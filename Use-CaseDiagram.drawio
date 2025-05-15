@@ -1,0 +1,327 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36" version="27.0.5">
+  <diagram name="Page-1" id="ryjZkBPZkrST7o51dUWx">
+    <mxGraphModel dx="786" dy="498" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <object label="" id="0">
+          <mxCell />
+        </object>
+        <mxCell id="1" parent="0" />
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-26" value="Effettua registrazione" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="10" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-27" value="UC1" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="60" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-28" value="Paziente/Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="90" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-29" value="&lt;ol&gt;&lt;li style=&quot;&quot;&gt;L&#39;utente inserisce i propri dati anagrafici&lt;/li&gt;&lt;li style=&quot;&quot;&gt;L&#39;utente invia la richiesta di account all&#39;amministratore di sistema&lt;/li&gt;&lt;li style=&quot;&quot;&gt;L&#39;admin procede a verificare tali informazioni&lt;/li&gt;&lt;/ol&gt;&lt;div&gt;&lt;div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="120" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-30" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="60" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-31" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="90" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-32" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="120" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-33" value="Validazione informazioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="10" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-34" value="UC2" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="60" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-35" value="Amministratore di sistema" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="90" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-36" value="&lt;ol&gt;&lt;li&gt;Controllo dei dati presenti in una richiesta&lt;/li&gt;&lt;li&gt;a) se sono validi inviare una mail di conferma con credenziali d&#39;accesso&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;b) se sono errati, invio di una mail di mancata registrazione&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="160" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-37" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="60" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-38" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="90" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-39" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="160" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-40" value="Un paziente o un diabetologo deve aver fatto richiesta di account al sistema" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="120" width="270" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-41" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="120" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-42" value="Aggiungi terapia" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="10" y="260" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-43" value="UC3" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="100" y="310" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-44" value="Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="100" y="340" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-45" value="&lt;ol&gt;&lt;li&gt;Il diabetologo visualizza la lista di pazienti ad esso associato&lt;/li&gt;&lt;li&gt;Il diabetologo effettua una ricerca in modo da trovare il paziente corretto&lt;/li&gt;&lt;li&gt;il diabetologo clicca sul pulsante &quot;aggiungi terapia&quot;&amp;nbsp;&amp;nbsp;&lt;/li&gt;&lt;li&gt;Il diabetologo procede ad aggiungere le specifiche della terapia (farmaco, dosaggio orari di assunzione, eventuali note)&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="100" y="410" width="270" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-46" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="10" y="310" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-47" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="10" y="340" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-48" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="10" y="410" width="90" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-49" value="Il diabetologo deve avere almeno un paziente associato e deve essersi autenticato" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="100" y="370" width="270" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-50" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="10" y="370" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-51" value="Aggiorna dati paziente" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="260" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-52" value="UC4" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="310" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-53" value="Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="340" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-54" value="&lt;ol&gt;&lt;li&gt;Il diabetologo visualizza la lista di pazienti ad esso associato&lt;/li&gt;&lt;li&gt;il diabetologo effettua una ricerca in modo da trovare il paziente corretto&lt;/li&gt;&lt;li&gt;Il diabetologo clicca sul pulsante &quot;aggiorna dati&quot;&lt;/li&gt;&lt;li&gt;a) Sceglie l&#39;opzione &quot;aggiorna terapia&quot;&amp;nbsp; &amp;nbsp; &amp;nbsp; b)sceglie l&#39;opzione &quot;aggiorna info&quot;&lt;/li&gt;&lt;li&gt;Il diabetologo procede a cambiare eventuali specifiche incorrette o non aggiornate&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="410" width="270" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-55" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="310" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-56" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="340" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-57" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="410" width="90" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-58" value="Il diabetologo deve avere almeno un paziente associato e deve essersi autenticato" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="370" width="270" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OcqQT08SO8zfZg4H9Xsi-59" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="370" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-1" value="Registra account" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="620" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-2" value="UC7" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="670" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-3" value="Amministratore di sistema" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="700" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-4" value="&lt;ol&gt;&lt;li&gt;Il sistema genera una password casuale&amp;nbsp;&lt;/li&gt;&lt;li&gt;L&#39;admin associa uno username alla password&lt;/li&gt;&lt;li&gt;L&#39;admin procede a inserire nella base di dati l&#39;account relativo all&#39;utente&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="780" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-5" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="670" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-6" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="700" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-7" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="780" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-8" value="Un paziente o un diabetologo deve aver fatto richiesta di account al sistema e deve aver verificato i dati" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="730" width="270" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-9" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="730" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-10" value="Elimina account" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="620" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-11" value="UC8" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="670" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-12" value="Amministratore di sistema" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="700" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-13" value="&lt;ol&gt;&lt;li&gt;L&#39;admin effettua una ricerca per trovare l&#39;account da eliminare&lt;/li&gt;&lt;li&gt;Dopo aver dato la conferma, l&#39;admin procede a togliere dalla base di dati l&#39;account relativo&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="780" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-14" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="670" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-15" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="700" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-16" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="780" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-17" value="Per un qualsiasi motivo ragionevole c&#39;è la necessità di eliminare un account dal sistema" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="730" width="270" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-18" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="730" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-19" value="postcondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="870" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-20" value="L&#39;account risulta &quot;inesistente&quot;, ed è eliminato correttamente anche dalla base di dati" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="870" width="270" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-21" value="Vedi grafici pazienti" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="900" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-22" value="UC9" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="950" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-23" value="Amministratore di sistema" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="980" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-24" value="&lt;ol&gt;&lt;li&gt;L&#39;admin entra nella sezione &quot;visualizza andamento&quot;&lt;/li&gt;&lt;li&gt;a)Vede i grafici generali comprensivi delle glicemie di tutti i pazienti&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; b) Sceglie un paziente e cliccando su &quot;visualizza&quot; vede i grafici relativi al singolo paziente&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="1060" width="270" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-25" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="950" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-26" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="980" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-27" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1060" width="90" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-28" value="Devono esserci pazienti che hanno registrato valori di glicemie e/o inserito assunzione di farmaci per terapie" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="1010" width="270" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-29" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1010" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-32" value="Vedi grafici pazienti" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="940" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-33" value="UC10" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="990" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-34" value="Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1020" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-35" value="&lt;ol&gt;&lt;li&gt;Il diabetologo etra nella sezione &quot;visualizza andamento pazienti&quot;&lt;/li&gt;&lt;li&gt;a) Vede i grafici dei pazienti ad esso associati&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;b) Sceglie un paziente e visualizza i grafici relativi al singolo paziente&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1100" width="270" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-36" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="990" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-37" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1020" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-38" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1100" width="90" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-39" value="Devono esserci pazienti che hanno registrato valori di glicemie e/o inserito assunzione di farmaci per terapie" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1050" width="270" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="u_16UKFtJq7T6G0FmRV1-40" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1050" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-2" value="Visualizza Dati (lavoro extra)" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1210" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-3" value="UC9" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="1260" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-4" value="Amministratore di sistema, Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="1290" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-5" value="&lt;div&gt;&lt;ol&gt;&lt;li&gt;L&#39;attore entra nella sezione &quot;visualizza dati&quot;.&lt;/li&gt;&lt;li&gt;se l&#39;attore è un amministratore di sistema mostra tutti i grafici.&amp;nbsp;&lt;/li&gt;&lt;li&gt;se l&#39;attore è un medico mostra i grafici relativi ai pazienti ad esso associati&lt;/li&gt;&lt;li&gt;Sceglie un paziente e visualizza i grafici relativi al singolo paziente.&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="1370" width="270" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-6" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1260" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-7" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1290" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-8" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1370" width="90" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-9" value="Devono esserci pazienti che hanno registrato valori di glicemie e/o inserito assunzione di farmaci per terapie" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="100" y="1320" width="270" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-10" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1320" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-15" value="sequenza alternativa" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="10" y="1510" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GM0dePd-EpBj3Bh3EC-17" value="1. in qualunque momento l&#39;attore può abbandonare la pagina&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="100" y="1510" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-1" value="Effettua Login" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="425" y="1240" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-2" value="UC5" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="515" y="1290" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-3" value="Paziente/Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="515" y="1320" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-4" value="&lt;ol&gt;&lt;li&gt;Il diabetologo o il paziente inseriscono il proprio username e la propria password.&lt;/li&gt;&lt;li&gt;Il sistema controlla la correttezza delle credenziali e permette l&#39;accesso alle relative aree personali.&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="515" y="1390" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-5" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="425" y="1290" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-6" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="425" y="1320" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-7" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="425" y="1390" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-8" value="Il paziente o il diabetologo devono aver effettuato la registrazione" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="515" y="1350" width="270" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-9" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="425" y="1350" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-10" value="postcondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="425" y="1480" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_Z5w76KnWP_vvyMMPEzF-11" value="Il paziente o il diabetologo possono usufruire delle funzionalità del sistema" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="515" y="1480" width="270" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-1" value="Visualizza dati (default)" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="425" y="1550" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-2" value="UC6" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="515" y="1600" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-3" value="Paziente/Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="515" y="1630" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-4" value="&lt;ol&gt;&lt;li&gt;Se l&#39;utente è un diabetologo:&lt;/li&gt;&lt;ol&gt;&lt;li&gt;Seleziona il paziente di cui vuole visualizzare l&#39;andamento.&lt;/li&gt;&lt;li&gt;Seleziona un periodo di cui vuole visualizzare l&#39;andamento.&amp;nbsp;&lt;/li&gt;&lt;li&gt;Visualizza il grafico dell&#39;andamento dei valori di glicemia.&amp;nbsp;&lt;/li&gt;&lt;/ol&gt;&lt;li&gt;Se l&#39;utente è un paziente:&lt;/li&gt;&lt;ol&gt;&lt;li&gt;Seleziona un periodo di cui vuole visualizzare l&#39;andamento.&amp;nbsp;&lt;/li&gt;&lt;li&gt;Visualizza il grafico dell&#39;andamento dei valori di glicemia.&amp;nbsp;&lt;/li&gt;&lt;/ol&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="515" y="1760" width="270" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-5" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="425" y="1600" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-6" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="425" y="1630" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-7" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="425" y="1760" width="90" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-8" value="1. Il paziente o il diabetologo devono aver effettuato il login.&lt;div&gt;2. Il paziente deve aver inserito almeno una misurazione della glicemia.&lt;/div&gt;&lt;div&gt;3. Il paziente o il diabetologo devono aver selezionato &quot;visualizza andamento glicemia&quot;&lt;/div&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="515" y="1660" width="270" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-9" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="425" y="1660" width="90" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-13" value="&lt;ol&gt;&lt;li&gt;L&#39;utente ha visualizzato le informazioni sulla glicemia.&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="515" y="1950" width="270" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-14" value="postcondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="425" y="1950" width="90" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
