@@ -1,3 +1,6 @@
 - Diabetologo
 - Paziente
 - Amministratore
+- Informazione Paziente (glicemia, sintomi, patologie)
+- Terapia
+- Sistema (per le funzioni generiche tipo alert, autenticazione, etc)
