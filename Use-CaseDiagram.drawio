@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36" version="27.0.5">
   <diagram name="Page-1" id="ryjZkBPZkrST7o51dUWx">
-    <mxGraphModel dx="786" dy="498" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="786" dy="464" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <object label="" id="0">
           <mxCell />
@@ -256,70 +256,70 @@
           <mxGeometry x="100" y="1510" width="270" height="90" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-1" value="Effettua Login" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="425" y="1240" width="360" height="50" as="geometry" />
+          <mxGeometry x="400" y="1240" width="360" height="50" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-2" value="UC5" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="515" y="1290" width="270" height="30" as="geometry" />
+          <mxGeometry x="490" y="1290" width="270" height="30" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-3" value="Paziente/Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="515" y="1320" width="270" height="30" as="geometry" />
+          <mxGeometry x="490" y="1320" width="270" height="30" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-4" value="&lt;ol&gt;&lt;li&gt;Il diabetologo o il paziente inseriscono il proprio username e la propria password.&lt;/li&gt;&lt;li&gt;Il sistema controlla la correttezza delle credenziali e permette l&#39;accesso alle relative aree personali.&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="515" y="1390" width="270" height="90" as="geometry" />
+          <mxGeometry x="490" y="1390" width="270" height="90" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-5" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="425" y="1290" width="90" height="30" as="geometry" />
+          <mxGeometry x="400" y="1290" width="90" height="30" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-6" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="425" y="1320" width="90" height="30" as="geometry" />
+          <mxGeometry x="400" y="1320" width="90" height="30" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-7" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="425" y="1390" width="90" height="90" as="geometry" />
+          <mxGeometry x="400" y="1390" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-8" value="Il paziente o il diabetologo devono aver effettuato la registrazione" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="515" y="1350" width="270" height="40" as="geometry" />
+          <mxGeometry x="490" y="1350" width="270" height="40" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-9" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="425" y="1350" width="90" height="40" as="geometry" />
+          <mxGeometry x="400" y="1350" width="90" height="40" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-10" value="postcondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="425" y="1480" width="90" height="40" as="geometry" />
+          <mxGeometry x="400" y="1480" width="90" height="40" as="geometry" />
         </mxCell>
         <mxCell id="_Z5w76KnWP_vvyMMPEzF-11" value="Il paziente o il diabetologo possono usufruire delle funzionalità del sistema" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
-          <mxGeometry x="515" y="1480" width="270" height="40" as="geometry" />
+          <mxGeometry x="490" y="1480" width="270" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-1" value="Visualizza dati (default)" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="425" y="1550" width="360" height="50" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-1" value="Visualizza dati (default)" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1540" width="360" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-2" value="UC6" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="515" y="1600" width="270" height="30" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-2" value="UC6" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1590" width="270" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-3" value="Paziente/Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="515" y="1630" width="270" height="30" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-3" value="Paziente/Diabetologo" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1620" width="270" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-4" value="&lt;ol&gt;&lt;li&gt;Se l&#39;utente è un diabetologo:&lt;/li&gt;&lt;ol&gt;&lt;li&gt;Seleziona il paziente di cui vuole visualizzare l&#39;andamento.&lt;/li&gt;&lt;li&gt;Seleziona un periodo di cui vuole visualizzare l&#39;andamento.&amp;nbsp;&lt;/li&gt;&lt;li&gt;Visualizza il grafico dell&#39;andamento dei valori di glicemia.&amp;nbsp;&lt;/li&gt;&lt;/ol&gt;&lt;li&gt;Se l&#39;utente è un paziente:&lt;/li&gt;&lt;ol&gt;&lt;li&gt;Seleziona un periodo di cui vuole visualizzare l&#39;andamento.&amp;nbsp;&lt;/li&gt;&lt;li&gt;Visualizza il grafico dell&#39;andamento dei valori di glicemia.&amp;nbsp;&lt;/li&gt;&lt;/ol&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="515" y="1760" width="270" height="190" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-4" value="&lt;ol&gt;&lt;li&gt;Se l&#39;utente è un diabetologo:&lt;/li&gt;&lt;ol&gt;&lt;li&gt;Seleziona il paziente di cui vuole visualizzare l&#39;andamento.&lt;/li&gt;&lt;li&gt;Seleziona un periodo di cui vuole visualizzare l&#39;andamento.&amp;nbsp;&lt;/li&gt;&lt;li&gt;Visualizza il grafico dell&#39;andamento dei valori di glicemia.&amp;nbsp;&lt;/li&gt;&lt;/ol&gt;&lt;li&gt;Se l&#39;utente è un paziente:&lt;/li&gt;&lt;ol&gt;&lt;li&gt;Seleziona un periodo di cui vuole visualizzare l&#39;andamento.&amp;nbsp;&lt;/li&gt;&lt;li&gt;Visualizza il grafico dell&#39;andamento dei valori di glicemia.&amp;nbsp;&lt;/li&gt;&lt;/ol&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1750" width="270" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-5" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="425" y="1600" width="90" height="30" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-5" value="ID" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1590" width="90" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-6" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="425" y="1630" width="90" height="30" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-6" value="attori" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1620" width="90" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-7" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="425" y="1760" width="90" height="190" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-7" value="sequenza" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1750" width="90" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-8" value="1. Il paziente o il diabetologo devono aver effettuato il login.&lt;div&gt;2. Il paziente deve aver inserito almeno una misurazione della glicemia.&lt;/div&gt;&lt;div&gt;3. Il paziente o il diabetologo devono aver selezionato &quot;visualizza andamento glicemia&quot;&lt;/div&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="515" y="1660" width="270" height="100" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-8" value="1. Il paziente o il diabetologo devono aver effettuato il login.&lt;div&gt;2. Il paziente deve aver inserito almeno una misurazione della glicemia.&lt;/div&gt;&lt;div&gt;3. Il paziente o il diabetologo devono aver selezionato &quot;visualizza andamento glicemia&quot;&lt;/div&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1650" width="270" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-9" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="425" y="1660" width="90" height="100" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-9" value="precondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1650" width="90" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-13" value="&lt;ol&gt;&lt;li&gt;L&#39;utente ha visualizzato le informazioni sulla glicemia.&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="515" y="1950" width="270" height="50" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-13" value="&lt;ol&gt;&lt;li&gt;L&#39;utente ha visualizzato le informazioni sulla glicemia.&lt;/li&gt;&lt;/ol&gt;" style="html=1;align=left;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="490" y="1940" width="270" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="_KpRicmcU8L8oWl8hXo7-14" value="postcondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
-          <mxGeometry x="425" y="1950" width="90" height="50" as="geometry" />
+        <mxCell id="_KpRicmcU8L8oWl8hXo7-14" value="postcondizioni" style="html=1;align=center;verticalAlign=middle;dashed=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1940" width="90" height="50" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
