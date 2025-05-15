@@ -1,6 +1,8 @@
-- Diabetologo
-- Paziente
-- Amministratore
-- Informazione Paziente (glicemia, sintomi, patologie)
-- Terapia
+- Diabetologo (dati anagrafici, numero di registrazione all'albo, getDatiPaziente(), aggiornaTerapia(), ...)
+- Paziente (dati anagrafici, inserisciGlicemia(), inserisciSintomi(), getDatiPropri(), etc)
+- Amministratore (getGraficoAndamentoGenerale(), rimuoviAccount(), aggiungiAccount())
+- Terapia (farmaco prescritto, dose, come prenderlo)
 - Sistema (per le funzioni generiche tipo alert, autenticazione, etc)
+- Farmaco (nome, tipo (insulina/antidiabetico), unità di misura, codice univoco?)
+- Glicemia (valore, data [GG/MM/AAAA], ora [ore:minuti:secondi])
+- Altro[nome di merda, cambia] (patologie pregresse, fattori di rischio, etc)
