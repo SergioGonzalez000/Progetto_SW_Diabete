@@ -8,7 +8,7 @@ def getLayout():
                 "Welcome Nigga", 
                 className="text-center my-4"),
             html.P(
-                "Bozza brutta giusto per", 
+                "In cosa ti identifichi coglionazzo?", 
                 className="text-center"),
             html.Div(
                 dbc.ButtonGroup([
