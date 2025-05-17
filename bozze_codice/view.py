@@ -5,10 +5,10 @@ def getLayout():
     return dbc.Container(
         [
             html.H1(
-                "Welcome Nigga", 
+                "卐 Welcome Nigga 卐", 
                 className="text-center my-4"),
             html.P(
-                "In cosa ti identifichi coglionazzo?", 
+                "卐 In cosa ti identifichi coglionazzo? 卐", 
                 className="text-center"),
             html.Div(
                 dbc.ButtonGroup([
