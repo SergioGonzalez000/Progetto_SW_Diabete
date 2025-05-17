@@ -1,0 +1,1 @@
+# gestione collegamento view-model --> callbacks etc.

@@ -1,0 +1,1 @@
+# gestione Database remoto, gestione altra roba logica
