@@ -7,3 +7,17 @@
 - Glicemia (valore, data [GG/MM/AAAA], ora [ore:minuti:secondi])
 - Altro[nome di merda, cambia] (patologie pregresse, fattori di rischio, etc)
 
+potenziali idee
+-Autenticabile (classe astratta/interfaccia che contiene funzioni di login() logout() vedi_profilo())
+paziente,diabetologo e admin devono implementare questa interfaccia per avere i metodi generali descritti
+ognuno però ha la sua implementazione 
+
+-Visualizzabile (classe astratta/interfaccia che contiene funzioni per visualizzare i grafici dei pazienti)
+la dovrebbero implementare diabetologo e admin
+le implementazioni diverse sono fondamentali per far vedere il dominio giusto a ciascuno
+potrebbe farci risparmiare codice i guess?
+
+FORSE classe Alert (potenzialmente implementabile con design pattern -> observer)
+potrebbe aiutarci a mandare il messaggio "in broadcast" a ci lo deve ricevere
+però non so come usare il design pattern
+
