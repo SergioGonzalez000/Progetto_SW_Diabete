@@ -12,3 +12,34 @@ connection = psycopg2.connect(
 )
 
 cur=connection.cursor()
+
+class Persona():
+    def __init__(self):
+        pass
+      
+class Paziente(Persona):
+    def __init__(self):
+        super().__init__()
+
+class Diabetologo(Persona):
+    def __init__(self):
+        super().__init__()
+
+class Admin(Persona):
+    def __init__(self):
+        super().__init__()
+
+class Terapia():
+    def __init__(self):
+        pass
+        
+class Farmaco():
+    def __init__(self):
+        pass
+
+class Glicemia():
+    def __init__(self):
+        pass
+
+
+        

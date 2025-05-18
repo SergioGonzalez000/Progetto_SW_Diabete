@@ -12,8 +12,8 @@ def getLayout():
                 className="text-center"),
             html.Div(
                 dbc.ButtonGroup([
-                    dbc.Button("Paziente", color="primary"), 
-                    dbc.Button("Diabetologo", color="danger")],
+                    dbc.Button("Paziente",id="btn_paz",href="/login_paz", color="primary"), 
+                    dbc.Button("Diabetologo",id="btn_doc",href="/login_doc", color="danger")],
                     size="md",
                     className="mt-4",
                     vertical=True),
