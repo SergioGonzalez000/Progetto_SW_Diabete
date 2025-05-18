@@ -4,7 +4,8 @@ from flask_login import LoginManager
 import os
 
 # funzioni fatte da me
-from view import getLayout 
+import view 
+import model
 
 # inizializzazione app con dbc
 app = dash.Dash(__name__, 
@@ -21,7 +22,7 @@ login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = '/login'
 
-app.layout = getLayout()
+app.layout = view.getLayout()
 
 # avvio app
 if __name__ == '__main__':

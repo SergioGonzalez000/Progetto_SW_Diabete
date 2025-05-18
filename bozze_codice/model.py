@@ -12,7 +12,3 @@ connection = psycopg2.connect(
 )
 
 cur=connection.cursor()
-
-def get_balls():
-    cur.execute("SELECT * FROM palle")
-    
