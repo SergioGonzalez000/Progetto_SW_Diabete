@@ -1,6 +1,6 @@
 Qui magari scriviamo come ci dividiamo il lavoro...
 
-ago: ?
-fil: ?
-miglio: ?
-sergio: ?
+ago:        view semplice (elementi essenziali), controller (essenziali)
+fil:        model db, inizializza database con le classi che servono, generazione account admin-paziente-diabetologo
+miglio: ?   jolly ass nigga?
+sergio:     registration, login, logout (autenticazione con Flask-Login e workzeug security)
