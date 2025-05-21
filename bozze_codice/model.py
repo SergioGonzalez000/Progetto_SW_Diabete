@@ -90,4 +90,4 @@ class Glicemia():
         pass
 
 if __name__ == '__main__':
-    Admin.approva_richiesta(1)
+    Admin.approva_richiesta(4)
