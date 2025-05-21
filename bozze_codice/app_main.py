@@ -22,7 +22,10 @@ login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = '/login'
 
-app.layout = view.getLayout()
+
+#*******************************************************************************************************
+# Per testare, ho impostato di default la visualizzazione del layout di login!!!
+app.layout = view.login_layout()
 
 # avvio app
 if __name__ == '__main__':
