@@ -3,9 +3,10 @@ import dash_bootstrap_components as dbc
 from flask_login import LoginManager
 import os
 
-# funzioni fatte da me
-import view 
+# funzioni fatte da noi
+from view import login_layout, getLayout
 import model
+from control import registra_callbacks
 
 # inizializzazione app con dbc
 app = dash.Dash(__name__, 
@@ -25,7 +26,11 @@ login_manager.login_view = '/login'
 
 #*******************************************************************************************************
 # Per testare, ho impostato di default la visualizzazione del layout di login!!!
-app.layout = view.login_layout()
+# srj - modificato la fx chiamata
+app.layout = getLayout()
+
+# chiamo la funzione per le callback
+registra_callbacks(app)
 
 # avvio app
 if __name__ == '__main__':

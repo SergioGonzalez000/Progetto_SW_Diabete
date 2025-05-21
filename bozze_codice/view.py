@@ -3,7 +3,10 @@ import dash_bootstrap_components as dbc
 
 # Layout dell'app. DA FARE
 def getLayout():
-    return dbc.Container()
+    return html.Div([
+        dcc.Location(id= "url", refresh= True),
+        html.Div(id= "contenuto-pagina")
+    ])
 
 # ******************************************************************************************************************
 def login_layout():
@@ -74,6 +77,12 @@ def login_layout():
         className="mt-2"
     )
 
+    # srj - elemento html.Div per poter testare le callback
+    output_box = html.Div(
+        id='output-box'
+    )
+
+
     # Layout del form
     form = dbc.Form(
         [
@@ -86,7 +95,10 @@ def login_layout():
             # Pulsante di Login
             signIn_button,
             # Link per la registrazione
-            signUp_link
+            signUp_link,
+
+            # srj - per testare callback
+            output_box
         ],
         # mx-auto: margin, x axis, imposta automaticamente; centra un elemento orizzontalmente
         # p-5: padding di 5 su ogni lato
