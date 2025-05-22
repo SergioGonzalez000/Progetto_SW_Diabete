@@ -1,5 +1,7 @@
 # gestione Database remoto, gestione altra roba logica
 import dash_bootstrap_components as dbc
+from abc import ABC,abstractmethod
+
 import psycopg2
 from flask_login import UserMixin, login_user, logout_user, current_user 
 import dash
@@ -17,6 +19,13 @@ cur=connection.cursor()
 # srj - Persona deve ereditare da UserMixin per permettere l'autenticazione con Flask
 #       Da fare
 class Persona(UserMixin):
+    pass
+class autenticabile():
+    pass
+        
+    
+
+class Persona():
     def __init__(self):
         pass
       
@@ -32,6 +41,48 @@ class Admin(Persona):
     def __init__(self):
         super().__init__()
 
+    def genera_username(id_richiesta):
+        cur.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
+        richiesta = cur.fetchone()
+        nome=richiesta[1]
+        cognome=richiesta[2]
+        paziente=richiesta[11]
+
+        if paziente:
+            cur.execute("SELECT * FROM Paziente WHERE nome = %s AND cognome = %s",(nome,cognome))
+            righe = cur.fetchall()
+            num=len(righe)
+            username=f"{nome}.{cognome}{num}_P"
+        else:
+            cur.execute("SELECT * FROM Diabetologo WHERE nome = %s AND  cognome = %s",(nome,cognome))
+            righe = cur.fetchall()
+            num=len(righe)
+            username=f"{nome}.{cognome}{num}_D"
+
+        return username
+
+
+    def approva_richiesta(id_richiesta):
+        cur.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
+        richiesta = cur.fetchone()
+        _,nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, flag_paziente, _,_, password=richiesta
+        if flag_paziente:
+            username=Admin.genera_username(id_richiesta)
+            cur.execute("""INSERT INTO Paziente 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
+                    VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, password))
+            connection.commit()
+        else:
+            username=Admin.genera_username(id_richiesta)
+            cur.execute("""INSERT INTO Diabetologo 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
+                    VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, password))
+            connection.commit()
+
+
+
 class Terapia():
     def __init__(self):
         pass
@@ -44,6 +95,12 @@ class Glicemia():
     def __init__(self):
         pass
 
+def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password):
+    cur.execute("""INSERT INTO RichiesteAccount 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, paziente, password) 
+                    VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password))
+    connection.commit()
 
 # srj - Funzione che cerca lo username nel database e se c'è
 #       confronta la password inserita da utente con quella 
@@ -71,3 +128,7 @@ def check_username_pw(username, password):
     else: 
         return dash.no_update, dbc.Alert('username inesistente', color='danger')
         
+
+
+if __name__ == '__main__':
+    Admin.approva_richiesta(4)

@@ -1,10 +1,10 @@
-# gestione collegamento view-model --> callbacks etc.
-from dash.dependencies import Input, Output, State
+# gestione collegamento view-model --> callbacks etc.from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
-from dash import html, dcc
+from dash import html, dcc, Input, Output, State
+from flask_login import login_user, logout_user, current_user
 import dash
-from model import check_username_pw
-from view import login_layout
+import model
+import view
 
 
 def registra_callbacks(app):
@@ -25,14 +25,102 @@ def registra_callbacks(app):
         if not username or not password:
             return dash.no_update, dbc.Alert('devi compilare tutti i campi!', color='danger')
         
-        return check_username_pw(username, password)
+        return model.check_username_pw(username, password)
     
 
+    
+    
     @app.callback(
-        Output("contenuto-pagina", "children"),
-        Input("url", "pathname")
+        Output("registration-feedback", "children"),
+        Output("registration-feedback", "color"),
+        Output("registration-feedback", "is_open"),
+        Output("generated-username", "children"),
+        Input("registration-input", "n_clicks"),
+        State("radio-user", "value"),
+        State("name-input", "value"),
+        State("surname-input", "value"),
+        State("codiceFiscale-input", "value"),
+        State("dataNascita-input", "value"),
+        State("radio-sesso", "value"),
+        State("tel-input", "value"),
+        State("email-input", "value"),
+        State("indirizzo-input", "value"),
+        State("city-input", "value"),
+        State("CAP-input", "value"),
+        State("scelta-password", "value"),
+        State("conferma-password", "value"),
+        prevent_initial_call='initial_duplicate',
+
+    )
+    def richiesta_account(n_clicks,user,nome,cognome,cf,datanascita,sesso,tel,email,indirizzo,citta,cap,pw,conf_pw):
+        if n_clicks > 0:
+
+            if not nome or not cognome or not cf or not datanascita or not sesso or not tel or not email or not indirizzo or not citta or not cap or not pw or not conf_pw:
+                return "Inserisci tutti i campi!", "danger", True, None
+
+            if pw != conf_pw:
+                return "Password errata!", "danger", True, None
+            
+            if user=='P':
+                model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,True,pw)
+                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                id_richiesta=model.cur.fetchone()
+                return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
+            else:
+                model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,False,pw)
+                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                id_richiesta=model.cur.fetchone()
+                return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
+        else:
+            return None,None,None,None
+        
+    @app.callback(
+        Output("form1", "style"),
+        Output("form2", "style"),
+        Output("form3", "style"),
+        Input("next-button", "n_clicks"),
+        Input("prev-button", "n_clicks"),
+        State("form1", "style"),
+        State("form2", "style"),
+        State("form3", "style"),
+        prevent_initial_call=True
+    )
+    def aggiorna_form(next_clicks, prev_clicks, s1, s2, s3):
+        ctx = dash.callback_context.triggered_id # variabile che mantiene il 'contesto' dice quale bottone è stato triggerato
+
+        if ctx == "next-button":
+            if s1["display"] == "block":
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}
+            elif s2["display"] == "block":
+                return {"display": "none"}, {"display": "none"}, {"display": "block"}
+        elif ctx == "prev-button":
+            if s3["display"] == "block":
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}
+            elif s2["display"] == "block":
+                return {"display": "block"}, {"display": "none"}, {"display": "none"}
+
+        return dash.no_update, dash.no_update, dash.no_update
+
+
+    # callback per il routing, cambia il contenuto della pagina a seconda dell'url
+    @app.callback(
+        [Output("contenuto-pagina", "children"),
+        Output("url", "pathname", allow_duplicate=True)],
+        Input("url", "pathname"), prevent_initial_call=True
     )
     def mostra_pagina(pathname):
+        if pathname == "/logout": # and current_user.is_authenticated:
+            logout_user()  # Log the user out using Flask-Login
+            return view.login_layout, "/login"  # da cambiare quando avremo fatto la home con la navbar
+            # Display game page (only for authenticated users)
+        # Display login page
+        if pathname == "/login": # and not current_user.is_authenticated:
+            return view.login_layout(), dash.no_update
+        # Display registration page
+        if pathname == "/register":
+            return view.registration_layout(), dash.no_update
         if pathname == "/home":
             return html.H1("Hai effettuato l'accesso, sei nella Home.")    
-        return login_layout()
+        
+        # qua ci va la pagina che vogliamo mostrare di default (home di solito)
+        return model.login_layout()
