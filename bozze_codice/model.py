@@ -89,5 +89,12 @@ class Glicemia():
     def __init__(self):
         pass
 
+def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password):
+    cur.execute("""INSERT INTO RichiesteAccount 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, paziente, password) 
+                    VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password))
+    connection.commit()
+
 if __name__ == '__main__':
     Admin.approva_richiesta(4)

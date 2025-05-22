@@ -5,7 +5,7 @@ import os
 
 # funzioni fatte da me
 import view 
-import model
+import control 
 
 # inizializzazione app con dbc
 app = dash.Dash(__name__, 
@@ -25,7 +25,8 @@ login_manager.login_view = '/login'
 
 #*******************************************************************************************************
 # Per testare, ho impostato di default la visualizzazione del layout di login!!!
-app.layout = view.login_layout()
+control.registra_callbacks(app)
+app.layout = view.registration_layout()
 
 # avvio app
 if __name__ == '__main__':
