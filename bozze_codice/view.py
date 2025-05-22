@@ -339,7 +339,7 @@ def registration_layout():
     # Pulsanti per la navigazione
     nav_buttons = html.Div(
         [
-            dbc.Button("🡨", id="prev-button", n_clicks=0),#, color="secondary", disabled=True tolto perchè da sistemare
+            dbc.Button("🡨", id="prev-button", n_clicks=0, color="secondary", disabled=True),
             dbc.Button("🡪", id="next-button", n_clicks=0)
         ],
         className="mt-3 d-flex justify-content-between"
