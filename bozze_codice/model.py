@@ -22,7 +22,6 @@ class Persona(UserMixin):
     pass
 class autenticabile():
     pass
-        
     
 
 class Persona():

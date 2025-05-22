@@ -26,7 +26,7 @@ login_manager.login_view = '/login'
 #*******************************************************************************************************
 # Per testare, ho impostato di default la visualizzazione del layout di login!!!
 control.registra_callbacks(app)
-app.layout = view.registration_layout()
+app.layout = view.getLayout()
 
 # avvio app
 if __name__ == '__main__':

@@ -49,8 +49,7 @@ def registra_callbacks(app):
         State("CAP-input", "value"),
         State("scelta-password", "value"),
         State("conferma-password", "value"),
-        prevent_initial_call='initial_duplicate',
-
+        prevent_initial_call='initial_duplicate'
     )
     def richiesta_account(n_clicks,user,nome,cognome,cf,datanascita,sesso,tel,email,indirizzo,citta,cap,pw,conf_pw):
         if n_clicks > 0:
@@ -78,28 +77,33 @@ def registra_callbacks(app):
         Output("form1", "style"),
         Output("form2", "style"),
         Output("form3", "style"),
+        Output("prev-button", "disabled"),
+        Output("prev-button", "style"),
+        Output("form-step", "data"),    # aggiorno lo stato delle freccette nel "dcc.Store" in "registration_layout()"
         Input("next-button", "n_clicks"),
         Input("prev-button", "n_clicks"),
         State("form1", "style"),
         State("form2", "style"),
         State("form3", "style"),
+        State("form-step", "data"),     # controlla lo stato delle freccette del form nell'elemento "dcc.Store()" nella return della "registration_layout()"
         prevent_initial_call=True
     )
-    def aggiorna_form(next_clicks, prev_clicks, s1, s2, s3):
+    def aggiorna_form(next_clicks, prev_clicks, s1, s2, s3, step):      # aggiunto "step"
         ctx = dash.callback_context.triggered_id # variabile che mantiene il 'contesto' dice quale bottone è stato triggerato
 
         if ctx == "next-button":
             if s1["display"] == "block":
-                return {"display": "none"}, {"display": "block"}, {"display": "none"}
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"}, 2
             elif s2["display"] == "block":
-                return {"display": "none"}, {"display": "none"}, {"display": "block"}
+                return {"display": "none"}, {"display": "none"}, {"display": "block"}, False, {"display": "block"}, 3
+            
         elif ctx == "prev-button":
             if s3["display"] == "block":
-                return {"display": "none"}, {"display": "block"}, {"display": "none"}
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"}, 2
             elif s2["display"] == "block":
-                return {"display": "block"}, {"display": "none"}, {"display": "none"}
+                return {"display": "block"}, {"display": "none"}, {"display": "none"}, True, {"visibility": "hidden"}, 1
 
-        return dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
 
     # callback per il routing, cambia il contenuto della pagina a seconda dell'url
@@ -120,7 +124,7 @@ def registra_callbacks(app):
         if pathname == "/register":
             return view.registration_layout(), dash.no_update
         if pathname == "/home":
-            return html.H1("Hai effettuato l'accesso, sei nella Home.")    
+            return html.H1("Hai effettuato l'accesso, sei nella Home."), dash.no_update   
         
         # qua ci va la pagina che vogliamo mostrare di default (home di solito)
-        return model.login_layout()
+        return view.login_layout(), dash.no_update

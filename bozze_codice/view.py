@@ -1,7 +1,7 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 
-# Layout dell'app. DA FARE
+# Layout dell'app, intero. Si aggiorna quando viene cambiato l'url.
 def getLayout():
     return html.Div([
         dcc.Location(id= "url", refresh= True),
@@ -67,9 +67,9 @@ def login_layout():
     signUp_link = html.Div([
         html.Span("Don't have an account? "),
         html.A(
-            "Sign Up",
-            # Rimanda al link "/signup"     -> Da modificare
-            href="/signup",
+            "Register",
+            # Rimanda al link "/register" dove c'è la pagina con i form di registrazione
+            href="/register",
             className="text-primary"
             )
         ],
@@ -339,7 +339,7 @@ def registration_layout():
     # Pulsanti per la navigazione
     nav_buttons = html.Div(
         [
-            dbc.Button("🡨", id="prev-button", n_clicks=0, color="secondary", disabled=True),
+            dbc.Button("🡨", id="prev-button", n_clicks=0, disabled=True, style={"visibility": "hidden"}),  # inizialmente questo pulsante sarà nascosto (nel form 1)
             dbc.Button("🡪", id="next-button", n_clicks=0)
         ],
         className="mt-3 d-flex justify-content-between"
@@ -365,7 +365,7 @@ def registration_layout():
     )
        
 
-    # Layout del form
+    # Layout del form, contiene tutti gli altri oggetti del layout sopra.
     form = dbc.Form(
         [
             # Titolo
@@ -374,7 +374,7 @@ def registration_layout():
             form_box,
             # Pulsanti per la navigazione
             nav_buttons,
-            #box per l'output
+            # Box per l'output
             registration_feedback,
         ],
         # mx-auto: margin, x axis, imposta automaticamente; centra un elemento orizzontalmente
@@ -388,6 +388,7 @@ def registration_layout():
 
     return dbc.Container(
         [
+            dcc.Store(id="form-step", data= 1),  # aggiunto per far comparire il pulsante "indietro" solo nei form 2 e 3
             form
         ],
         fluid = True,
