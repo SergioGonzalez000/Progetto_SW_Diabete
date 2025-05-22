@@ -92,7 +92,7 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def aggiorna_form(next_clicks, prev_clicks, s1, s2, s3):
-        ctx = dash.callback_context.triggered_id
+        ctx = dash.callback_context.triggered_id # variabile che mantiene il 'contesto' dice quale bottone è stato triggerato
 
         if ctx == "next-button":
             if s1["display"] == "block":

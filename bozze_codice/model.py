@@ -40,7 +40,7 @@ class Admin(Persona):
         richiesta = cur.fetchone()
         nome=richiesta[1]
         cognome=richiesta[2]
-        paziente=richiesta[12]
+        paziente=richiesta[11]
 
         if paziente:
             cur.execute("SELECT * FROM Paziente WHERE nome = %s AND cognome = %s",(nome,cognome))
@@ -50,7 +50,7 @@ class Admin(Persona):
         else:
             cur.execute("SELECT * FROM Diabetologo WHERE nome = %s AND  cognome = %s",(nome,cognome))
             righe = cur.fetchall()
-            num=righe.count()
+            num=len(righe)
             username=f"{nome}.{cognome}{num}_D"
 
         return username
