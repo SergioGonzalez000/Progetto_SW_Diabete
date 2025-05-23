@@ -79,6 +79,8 @@ def registra_callbacks(app):
         Output("form3", "style"),
         Output("prev-button", "disabled"),
         Output("prev-button", "style"),
+        Output("next-button", "disabled"), #fil - aggiunta anche di next-button per nasconderlo al 3 form
+        Output("next-button", "style"),
         Output("form-step", "data"),    # aggiorno lo stato delle freccette nel "dcc.Store" in "registration_layout()"
         Input("next-button", "n_clicks"),
         Input("prev-button", "n_clicks"),
@@ -93,15 +95,15 @@ def registra_callbacks(app):
 
         if ctx == "next-button":
             if s1["display"] == "block":
-                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"}, 2
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"},False, {"display": "block"}, 2
             elif s2["display"] == "block":
-                return {"display": "none"}, {"display": "none"}, {"display": "block"}, False, {"display": "block"}, 3
+                return {"display": "none"}, {"display": "none"}, {"display": "block"}, False, {"display": "block"},True, {"visibility": "hidden"}, 3
             
         elif ctx == "prev-button":
             if s3["display"] == "block":
-                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"}, 2
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"},False, {"display": "block"}, 2
             elif s2["display"] == "block":
-                return {"display": "block"}, {"display": "none"}, {"display": "none"}, True, {"visibility": "hidden"}, 1
+                return {"display": "block"}, {"display": "none"}, {"display": "none"}, True, {"visibility": "hidden"},False, {"display": "block"}, 1
 
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
