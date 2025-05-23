@@ -10,6 +10,7 @@ import view
 def registra_callbacks(app):
     '''registro le callback dell'app'''
 
+
     @app.callback(
         [Output('url', 'pathname'),
          Output('output-box', 'children')],
@@ -18,16 +19,30 @@ def registra_callbacks(app):
          State('password-input', 'value')],
          prevent_initial_call=True
     )
-    def check_login_account(n_clicks, username, password):    
+    def check_login_account(n_clicks, username, password_dal_form):    # molta della logica è scritta qui nel control.py, ma volendo la si può spostare nel model
         if n_clicks is None or n_clicks == 0:
             return dash.no_update, dash.no_update
         
-        if not username or not password:
-            return dash.no_update, dbc.Alert('devi compilare tutti i campi!', color='danger')
+        if not username or not password_dal_form:
+            return dash.no_update, dbc.Alert('Devi compilare tutti i campi!', color='danger')
         
-        return model.check_username_pw(username, password)
-    
+        user = model.get_by_username(username)  
 
+        if user:        # è un oggetto Persona
+            # controlliamo la password.
+            # se la password va bene, chiamo login_user()
+            valid = model.check_password(user.username, password_dal_form)  # qui andrà passata la hash della pw. Conviene metterla in una variabile prima.
+
+            if valid:
+                # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
+                # nella pratica all'oggetto Persona andrà messa la password_hash invece della password in chiaro + tutto il resto degli attributi.
+                login_user(user)    # loggo l'utente con flask
+                return "/home", dbc.Alert("Login effettuato!", color= "success")
+            else:
+                return dash.no_update, dbc.Alert("Password sbagliata!", color= "danger")
+
+        else:
+            return dash.no_update, dbc.Alert("Username inesistente", color= "danger")
     
     
     @app.callback(
@@ -73,6 +88,7 @@ def registra_callbacks(app):
         else:
             return None,None,None,None
         
+
     @app.callback(
         Output("form1", "style"),
         Output("form2", "style"),
@@ -113,9 +129,9 @@ def registra_callbacks(app):
         Input("url", "pathname"), prevent_initial_call=True
     )
     def mostra_pagina(pathname):
-        if pathname == "/logout": # and current_user.is_authenticated:
+        if pathname == "/logout" and current_user.is_authenticated:
             logout_user()  # Log the user out using Flask-Login
-            return view.login_layout, "/login"  # da cambiare quando avremo fatto la home con la navbar
+            return view.login_layout(), "/login"  # da cambiare quando avremo fatto la navbar
             # Display game page (only for authenticated users)
         # Display login page
         if pathname == "/login": # and not current_user.is_authenticated:
@@ -124,7 +140,7 @@ def registra_callbacks(app):
         if pathname == "/register":
             return view.registration_layout(), dash.no_update
         if pathname == "/home":
-            return html.H1("Hai effettuato l'accesso, sei nella Home."), dash.no_update   
+            return html.H1("Hai effettuato l'accesso, sei nella Home."), dash.no_update   # qui va messa la home_layout()
         
-        # qua ci va la pagina che vogliamo mostrare di default (home di solito)
-        return view.login_layout(), dash.no_update
+        # qua ci va la pagina che vogliamo mostrare di default (home + navbar di solito)
+        return view.login_layout(), dash.no_update  

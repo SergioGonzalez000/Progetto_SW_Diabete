@@ -17,16 +17,20 @@ connection = psycopg2.connect(
 cur=connection.cursor()
 
 # srj - Persona deve ereditare da UserMixin per permettere l'autenticazione con Flask
-#       Da fare
+#       Da aggiugnere altra roba
 class Persona(UserMixin):
-    pass
+    
+    # costruttore. Ho usato l'attributo "username" al posto del classico id (fa nulla, perchè nel progetto lo username è univoco)
+    def __init__(self, username, password):
+        self.username = username    # è univoco.
+        self.password = password
+    
+    def get_id(self):           # è il getter per gli utenti di flask-login. Deve avere questa signature, nonostante in questo caso ritorni "username"
+        return self.username    # questa deve semplicemente essere una stringa univoca.
+
+
 class autenticabile():
     pass
-    
-
-class Persona():
-    def __init__(self):
-        pass
       
 class Paziente(Persona):
     def __init__(self):
@@ -100,33 +104,36 @@ def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indi
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password))
     connection.commit()
-
-# srj - Funzione che cerca lo username nel database e se c'è
-#       confronta la password inserita da utente con quella 
-#       nel database
-def check_username_pw(username, password):
-    
-    query_ricerca_username = "SELECT username FROM paziente WHERE username= %s"
-    cur.execute(query_ricerca_username, (username,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
-
-    nome_utente = cur.fetchone()
-
-    if nome_utente:
         
-        query_get_password = "SELECT pw FROM paziente WHERE username= %s"
-        cur.execute(query_get_password, (username,))
 
-        pw_utente = cur.fetchone()
-
-        # accedo al primo elemento della tupla (psycopg returna sempre una tupla del tipo (pw,) in questo caso)
-        if pw_utente[0] == password:
-            return "/home", dbc.Alert('Accesso effettuato')
-        else: 
-            return dash.no_update, dbc.Alert('username o password non validi', color= 'danger')
+# Funzione che prende un utente.
+def get_by_username(username_utente):
+    '''se l'utente esiste ritorna un oggetto Persona con i campi compilati, se non esiste, ritorna None '''
     
+    # non ho messo questa query direttamente nel main perchè avrei dovuto creare un cursore anche lì
+    query_ricerca_username = "SELECT username, pw FROM paziente WHERE username= %s" # pw deve essere la hash
+    cur.execute(query_ricerca_username, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
+
+    record = cur.fetchone()
+
+    if record:
+        return Persona(record [0], record[1])
+    return None
+
+
+# Funzione che controlla la password
+def check_password(username, password_dal_form):
+    query_get_password = "SELECT pw FROM paziente WHERE username= %s"
+    cur.execute(query_get_password, (username,))
+
+    pw_utente = cur.fetchone()
+
+    # accedo al primo elemento della tupla (psycopg returna sempre una tupla del tipo (pw,) in questo caso)
+    if pw_utente[0] == password_dal_form:
+        return True
     else: 
-        return dash.no_update, dbc.Alert('username inesistente', color='danger')
-        
+        return False
+
 
 
 if __name__ == '__main__':

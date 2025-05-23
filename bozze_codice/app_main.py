@@ -5,7 +5,8 @@ import os
 
 # funzioni fatte da me
 import view 
-import control 
+import control
+import model 
 
 # inizializzazione app con dbc
 app = dash.Dash(__name__, 
@@ -21,6 +22,12 @@ server.secret_key = os.environ.get('SECRET_KEY', 'wthellybronjames')
 login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = '/login'
+
+# login fatto tramite Oggetti-Sessions con flask-login
+# "prende" una persona e la carica. Il controllo dell'esistenza dello username e password è in un altra funzione.
+@login_manager.user_loader
+def carica_utente(username_utente):
+    return model.get_by_username(username_utente)   # questa funzione deve restituire un oggetto
 
 
 #*******************************************************************************************************
