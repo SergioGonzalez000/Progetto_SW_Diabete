@@ -4,7 +4,9 @@ from flask_login import LoginManager
 import os
 
 # funzioni fatte da me
-from view import getLayout 
+import view 
+import control
+import model 
 
 # inizializzazione app con dbc
 app = dash.Dash(__name__, 
@@ -21,7 +23,17 @@ login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = '/login'
 
-app.layout = getLayout()
+# login fatto tramite Oggetti-Sessions con flask-login
+# "prende" una persona e la carica. Il controllo dell'esistenza dello username e password è in un altra funzione.
+@login_manager.user_loader
+def carica_utente(username_utente):
+    return model.get_by_username(username_utente)   # questa funzione deve restituire un oggetto
+
+
+#*******************************************************************************************************
+# impostata la visualizzazione del layout intero
+control.registra_callbacks(app)
+app.layout = view.getLayout()
 
 # avvio app
 if __name__ == '__main__':
