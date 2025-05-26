@@ -10,7 +10,6 @@ import view
 def registra_callbacks(app):
     '''registro le callback dell'app'''
 
-
     @app.callback(
         [Output('url', 'pathname'),
          Output('output-box', 'children')],
@@ -31,7 +30,7 @@ def registra_callbacks(app):
         if user:        # è un oggetto Persona
             # controlliamo la password.
             # se la password va bene, chiamo login_user()
-            valid = model.check_password(user.username, password_dal_form)  # qui andrà passata la hash della pw. Conviene metterla in una variabile prima.
+            valid = model.check_password(user, password_dal_form)  # qui andrà passata la hash della pw. Conviene metterla in una variabile prima.
 
             if valid:
                 # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
@@ -95,6 +94,8 @@ def registra_callbacks(app):
         Output("form3", "style"),
         Output("prev-button", "disabled"),
         Output("prev-button", "style"),
+        Output("next-button", "disabled"), #fil - aggiunta anche di next-button per nasconderlo al 3 form
+        Output("next-button", "style"),
         Output("form-step", "data"),    # aggiorno lo stato delle freccette nel "dcc.Store" in "registration_layout()"
         Input("next-button", "n_clicks"),
         Input("prev-button", "n_clicks"),
@@ -109,15 +110,15 @@ def registra_callbacks(app):
 
         if ctx == "next-button":
             if s1["display"] == "block":
-                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"}, 2
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"},False, {"display": "block"}, 2
             elif s2["display"] == "block":
-                return {"display": "none"}, {"display": "none"}, {"display": "block"}, False, {"display": "block"}, 3
+                return {"display": "none"}, {"display": "none"}, {"display": "block"}, False, {"display": "block"},True, {"visibility": "hidden"}, 3
             
         elif ctx == "prev-button":
             if s3["display"] == "block":
-                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"}, 2
+                return {"display": "none"}, {"display": "block"}, {"display": "none"}, False, {"display": "block"},False, {"display": "block"}, 2
             elif s2["display"] == "block":
-                return {"display": "block"}, {"display": "none"}, {"display": "none"}, True, {"visibility": "hidden"}, 1
+                return {"display": "block"}, {"display": "none"}, {"display": "none"}, True, {"visibility": "hidden"},False, {"display": "block"}, 1
 
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
