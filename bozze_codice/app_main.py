@@ -31,7 +31,7 @@ def carica_utente(username_utente):
 
 
 #*******************************************************************************************************
-# Per testare, ho impostato di default la visualizzazione del layout di login!!!
+# impostata la visualizzazione del layout intero
 control.registra_callbacks(app)
 app.layout = view.getLayout()
 
