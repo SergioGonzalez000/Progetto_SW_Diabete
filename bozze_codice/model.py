@@ -277,5 +277,5 @@ def check_username_pw(username, password):
         
 
 
-#if __name__ == '__main__':
-#    Admin.approva_richiesta(8)
+if __name__ == '__main__':
+    Admin.approva_richiesta(11)
