@@ -1,6 +1,8 @@
 # gestione Database remoto, gestione altra roba logica
+import datetime
 import dash_bootstrap_components as dbc
 from abc import ABC,abstractmethod
+from werkzeug.security import generate_password_hash, check_password_hash #password criptate
 
 import psycopg2
 from flask_login import UserMixin, login_user, logout_user, current_user 
@@ -150,15 +152,24 @@ class Paziente(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
-    def inserisci_glicemia():
-        pass
+    def inserisci_glicemia(id_paz, valore, farmaco, dose, sintomi="" ):
+        cur.execute("""INSERT INTO Glicemia 
+                    (paziente, farmaco, dosaggio, sintomo, valore) 
+                    VALUES (%s, %s, %s, %s, %s)""", 
+                    (id_paz, farmaco, dose, sintomi, valore))
+        connection.commit()
+        
 
 class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
     
-    def inserici_terapia():
-        pass
+    def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine):
+        cur.execute("""INSERT INTO Terapia 
+                    (paziente, diabetologo, farmaco, dosaggio, assunzioni_gg, data_inizio, data_fine) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
+                    (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine))
+        connection.commit()
 
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -246,7 +257,7 @@ def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indi
     cur.execute("""INSERT INTO RichiesteAccount 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, paziente, password) 
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
-                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password))
+                    (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, generate_password_hash(password)))
     connection.commit()
 
 # srj - Funzione che cerca lo username nel database e se c'è
@@ -278,4 +289,11 @@ def check_username_pw(username, password):
 
 
 if __name__ == '__main__':
-    Admin.approva_richiesta(11)
+    #Paziente.inserisci_glicemia(17,180,'fentanylo',20.5, 'geekd up')
+    # Esempio: 31 dicembre 2025, ore 10:30
+    data_i= datetime.datetime(2025, 12, 31, 10, 30, 0)
+# Esempio: 31 dicembre 2025, ore 10:30
+    data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
+
+    Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)
+
