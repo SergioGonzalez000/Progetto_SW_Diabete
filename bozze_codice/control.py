@@ -2,6 +2,7 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc, Input, Output, State
 from flask_login import login_user, logout_user, current_user
+from werkzeug.security import check_password_hash 
 import dash
 import model
 import view
@@ -30,7 +31,7 @@ def registra_callbacks(app):
         if user:        # è un oggetto Persona
             # controlliamo la password.
             # se la password va bene, chiamo login_user()
-            valid = model.check_password(user, password_dal_form)  # qui andrà passata la hash della pw. Conviene metterla in una variabile prima.
+            valid = check_password_hash(user.pw, password_dal_form)  # ho eliminato la fx check_password mia, nel model.py
 
             if valid:
                 # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
@@ -124,6 +125,9 @@ def registra_callbacks(app):
 
 
     # callback per il routing, cambia il contenuto della pagina a seconda dell'url
+    # Problema nella gestione della logica del routing:
+    #   Se da barra dell'indirizzo si digita "/home" o qualsiasi altro indirizzo, lo mostra senza controllare
+    #   se l'utente è autenticato o meno.
     @app.callback(
         [Output("contenuto-pagina", "children"),
         Output("url", "pathname", allow_duplicate=True)],
@@ -133,15 +137,15 @@ def registra_callbacks(app):
         if pathname == "/logout" and current_user.is_authenticated:
             logout_user()  # Log the user out using Flask-Login
             return view.login_layout(), "/login"  # da cambiare quando avremo fatto la navbar
-            # Display game page (only for authenticated users)
         # Display login page
-        if pathname == "/login": # and not current_user.is_authenticated:
+        if pathname == "/login" and not current_user.is_authenticated: 
             return view.login_layout(), dash.no_update
         # Display registration page
-        if pathname == "/register":
+        if pathname == "/register" and not current_user.is_authenticated:
             return view.registration_layout(), dash.no_update
         if pathname == "/home":
-            return html.H1("Hai effettuato l'accesso, sei nella Home."), dash.no_update   # qui va messa la home_layout()
-        
+            # return html.H1("Hai effettuato l'accesso, sei nella Home."), dash.no_update   # qui va messa la home_layout()
+            return view.home_layout(), dash.no_update   # aggiunto la call alla home provvisoria
+
         # qua ci va la pagina che vogliamo mostrare di default (home + navbar di solito)
         return view.login_layout(), dash.no_update  

@@ -401,7 +401,61 @@ def registration_layout():
 # ******************************************************************************************************************
 
 # da fare e aggiungere nella callback del routing
+# implementazione aggiunta (AI) solo per fare un check delle classi nel model
 def home_layout():
-    pass
+    return html.Div(
+        className="home-container",
+        children=[
+            # Titolo della pagina
+            html.H1("Dashboard Home", className="text-center my-4"),
+            
+            # Riga con due pulsanti
+            dbc.Row(
+                justify="center",
+                children=[
+                    dbc.Col(
+                        dbc.Button(
+                            "Azione 1",
+                            id="btn-1",
+                            color="primary",
+                            className="mx-2"
+                        ),
+                        width="auto"
+                    ),
+                    dbc.Col(
+                        dbc.Button(
+                            "Azione 2", 
+                            id="btn-2",
+                            color="secondary",
+                            className="mx-2"
+                        ),
+                        width="auto"
+                    )
+                ],
+                className="mb-4"
+            ),
+            
+            # Container per output testuale 1
+            dbc.Card(
+                [
+                    dbc.CardHeader("Risultato Azione 1"),
+                    dbc.CardBody(
+                        dcc.Markdown(id="output-text-1", children="*Nessun risultato ancora*")
+                    )
+                ],
+                className="mb-4"
+            ),
+            
+            # Container per output testuale 2
+            dbc.Card(
+                [
+                    dbc.CardHeader("Risultato Azione 2"),
+                    dbc.CardBody(
+                        dcc.Markdown(id="output-text-2", children="*Nessun risultato ancora*")
+                    )
+                ]
+            )
+        ]
+    )
 
 # ******************************************************************************************************************

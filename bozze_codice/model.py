@@ -38,7 +38,7 @@ class Persona(UserMixin):
     def get_id(self):           # è il getter per gli utenti di flask-login. Deve avere questa signature, nonostante in questo caso ritorni "username"
         return self.username    # questa deve semplicemente essere una stringa univoca.
     
-        # nome
+    # nome
     @property
     def nome(self):
         return self._nome
@@ -146,7 +146,7 @@ class Persona(UserMixin):
     def pw(self, value):
         self._pw = value
 
-
+# si può scrivere nei diagrammi di classe UML senza metterla nel codice? 
 class autenticabile():
     pass
     
@@ -173,6 +173,22 @@ class Diabetologo(Persona):
                     VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
                     (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine))
         connection.commit()
+
+    # Funzione per aggiornare la terapia corrente/i singoli campi della terapia corrente? 
+    # ad es. in caso di errori
+    def aggiorna_terapia_paziente():
+        pass
+
+    # Da buildare in un secondo momento.
+    # Come detto dal prof, il diabetologo deve essere in grado di vedere solo i grafici delle glicemie dei pazienti 
+    # a lui associati.
+    def visualizza_glicemia_pazienti_associati():
+        pass
+
+    # Funzione che permetta al medico di visualizzare interamente i dati del paziente?
+    def visualizza_dati_paziente():
+        pass
+
 
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -242,14 +258,96 @@ class PersonaFactory:
         else:
             raise ValueError("Tipo di persona non valido")
 
+
+# classi Terapia e Farmaco abbozzate, variabili d'istanza minime necessarie
 class Terapia():
-    def __init__(self):
-        pass
+    def __init__(self, farmaco_prescritto, dose, via_somministrazione, periodo_terapia):
+        self.farmaco_prescritto = farmaco_prescritto 
+        self.dose = dose 
+        self.via_somministrazione = via_somministrazione 
+        self.periodo_terapia = periodo_terapia
+
+    # Getter e Setter per farmaco_prescritto
+    @property
+    def farmaco_prescritto(self):
+        return self._farmaco_prescritto
+    
+    @farmaco_prescritto.setter
+    def farmaco_prescritto(self, value):
+        self._farmaco_prescritto = value
+
+    # Getter e Setter per dose
+    @property
+    def dose(self):
+        return self._dose
+    
+    @dose.setter
+    def dose(self, value):
+        self._dose = value
+
+    # Getter e Setter per via_somministrazione
+    @property
+    def via_somministrazione(self):
+        return self._via_somministrazione
+    
+    @via_somministrazione.setter
+    def via_somministrazione(self, value):
+        self._via_somministrazione = value
+
+    # Getter e Setter per periodo_terapia
+    @property
+    def periodo_terapia(self):
+        return self._periodo_terapia
+    
+    @periodo_terapia.setter
+    def periodo_terapia(self, value):
+        self._periodo_terapia = value
+        
         
 class Farmaco():
-    def __init__(self):
-        pass
+    def __init__(self, nome, tipologia, unita_misura, codice_univoco):
+        self.nome = nome
+        self.tipologia = tipologia
+        self.unita_misura = unita_misura
+        self.codice_univoco = codice_univoco
 
+    # Getter e Setter per nome
+    @property
+    def nome(self):
+        return self._nome
+    
+    @nome.setter
+    def nome(self, value):
+        self._nome = value
+
+    # Getter e Setter per tipologia
+    @property
+    def tipologia(self):
+        return self._tipologia
+    
+    @tipologia.setter
+    def tipologia(self, value):
+        self._tipologia = value
+
+    # Getter e Setter per unita_misura
+    @property
+    def unita_misura(self):
+        return self._unita_misura
+    
+    @unita_misura.setter
+    def unita_misura(self, value):
+        self._unita_misura = value
+
+    # Getter e Setter per codice_univoco
+    @property
+    def codice_univoco(self):
+        return self._codice_univoco
+    
+    @codice_univoco.setter
+    def codice_univoco(self, value):
+        self._codice_univoco = value
+
+    
 class Glicemia():
     def __init__(self):
         pass
@@ -296,27 +394,11 @@ def get_by_username(username_utente):
     return None
 
 
-# Funzione che controlla la password
-def check_password(user, password_dal_form):
-    # query_get_password = "SELECT pw FROM paziente, diabetologo WHERE username= %s"
-    # cur.execute(query_get_password, (username,))
-
-    # pw_utente = cur.fetchone()
-
-    # accedo al primo elemento della tupla (psycopg returna sempre una tupla del tipo (pw,) in questo caso)
-    if user.pw == password_dal_form:
-        return True
-    else: 
-        return False
-
-
-
 if __name__ == '__main__':
     #Paziente.inserisci_glicemia(17,180,'fentanylo',20.5, 'geekd up')
     # Esempio: 31 dicembre 2025, ore 10:30
     data_i= datetime.datetime(2025, 12, 31, 10, 30, 0)
-# Esempio: 31 dicembre 2025, ore 10:30
+    # Esempio: 31 dicembre 2025, ore 10:30
     data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
 
-    Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)
-
+    # Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)
