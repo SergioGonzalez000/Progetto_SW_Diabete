@@ -134,18 +134,39 @@ def registra_callbacks(app):
         Input("url", "pathname"), prevent_initial_call=True
     )
     def mostra_pagina(pathname):
+        # Se l'utente non è autenticato e prova ad accedere a una pagina protetta,
+        # viene reindirizzato sul login. (magari in futuro avremo una navbar per i guests, che verrà personalizzata
+        # per i diabetologi e i pazienti)
+        if not current_user.is_authenticated and pathname not in ["/login", "/register"]:
+            return view.login_layout(), "/login"
+        
+        # se (da utenti autenticati) si prova a scrivere "/login" o "/register" nella barra degli indirizzi,
+        # si torna diretti alla home (in futuro sarà una home caruccia con navbar etc)
+        if current_user.is_authenticated and pathname in ["/login", "/register"]:
+            return view.home_layout(), "/home"
+        
+        # per fare logout
         if pathname == "/logout" and current_user.is_authenticated:
-            logout_user()  # Log the user out using Flask-Login
-            return view.login_layout(), "/login"  # da cambiare quando avremo fatto la navbar
-        # Display login page
-        if pathname == "/login" and not current_user.is_authenticated: 
+            logout_user()
+            return view.login_layout(), "/login"
+        
+        # pagina di login, accessibile solo se l'utente non è autenticato
+        if pathname == "/login" and not current_user.is_authenticated:
             return view.login_layout(), dash.no_update
-        # Display registration page
+        
+        # pagina di registrazione, solo se l'utente non è autenticato
         if pathname == "/register" and not current_user.is_authenticated:
             return view.registration_layout(), dash.no_update
-        if pathname == "/home":
-            # return html.H1("Hai effettuato l'accesso, sei nella Home."), dash.no_update   # qui va messa la home_layout()
-            return view.home_layout(), dash.no_update   # aggiunto la call alla home provvisoria
-
-        # qua ci va la pagina che vogliamo mostrare di default (home + navbar di solito)
-        return view.login_layout(), dash.no_update  
+        
+        # home, solo se l'utente è autenticato
+        if pathname == "/home" and current_user.is_authenticated:
+            return view.home_layout(), dash.no_update
+        
+        # in tutti gli altri casi, just in case...
+        # se l'utente è autenticato --> home
+        # se non è autenticato --> login
+        if current_user.is_authenticated:
+            return view.home_layout(), "/home"
+        else:
+            return view.login_layout(), "/login"
+    

@@ -407,7 +407,7 @@ def home_layout():
         className="home-container",
         children=[
             # Titolo della pagina
-            html.H1("Dashboard Home", className="text-center my-4"),
+            html.H1("Home", className="text-center my-4"),
             
             # Riga con due pulsanti
             dbc.Row(
@@ -426,7 +426,7 @@ def home_layout():
                         dbc.Button(
                             "Azione 2", 
                             id="btn-2",
-                            color="secondary",
+                            color="danger",
                             className="mx-2"
                         ),
                         width="auto"
