@@ -2,7 +2,7 @@
 import datetime
 import dash_bootstrap_components as dbc
 from abc import ABC,abstractmethod
-from werkzeug.security import generate_password_hash, check_password_hash #password criptate
+from werkzeug.security import generate_password_hash #password criptate
 
 import psycopg2
 from flask_login import UserMixin, login_user, logout_user, current_user 
@@ -161,6 +161,13 @@ class Paziente(Persona):
                     VALUES (%s, %s, %s, %s, %s)""", 
                     (id_paz, farmaco, dose, sintomi, valore))
         connection.commit()
+
+    # Fx che associ il paziente al diabetologo. (modifica quindi diabetologo.paziente_associato)
+    # potremmo permettere al paziente di selezionare quale sarà il suo
+    # medico di riferimento.
+    def associa_a_diabetologo():
+        pass
+
         
 
 class Diabetologo(Persona):
@@ -185,7 +192,9 @@ class Diabetologo(Persona):
     def visualizza_glicemia_pazienti_associati():
         pass
 
-    # Funzione che permetta al medico di visualizzare interamente i dati del paziente?
+    # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
+    # insieme alle informazioni cliniche. 
+    # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def visualizza_dati_paziente():
         pass
 
@@ -259,7 +268,7 @@ class PersonaFactory:
             raise ValueError("Tipo di persona non valido")
 
 
-# classi Terapia e Farmaco abbozzate, variabili d'istanza minime necessarie
+# classi Terapia, Farmaco e Glicemia abbozzate, variabili d'istanza minime necessarie, qualche idea per i metodi
 class Terapia():
     def __init__(self, farmaco_prescritto, dose, via_somministrazione, periodo_terapia):
         self.farmaco_prescritto = farmaco_prescritto 
@@ -346,6 +355,10 @@ class Farmaco():
     @codice_univoco.setter
     def codice_univoco(self, value):
         self._codice_univoco = value
+
+    # fx che aggiunga un farmaco alla tabella farmaco nel db
+    def aggiungi_farmaco():
+        pass
 
     
 class Glicemia():
