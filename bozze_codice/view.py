@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 def getLayout():
     return html.Div([
         # html.Div("navbar-container"),
-        navbar,
+        guest_navbar,
         profile_offcanvas,
         dcc.Location(id= "url", refresh= True),
         html.Div(id= "contenuto-pagina")
@@ -43,16 +43,6 @@ profile_offcanvas = dbc.Offcanvas(
 
 # Per modificare la dimensione di ogni link della navbar scrivere qua:
 dimensione_font = {"fontSize": "1.5rem"}
-
-# Navbar per utenti non autenticati
-non_authenticated_navbar = dbc.Nav(
-    [
-        dbc.NavItem(dbc.NavLink("Home", href="/", className="mx-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Login", href="/login", className="me-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Registration", href="/registration", className="me-3", style=dimensione_font)),
-    ], 
-    navbar=True
-)
 
 # Navbar per pazienti
 patient_navbar = dbc.Nav(
@@ -97,17 +87,43 @@ profile_button = dbc.Button(
     className="ms-auto"
 )
 
-# NAVBAR formata da: [Brand | NavLinks | ≡]
+# NAVBAR PER OSPITI
+guest_navbar = dbc.Navbar(
+    dbc.Container([
+        # Brand
+        dbc.NavbarBrand("App Diabete", href="/", style={"fontSize": "2rem"}),
+        
+        # Link di navigazione
+        dbc.Nav(
+            [
+                dbc.NavItem(dbc.NavLink("Home", href="/", className="mx-3", style=dimensione_font)),
+                dbc.NavItem(dbc.NavLink("Login", href="/login", className="me-3", style=dimensione_font)),
+                dbc.NavItem(dbc.NavLink("Registration", href="/registration", className="me-3", style=dimensione_font)),
+            ], 
+            navbar=True,
+            className="me-auto"
+        )  
+    ]),
+    color="primary",
+    dark=True,
+    sticky="top",
+    # NavBar alta 90 pixels
+    style={"height": "90px"}
+) 
+
+# NAVBAR PER UTENTI 
+# formata da: [Brand | NavLinks | ≡]
 # I navLinks vengono modificati con una callback in base allo stato di autenticaione
-# id = "navbar-links"
-navbar = dbc.Navbar(
+# id = "authenticated-links"
+user_navbar = dbc.Navbar(
     dbc.Container([
         # Brand
         dbc.NavbarBrand("App Diabete", href="/", style={"fontSize": "2rem"}),
 
         # Link delle pagine nel lato sinistro
-        # html.Div(id="navbar-links"),
-        non_authenticated_navbar,                              # DA MODIFICARE CON LA CALLBACK
+        # html.Div(id="authenticated-links"),
+        patient_navbar,                              # DA MODIFICARE CON LA CALLBACK
+
         # Pulsante del profilo a destra
         profile_button
     ]),
