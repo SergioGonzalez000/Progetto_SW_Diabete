@@ -322,6 +322,7 @@ def registration_layout():
                 ],
                 className="mb-4"
             ),
+            
             # Pulsante di registrazione
             html.Div(
                 [
@@ -331,6 +332,19 @@ def registration_layout():
                 # d-grid di default usa la larghezza 100%
                 className="d-grid gap-2 mb-5"
             ),
+
+            # Link per il Login
+            html.Div(
+                [
+                    html.Span("Already have an account? "),
+                    html.A(
+                        "Login",
+                        href="/login",
+                        className="text-primary"
+                    )
+                ],
+                className="mt-2"
+            )
         ],
         id="form3",
         style={"display": "none"}
