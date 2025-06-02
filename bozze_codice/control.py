@@ -45,6 +45,8 @@ def registra_callbacks(app):
             return dash.no_update, dbc.Alert("Username inesistente", color= "danger")
     
     
+    # ******************************************************************************************************************
+
     @app.callback(
         Output("registration-feedback", "children"),
         Output("registration-feedback", "color"),
@@ -88,6 +90,7 @@ def registra_callbacks(app):
         else:
             return None,None,None,None
         
+    # ******************************************************************************************************************
 
     @app.callback(
         Output("form1", "style"),
@@ -123,6 +126,7 @@ def registra_callbacks(app):
 
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
+    # ******************************************************************************************************************
 
     # callback per il routing, cambia il contenuto della pagina a seconda dell'url
     # Problema nella gestione della logica del routing:
@@ -169,4 +173,20 @@ def registra_callbacks(app):
             return view.home_layout(), "/home"
         else:
             return view.login_layout(), "/login"
-    
+        
+
+    # ******************************************************************************************************************
+
+    # Callback per l'apertura del menu a tendina (profile_offcanvas)
+
+    @app.callback(
+        Output("profile-offcanvas", "is_open"),
+        Input("open-offcanvas", "n_clicks"),
+        [State("profile-offcanvas", "is_open")],
+    )
+    def toggle_offcanvas(n1, is_open):
+        if n1:
+            return not is_open
+        return is_open
+
+     # ******************************************************************************************************************

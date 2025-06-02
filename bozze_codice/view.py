@@ -4,9 +4,119 @@ import dash_bootstrap_components as dbc
 # Layout dell'app, intero. Si aggiorna quando viene cambiato l'url.
 def getLayout():
     return html.Div([
+        # html.Div("navbar-container"),
+        navbar,
+        profile_offcanvas,
         dcc.Location(id= "url", refresh= True),
         html.Div(id= "contenuto-pagina")
     ])
+
+# ******************************************************************************************************************
+# NAVBAR + OFFCANVAS
+
+# id = "profile-offcanvas"
+profile_offcanvas = dbc.Offcanvas(
+    [
+        html.Hr(),
+        html.H5("** Qui i links**"),
+        html.Hr(),
+
+        # DA COMPLETARE
+
+        html.Span("Chiudi sessione: "),
+        html.A(
+            "Logout",
+            href="/dashboard",
+            className="text-danger"
+        )
+    ],
+    id="profile-offcanvas",
+    title=html.Div(
+        "Profilo",
+        style={"fontSize": "2rem", "fontWeight": "bold"}
+    ),
+    # Apri l'offcanvas sul lato destro della pagina
+    placement="end",
+    # Se True all'esecuzione è aperto
+    is_open=False
+)
+
+# Per modificare la dimensione di ogni link della navbar scrivere qua:
+dimensione_font = {"fontSize": "1.5rem"}
+
+# Navbar per utenti non autenticati
+non_authenticated_navbar = dbc.Nav(
+    [
+        dbc.NavItem(dbc.NavLink("Home", href="/", className="mx-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Login", href="/login", className="me-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Registration", href="/registration", className="me-3", style=dimensione_font)),
+    ], 
+    navbar=True
+)
+
+# Navbar per pazienti
+patient_navbar = dbc.Nav(
+    [
+        dbc.NavItem(dbc.NavLink("Home", href="/home", className="mx-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Glicemia", href="/glicemia", className="me-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Grafici", href="/graph", className="me-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Chat", href="/chat", className="me-3", style=dimensione_font))
+    ],
+    navbar=True
+)
+
+# Navbar per dottori
+doctor_navbar = dbc.Nav(
+    [
+        dbc.NavItem(dbc.NavLink("Home", href="/home", className="mx-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Pazienti", href="/patient", className="me-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Chat", href="/chat", className="me-3", style=dimensione_font))
+    ],
+    navbar=True
+)
+
+# Navbar per admin
+admin_navbar = dbc.Nav(
+    [
+        dbc.NavItem(dbc.NavLink("Home", href="/home", className="mx-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Richieste", href="/request", className="me-3", style=dimensione_font)),
+        dbc.NavItem(dbc.NavLink("Pazienti", href="/patient", className="me-3", style=dimensione_font))        
+    ],
+    navbar=True
+)
+
+# Pulsante per aprire l'offcanvas di controllo
+# id = "open-offcanvas"
+profile_button = dbc.Button(
+    "≡", 
+    id="open-offcanvas",
+    style=dimensione_font, 
+    n_clicks=0, 
+    color="primary",
+    size="lg",
+    className="ms-auto"
+)
+
+# NAVBAR formata da: [Brand | NavLinks | ≡]
+# I navLinks vengono modificati con una callback in base allo stato di autenticaione
+# id = "navbar-links"
+navbar = dbc.Navbar(
+    dbc.Container([
+        # Brand
+        dbc.NavbarBrand("App Diabete", href="/", style={"fontSize": "2rem"}),
+
+        # Link delle pagine nel lato sinistro
+        # html.Div(id="navbar-links"),
+        non_authenticated_navbar,                              # DA MODIFICARE CON LA CALLBACK
+        # Pulsante del profilo a destra
+        profile_button
+    ]),
+    color="primary",
+    dark=True,
+    sticky="top",
+    # NavBar alta 90 pixels
+    style={"height": "90px"}
+)
 
 # ******************************************************************************************************************
 def login_layout():
@@ -322,7 +432,7 @@ def registration_layout():
                 ],
                 className="mb-4"
             ),
-            
+
             # Pulsante di registrazione
             html.Div(
                 [
