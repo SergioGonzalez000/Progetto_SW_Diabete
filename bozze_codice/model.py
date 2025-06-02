@@ -349,8 +349,38 @@ class Farmaco():
 
     
 class Glicemia():
-    def __init__(self):
-        pass
+    def __init__(self, valore, data_assunzione, ora_assunzione):
+        self.valore = valore
+        self.data_assunzione = data_assunzione
+        self.ora_assunzione = ora_assunzione
+
+    # Getter e setter del valore
+    @property
+    def valore(self):
+        return self._valore
+
+    @valore.setter
+    def valore(self, valore):
+        self._valore = valore
+
+    # Getter e setter della data di assunzione
+    @property
+    def data_assunzione(self):
+        return self._data_assunzione
+
+    @data_assunzione.setter
+    def data_assunzione(self, data_assunzione):
+        self._data_assunzione = data_assunzione
+
+    # Getter e setter dell'ora di assunzione
+    @property
+    def ora_assunzione(self):
+        return self._ora_assunzione
+
+    @ora_assunzione.setter
+    def ora_assunzione(self, ora_assunzione):
+        self._ora_assunzione = ora_assunzione
+        
 
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
 #      procede ad inserirle effettivamente nella base di dati 
