@@ -289,11 +289,6 @@ def check_username_pw(username, password):
 
 
 if __name__ == '__main__':
-    #Paziente.inserisci_glicemia(17,180,'fentanylo',20.5, 'geekd up')
-    # Esempio: 31 dicembre 2025, ore 10:30
-    data_i= datetime.datetime(2025, 12, 31, 10, 30, 0)
-# Esempio: 31 dicembre 2025, ore 10:30
-    data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
-
-    Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)
+    
+    Admin.approva_richiesta(43)
 
