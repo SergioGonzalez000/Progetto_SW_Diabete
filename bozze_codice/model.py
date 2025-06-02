@@ -163,6 +163,13 @@ class Paziente(Persona):
 class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
+
+    def get_id(self):
+        cur.execute("""SELECT id_diabetologo
+                    FROM Diabetologo 
+                    WHERE cf = %s""", (self.cf,))
+        id=cur.fetchone()
+        return id
     
     def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine):
         cur.execute("""INSERT INTO Terapia 
@@ -170,6 +177,15 @@ class Diabetologo(Persona):
                     VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
                     (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine))
         connection.commit()
+
+    def visualizza_pazienti_associati(id):
+        cur.execute("""SELECT p.username 
+                    FROM Paziente p, Diabetologo d 
+                    WHERE p.diabetologo_associato=d.id_diabetologo 
+                    AND d.id_diabetologo = %s""",
+                    (id,))
+        pazienti=cur.fetchall()
+        return pazienti
 
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -290,5 +306,5 @@ def check_username_pw(username, password):
 
 if __name__ == '__main__':
     
-    Admin.approva_richiesta(43)
+    print(Diabetologo.visualizza_pazienti_associati(17))
 
