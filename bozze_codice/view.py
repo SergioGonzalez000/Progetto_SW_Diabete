@@ -99,6 +99,7 @@ guest_navbar = dbc.Navbar(
                 dbc.NavItem(dbc.NavLink("Home", href="/", className="mx-3", style=dimensione_font)),
                 dbc.NavItem(dbc.NavLink("Login", href="/login", className="me-3", style=dimensione_font)),
                 dbc.NavItem(dbc.NavLink("Registration", href="/registration", className="me-3", style=dimensione_font)),
+                dbc.NavItem(dbc.NavLink("Admin", href="/admin", className="me-3", style=dimensione_font)),
             ], 
             navbar=True,
             className="me-auto"
@@ -133,6 +134,27 @@ user_navbar = dbc.Navbar(
     # NavBar alta 90 pixels
     style={"height": "90px"}
 )
+
+# ******************************************************************************************************************
+
+def admin_layout():
+    
+    admin_title = html.H2(
+        "Benvenuto amministratore",
+        style={"textAlign": "left"},
+        className="mt-2"
+    )
+
+    buttons_options = html.Div([
+        html.H6("Funzionalità disponibili"),
+        dbc.Button("Grafico complessivo andamento glicemia", id="bottone_grafico_complessivo", n_clicks=0)],
+        className="mb-2"
+        )
+
+    return dbc.Container([
+        admin_title,
+        buttons_options
+    ])
 
 # ******************************************************************************************************************
 def login_layout():

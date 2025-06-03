@@ -166,6 +166,10 @@ def registra_callbacks(app):
         if pathname == "/home" and current_user.is_authenticated:
             return view.home_layout(), dash.no_update
         
+        # per reidirizzare alla pagina dell'Admin
+        if pathname == "/admin":
+            return view.admin_layout(), dash.no_update
+        
         # in tutti gli altri casi, just in case...
         # se l'utente è autenticato --> home
         # se non è autenticato --> login
