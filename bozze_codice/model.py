@@ -240,11 +240,17 @@ class Diabetologo(Persona):
 
     def aggiorna_terapia_paziente():
         pass
-    def visualizza_dati_paziente():
-        pass
+
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
+    def visualizza_dati_paziente():
+        pass
+
+
+
+
+    
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
@@ -314,6 +320,9 @@ class PersonaFactory:
             raise ValueError("Tipo di persona non valido")
 
 
+
+
+
 # classi Terapia, Farmaco e Glicemia abbozzate, variabili d'istanza minime necessarie, qualche idea per i metodi
 class Terapia():
     def __init__(self, farmaco_prescritto, dose, via_somministrazione, periodo_terapia):
@@ -358,7 +367,10 @@ class Terapia():
     def periodo_terapia(self, value):
         self._periodo_terapia = value
         
-        
+
+
+
+
 class Farmaco():
     def __init__(self, nome, tipologia, unita_misura, codice_univoco):
         self.nome = nome
@@ -406,6 +418,9 @@ class Farmaco():
     def aggiungi_farmaco():
         pass
 
+
+
+
     
 class Glicemia():
     def __init__(self, valore, data_assunzione, ora_assunzione):
@@ -440,6 +455,10 @@ class Glicemia():
     def ora_assunzione(self, ora_assunzione):
         self._ora_assunzione = ora_assunzione
         
+
+
+#da qua in poi metodi generali non appartenenti a classi specifiche
+
 
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
 #      procede ad inserirle effettivamente nella base di dati 
