@@ -7,6 +7,9 @@ from werkzeug.security import generate_password_hash, check_password_hash #passw
 import psycopg2
 from flask_login import UserMixin, login_user, logout_user, current_user 
 import dash
+import plotly.express as px
+import plotly.graph_objects as go
+
 
 connection = psycopg2.connect(
     host='aws-0-eu-central-2.pooler.supabase.com',
@@ -144,10 +147,15 @@ class Persona(UserMixin):
         self._pw = value
 
 
+
+
+
 class autenticabile():
     pass
     
-      
+
+
+
 class Paziente(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
@@ -159,6 +167,10 @@ class Paziente(Persona):
                     (id_paz, farmaco, dose, sintomi, valore))
         connection.commit()
         
+
+
+
+
 
 class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -186,6 +198,38 @@ class Diabetologo(Persona):
                     (id,))
         pazienti=cur.fetchall()
         return pazienti
+    
+    def visualizza_glicemia_paziente(id_paziente):
+        cur.execute("""
+            SELECT g.valore, g.data_inserimento 
+            FROM Glicemia g  
+            WHERE g.paziente = %s
+            ORDER BY g.data_inserimento"""
+            , (id_paziente,))
+        dati = cur.fetchall()
+
+        # Separare i dati della tupla 
+        valori = [r[0] for r in dati]
+        date = [r[1] for r in dati]
+
+        fig = go.Figure(
+            data=go.Scatter(
+                x=date,
+                y=valori,
+                mode='lines+markers',  # Mostra punti e linee
+                line=dict(color='blue'),
+                marker=dict(size=8)
+            )
+        )
+
+        fig.update_layout(title="Andamento completo",
+                        xaxis_title="Momento rilevazione",
+                        yaxis_title="Valori")
+        fig.show()
+
+
+
+
 
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -304,7 +348,10 @@ def check_username_pw(username, password):
         
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     
-    print(Diabetologo.visualizza_pazienti_associati(17))
+    #print(Diabetologo.visualizza_pazienti_associati(17))
+    
+    #Diabetologo.visualizza_glicemia_paziente(28)
+
 
