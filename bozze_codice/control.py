@@ -1,4 +1,3 @@
-# gestione collegamento view-model --> callbacks etc.from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from dash import html, dcc, Input, Output, State
 from flask_login import login_user, logout_user, current_user
@@ -28,6 +27,9 @@ def registra_callbacks(app):
         
         user = model.get_by_username(username)  
 
+        # qua andrebbe chiamata una fx che racchiude tutta la logica di creazione dello user etc., 
+        # e che restituisca semplicemente il booleano "valid"
+
         if user:        # è un oggetto Persona
             # controlliamo la password.
             # se la password va bene, chiamo login_user()
@@ -37,7 +39,7 @@ def registra_callbacks(app):
                 # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
                 # nella pratica all'oggetto Persona andrà messa la password_hash invece della password in chiaro + tutto il resto degli attributi.
                 login_user(user)    # loggo l'utente con flask
-                return "/home", dbc.Alert("Login effettuato!", color= "success")
+                return "/redirect", dbc.Alert("Login effettuato!", color= "success")
             else:
                 return dash.no_update, dbc.Alert("Password sbagliata!", color= "danger")
 
@@ -66,7 +68,7 @@ def registra_callbacks(app):
         State("CAP-input", "value"),
         State("scelta-password", "value"),
         State("conferma-password", "value"),
-        prevent_initial_call='initial_duplicate'
+        prevent_initial_call=True
     )
     def richiesta_account(n_clicks,user,nome,cognome,cf,datanascita,sesso,tel,email,indirizzo,citta,cap,pw,conf_pw):
         if n_clicks > 0:
@@ -147,7 +149,7 @@ def registra_callbacks(app):
         # se (da utenti autenticati) si prova a scrivere "/login" o "/register" nella barra degli indirizzi,
         # si torna diretti alla home (in futuro sarà una home caruccia con navbar etc)
         if current_user.is_authenticated and pathname in ["/login", "/register"]:
-            return view.home_layout(), "/home"
+            return view.home_layout(), "/redirect"
         
         # per fare logout
         if pathname == "/logout" and current_user.is_authenticated:
@@ -163,14 +165,20 @@ def registra_callbacks(app):
             return view.registration_layout(), dash.no_update
         
         # home, solo se l'utente è autenticato
-        if pathname == "/home" and current_user.is_authenticated and isinstance(current_user, model.Admin):
+        if pathname == "/home" and current_user.is_authenticated:
             return view.home_layout(), dash.no_update
         
         # per reidirizzare alla pagina dell'Admin. Controllo che l'utente 
         # sia istanza della classe Admin. 
         # Bisogna implementare sta roba anche per gli altri due tipi di utente.
-        if pathname == "/admin" and isinstance(current_user, model.Admin):
+        if pathname == "/admin" and isinstance(current_user, model.Admin) and current_user.is_authenticated:
             return view.admin_layout(), dash.no_update
+        
+        if pathname == "/paziente" and isinstance(current_user, model.Paziente) and current_user.is_authenticated:
+            return view.paziente_layout(), dash.no_update
+        
+        if pathname == "/diabetologo" and isinstance(current_user, model.Diabetologo) and current_user.is_authenticated:
+            return view.diabetologo_layout(), dash.no_update
         
         # IMPORTANTE
         # altrimenti si potrebbe pensare un gateway? una specie di pagina intermedia in cui 
@@ -178,6 +186,22 @@ def registra_callbacks(app):
         # in modo da non doverli ripetere. Il login di defaulti mi porta su "/gateway" e
         # da li se sono paziente vado su /paziente , ... etc. 
 
+        #**************************
+
+        # QUI LA REDIRECT "/redirect", chiamata dopo un login con successo, che reidirizzerà
+        # a "/admin" gli admin, "/paziente" i pazienti, etc...
+
+        if pathname == "/redirect" and current_user.is_authenticated:
+            if isinstance(current_user, model.Admin):
+                return view.admin_layout(), "/admin"
+            elif isinstance(current_user, model.Diabetologo):
+                return view.diabetologo_layout(), "/diabetologo"
+            else:
+                return view.paziente_layout(), "/paziente"
+        
+
+        #**************************
+        
         # in tutti gli altri casi, just in case...
         # se l'utente è autenticato --> home
         # se non è autenticato --> login

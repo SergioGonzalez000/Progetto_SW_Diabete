@@ -156,6 +156,45 @@ def admin_layout():
         buttons_options
     ])
 
+def diabetologo_layout():
+    
+    diab_title = html.H2(
+        "Benvenuto dottore",
+        style={"textAlign": "left"},
+        className="mt-2"
+    )
+
+    buttons_options = html.Div([
+        html.H6("Funzionalità disponibili"),
+        dbc.Button("Grafico glicemia pazienti in cura", id="bottone_grafico_diabetologo", n_clicks=0)],
+        className="mb-2"
+        )
+
+    return dbc.Container([
+        diab_title,
+        buttons_options
+    ])
+
+def paziente_layout():
+    
+    paziente_title = html.H2(
+        "Benvenuto paziente",
+        style={"textAlign": "left"},
+        className="mt-2"
+    )
+
+    buttons_options = html.Div([
+        html.H6("Funzionalità disponibili"),
+        dbc.Button("La mia glicemia", id="bottone_grafico_paziente", n_clicks=0)],
+        className="mb-2"
+        )
+
+    return dbc.Container([
+        paziente_title,
+        buttons_options
+    ])
+
+
 # ******************************************************************************************************************
 def login_layout():
     # Titolo

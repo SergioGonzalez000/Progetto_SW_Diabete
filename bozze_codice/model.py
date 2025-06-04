@@ -168,7 +168,6 @@ class Paziente(Persona):
     def associa_a_diabetologo():
         pass
 
-        
 
 class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -411,20 +410,33 @@ def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indi
 def get_by_username(username_utente):
     '''se l'utente esiste ritorna un oggetto paziente/diabetologo/admin con i campi compilati, se non esiste, ritorna None '''
     
-    presente_in_paziente = False  # flag per controllare se l'utente è un paz/diab
+    # ho dovuto aggiungere questo cursore locale per evitare letture sporche e sovrapposizioni nelle query (dava errori strani)
+    cursore_2 = connection.cursor()
 
-    # non ho messo questa query direttamente nel main perchè avrei dovuto creare un cursore anche lì
-    query_ricerca_paziente = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM paziente WHERE username= %s" # pw deve essere la hash
-    cur.execute(query_ricerca_paziente, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
-    record = cur.fetchone()
+    presente_in_paziente = False     # flag per controllare se l'utente è un paz/diab
+    presente_in_diabetologo = False  # flag per controllare se l'utente è un diab
+    presente_in_admin = False        # flag per controllare se l'utente è un admin
 
-    if record:      # se non c'è in paziente, cerchiamo se c'è in diabetologo. se non c'è --> return None
+    # uso il cursore che c'è già a livello globale
+    query_ricerca = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM paziente WHERE username= %s" # pw deve essere la hash
+    cursore_2.execute(query_ricerca, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
+    record = cursore_2.fetchone()
+
+    if record:      # se non c'è in paziente, cerchiamo se c'è in diabetologo. se non c'è --> controlliamo admin. se non c'è --> return None
         presente_in_paziente = True
     else:
-        query_ricerca_paziente = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM diabetologo WHERE username= %s" # pw deve essere la hash
-        cur.execute(query_ricerca_paziente, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
-        record = cur.fetchone()
+        query_ricerca = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM diabetologo WHERE username= %s" # pw deve essere la hash
+        cursore_2.execute(query_ricerca, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
+        record = cursore_2.fetchone()
 
+        if record:
+            presente_in_diabetologo = True
+        else:
+            query_ricerca = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM amministratore WHERE username= %s" # pw deve essere la hash
+            cursore_2.execute(query_ricerca, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
+            record = cursore_2.fetchone()
+            if record:
+                presente_in_admin = True
 
     # se il record proviene da diabetologo, uso il costruttore del diabetologo, altrimenti del paziente
     # i dati nel recordo sarebbero (in ordine):
@@ -432,10 +444,14 @@ def get_by_username(username_utente):
     if record and presente_in_paziente:
         return PersonaFactory.crea_persona(
             "paziente", record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
-    elif record and not presente_in_paziente:
+    elif record and presente_in_diabetologo:
         return PersonaFactory.crea_persona(
             "diabetologo", record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
+    elif record and presente_in_admin:
+        return PersonaFactory.crea_persona(
+            "admin", record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
     return None
+
 
 
 if __name__ == '__main__':
