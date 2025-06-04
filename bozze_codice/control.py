@@ -129,7 +129,9 @@ def registra_callbacks(app):
     # ******************************************************************************************************************
 
     # callback per il routing, cambia il contenuto della pagina a seconda dell'url
-    # dovrebbe funzionare correttamente.
+    # Problema nella gestione della logica del routing:
+    #   Se da barra dell'indirizzo si digita "/home" o qualsiasi altro indirizzo, lo mostra senza controllare
+    #   se l'utente è autenticato o meno.
     @app.callback(
         [Output("contenuto-pagina", "children"),
         Output("url", "pathname", allow_duplicate=True)],
@@ -161,7 +163,7 @@ def registra_callbacks(app):
             return view.registration_layout(), dash.no_update
         
         # home, solo se l'utente è autenticato
-        if pathname == "/home" and current_user.is_authenticated:
+        if pathname == "/home" and current_user.is_authenticated and isinstance(current_user, model.Admin):
             return view.home_layout(), dash.no_update
         
         # per reidirizzare alla pagina dell'Admin. Controllo che l'utente 
