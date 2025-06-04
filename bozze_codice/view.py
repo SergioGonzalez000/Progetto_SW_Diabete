@@ -42,7 +42,7 @@ profile_offcanvas = dbc.Offcanvas(
 )
 
 # Per modificare la dimensione di ogni link della navbar scrivere qua:
-dimensione_font = {"fontSize": "1.5rem"}
+dimensione_font = {"fontSize": "1.4rem"}
 
 # Navbar per pazienti
 patient_navbar = dbc.Nav(
@@ -98,8 +98,7 @@ guest_navbar = dbc.Navbar(
             [
                 dbc.NavItem(dbc.NavLink("Home", href="/", className="mx-3", style=dimensione_font)),
                 dbc.NavItem(dbc.NavLink("Login", href="/login", className="me-3", style=dimensione_font)),
-                dbc.NavItem(dbc.NavLink("Registration", href="/registration", className="me-3", style=dimensione_font)),
-                dbc.NavItem(dbc.NavLink("Admin", href="/admin", className="me-3", style=dimensione_font)),
+                dbc.NavItem(dbc.NavLink("Registration", href="/register", className="me-3", style=dimensione_font)),
             ], 
             navbar=True,
             className="me-auto"
@@ -108,8 +107,8 @@ guest_navbar = dbc.Navbar(
     color="primary",
     dark=True,
     sticky="top",
-    # NavBar alta 90 pixels
-    style={"height": "90px"}
+    # NavBar alta 80 pixels
+    style={"height": "80px"}
 ) 
 
 # NAVBAR PER UTENTI 
@@ -136,7 +135,8 @@ user_navbar = dbc.Navbar(
 )
 
 # ******************************************************************************************************************
-
+# buildato al volo, giusto per settare il login degli admin, le callback, 
+# il pulsante per visualizzare il grafico.
 def admin_layout():
     
     admin_title = html.H2(
@@ -577,20 +577,15 @@ def home_layout():
                 children=[
                     dbc.Col(
                         dbc.Button(
-                            "Azione 1",
+                            "logout",
                             id="btn-1",
+                            href="/logout",
                             color="primary",
                             className="mx-2"
                         ),
                         width="auto"
                     ),
                     dbc.Col(
-                        dbc.Button(
-                            "Azione 2", 
-                            id="btn-2",
-                            color="danger",
-                            className="mx-2"
-                        ),
                         width="auto"
                     )
                 ],

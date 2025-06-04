@@ -407,8 +407,9 @@ def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indi
 
 # Funzione che prende un utente dato lo username, e restituisce un oggetto Persona.diabetologo o Persona.paziente
 # n.b lo username deve essere univoco altrimenti disastro dc
+# esteso per aggiungere la query sulla tabella "amministratore"
 def get_by_username(username_utente):
-    '''se l'utente esiste ritorna un oggetto paziente/diabetologo con i campi compilati, se non esiste, ritorna None '''
+    '''se l'utente esiste ritorna un oggetto paziente/diabetologo/admin con i campi compilati, se non esiste, ritorna None '''
     
     presente_in_paziente = False  # flag per controllare se l'utente è un paz/diab
 

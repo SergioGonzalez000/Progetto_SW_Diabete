@@ -129,9 +129,7 @@ def registra_callbacks(app):
     # ******************************************************************************************************************
 
     # callback per il routing, cambia il contenuto della pagina a seconda dell'url
-    # Problema nella gestione della logica del routing:
-    #   Se da barra dell'indirizzo si digita "/home" o qualsiasi altro indirizzo, lo mostra senza controllare
-    #   se l'utente è autenticato o meno.
+    # dovrebbe funzionare correttamente.
     @app.callback(
         [Output("contenuto-pagina", "children"),
         Output("url", "pathname", allow_duplicate=True)],
@@ -166,10 +164,18 @@ def registra_callbacks(app):
         if pathname == "/home" and current_user.is_authenticated:
             return view.home_layout(), dash.no_update
         
-        # per reidirizzare alla pagina dell'Admin
-        if pathname == "/admin":
+        # per reidirizzare alla pagina dell'Admin. Controllo che l'utente 
+        # sia istanza della classe Admin. 
+        # Bisogna implementare sta roba anche per gli altri due tipi di utente.
+        if pathname == "/admin" and isinstance(current_user, model.Admin):
             return view.admin_layout(), dash.no_update
         
+        # IMPORTANTE
+        # altrimenti si potrebbe pensare un gateway? una specie di pagina intermedia in cui 
+        # si viene mandati dopo il login, in cui si mettono i controlli di routing "isinstance()"
+        # in modo da non doverli ripetere. Il login di defaulti mi porta su "/gateway" e
+        # da li se sono paziente vado su /paziente , ... etc. 
+
         # in tutti gli altri casi, just in case...
         # se l'utente è autenticato --> home
         # se non è autenticato --> login
