@@ -7,6 +7,9 @@ import dash
 import model
 import view
 
+import plotly.express as px
+import plotly.graph_objects as go
+
 
 def registra_callbacks(app):
     '''registro le callback dell'app'''
@@ -190,3 +193,15 @@ def registra_callbacks(app):
         return is_open
 
      # ******************************************************************************************************************
+    #permette di vedere i grafici paziente per paziente al diabetologo
+    @app.callback(
+        Output("dropdown-output","children"),
+        Input("dropdown-pazienti","value"),
+    )
+    def visualizza_grafico_paziente(value):
+        if not value:
+            return "Seleziona un paziente per visualizzare il grafico."
+    
+        fig = model.Diabetologo.visualizza_glicemia_paziente(value)
+        return dcc.Graph(figure=fig)
+       

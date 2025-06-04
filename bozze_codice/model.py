@@ -183,11 +183,11 @@ class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
-    def get_id(self):
+    def get_id_diabetologo(self):
         cur.execute("""SELECT id_diabetologo
                     FROM Diabetologo 
-                    WHERE cf = %s""", (self.cf,))
-        id=cur.fetchone()
+                    WHERE codice_fiscale = %s""", (self.cf,))
+        id=cur.fetchone()[0]
         return id
     
     def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine):
@@ -203,16 +203,19 @@ class Diabetologo(Persona):
                     WHERE p.diabetologo_associato=d.id_diabetologo 
                     AND d.id_diabetologo = %s""",
                     (id,))
-        pazienti=cur.fetchall()
+        result=cur.fetchall()
+        pazienti=[r[0] for r in result]
         return pazienti
     
-    def visualizza_glicemia_paziente(id_paziente):
+    def visualizza_glicemia_paziente(username):
+        cur.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
+        id_paziente=cur.fetchone()
         cur.execute("""
             SELECT g.valore, g.data_inserimento 
             FROM Glicemia g  
             WHERE g.paziente = %s
             ORDER BY g.data_inserimento"""
-            , (id_paziente,))
+            , (id_paziente[0],))
         dati = cur.fetchall()
 
         # Separare i dati della tupla 
@@ -232,7 +235,7 @@ class Diabetologo(Persona):
         fig.update_layout(title="Andamento completo",
                         xaxis_title="Momento rilevazione",
                         yaxis_title="Valori")
-        fig.show()
+        return fig
 
 
 
@@ -508,5 +511,5 @@ if __name__ == '__main__':
     data_i= datetime.datetime(2025, 12, 31, 10, 30, 0)
     # Esempio: 31 dicembre 2025, ore 10:30
     data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
-
+    Admin.approva_richiesta(47)
     # Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)
