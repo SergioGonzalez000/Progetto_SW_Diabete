@@ -7,6 +7,9 @@ from werkzeug.security import generate_password_hash #password criptate
 import psycopg2
 from flask_login import UserMixin, login_user, logout_user, current_user 
 import dash
+import plotly.express as px
+import plotly.graph_objects as go
+
 
 connection = psycopg2.connect(
     host='aws-0-eu-central-2.pooler.supabase.com',
@@ -150,7 +153,9 @@ class Persona(UserMixin):
 class autenticabile():
     pass
     
-      
+
+
+
 class Paziente(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
@@ -169,9 +174,20 @@ class Paziente(Persona):
         pass
 
 
+
+
+
+
 class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
+
+    def get_id_diabetologo(self):
+        cur.execute("""SELECT id_diabetologo
+                    FROM Diabetologo 
+                    WHERE codice_fiscale = %s""", (self.cf,))
+        id=cur.fetchone()[0]
+        return id
     
     def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine):
         cur.execute("""INSERT INTO Terapia 
@@ -180,15 +196,51 @@ class Diabetologo(Persona):
                     (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine))
         connection.commit()
 
-    # Funzione per aggiornare la terapia corrente/i singoli campi della terapia corrente? 
-    # ad es. in caso di errori
-    def aggiorna_terapia_paziente():
-        pass
+    def visualizza_pazienti_associati(id):
+        cur.execute("""SELECT p.username 
+                    FROM Paziente p, Diabetologo d 
+                    WHERE p.diabetologo_associato=d.id_diabetologo 
+                    AND d.id_diabetologo = %s""",
+                    (id,))
+        result=cur.fetchall()
+        pazienti=[r[0] for r in result]
+        return pazienti
+    
+    def visualizza_glicemia_paziente(username):
+        cur.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
+        id_paziente=cur.fetchone()
+        cur.execute("""
+            SELECT g.valore, g.data_inserimento 
+            FROM Glicemia g  
+            WHERE g.paziente = %s
+            ORDER BY g.data_inserimento"""
+            , (id_paziente[0],))
+        dati = cur.fetchall()
 
-    # Da buildare in un secondo momento.
-    # Come detto dal prof, il diabetologo deve essere in grado di vedere solo i grafici delle glicemie dei pazienti 
-    # a lui associati.
-    def visualizza_glicemia_pazienti_associati():
+        # Separare i dati della tupla 
+        valori = [r[0] for r in dati]
+        date = [r[1] for r in dati]
+
+        fig = go.Figure(
+            data=go.Scatter(
+                x=date,
+                y=valori,
+                mode='lines+markers',  # Mostra punti e linee
+                line=dict(color='blue'),
+                marker=dict(size=8)
+            )
+        )
+
+        fig.update_layout(title="Andamento completo",
+                        xaxis_title="Momento rilevazione",
+                        yaxis_title="Valori")
+        return fig
+
+
+
+
+
+    def aggiorna_terapia_paziente():
         pass
 
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
@@ -198,6 +250,9 @@ class Diabetologo(Persona):
         pass
 
 
+
+
+    
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
@@ -267,6 +322,9 @@ class PersonaFactory:
             raise ValueError("Tipo di persona non valido")
 
 
+
+
+
 # classi Terapia, Farmaco e Glicemia abbozzate, variabili d'istanza minime necessarie, qualche idea per i metodi
 class Terapia():
     def __init__(self, farmaco_prescritto, dose, via_somministrazione, periodo_terapia):
@@ -311,7 +369,10 @@ class Terapia():
     def periodo_terapia(self, value):
         self._periodo_terapia = value
         
-        
+
+
+
+
 class Farmaco():
     def __init__(self, nome, tipologia, unita_misura, codice_univoco):
         self.nome = nome
@@ -359,6 +420,9 @@ class Farmaco():
     def aggiungi_farmaco():
         pass
 
+
+
+
     
 class Glicemia():
     def __init__(self, valore, data_assunzione, ora_assunzione):
@@ -393,6 +457,10 @@ class Glicemia():
     def ora_assunzione(self, ora_assunzione):
         self._ora_assunzione = ora_assunzione
         
+
+
+#da qua in poi metodi generali non appartenenti a classi specifiche
+
 
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
 #      procede ad inserirle effettivamente nella base di dati 
@@ -460,5 +528,5 @@ if __name__ == '__main__':
     data_i= datetime.datetime(2025, 12, 31, 10, 30, 0)
     # Esempio: 31 dicembre 2025, ore 10:30
     data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
-
+    Admin.approva_richiesta(47)
     # Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)

@@ -1,5 +1,8 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
+import model
+from flask_login import UserMixin, login_user, logout_user, current_user 
+
 
 # Layout dell'app, intero. Si aggiorna quando viene cambiato l'url.
 def getLayout():
@@ -655,3 +658,23 @@ def home_layout():
     )
 
 # ******************************************************************************************************************
+#fil aggiunta per provare funzionalità diabetologo -> da eliminare poi
+def home_diabetologo_layout():
+    #siccome utilizza su current_user una funzione di Diabetologo 
+    # -> 
+    # FONDAMENTALE mettere questa pagina solo se lo user è autenticato e è un istanza di diabetologo
+    id=current_user.get_id_diabetologo()
+    options=model.Diabetologo.visualizza_pazienti_associati(id)
+    return html.Div(
+        className="home_diab_container",
+            children=[
+                dcc.Dropdown(
+                    id='dropdown-pazienti',
+                    options=options,
+                    placeholder="Seleziona un paziente",
+                    style={"width": "50%"}
+                ),
+                html.Div(id="dropdown-output")
+            ],
+
+    )
