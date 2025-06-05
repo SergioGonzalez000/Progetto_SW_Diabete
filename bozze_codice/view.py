@@ -140,6 +140,8 @@ user_navbar = dbc.Navbar(
 # ******************************************************************************************************************
 # buildato al volo, giusto per settare il login degli admin, le callback, 
 # il pulsante per visualizzare il grafico.
+# PAGINE MERDOSE SOLO DA TEST
+# DA CANCELLARE E RIPIAZZARE CON LE VERSIONI SERIE!!
 def admin_layout():
     
     admin_title = html.H2(
@@ -172,10 +174,15 @@ def diabetologo_layout():
         dbc.Button("Grafico glicemia pazienti in cura", id="bottone_grafico_diabetologo", n_clicks=0)],
         className="mb-2"
         )
+    
+    grafico_diabetologo = html.Div(
+        id="contenitore-grafico-diabetologo"
+    )
 
     return dbc.Container([
         diab_title,
-        buttons_options
+        buttons_options,
+        grafico_diabetologo
     ])
 
 def paziente_layout():
@@ -611,7 +618,7 @@ def home_layout():
         className="home-container",
         children=[
             # Titolo della pagina
-            html.H1("Home", className="text-center my-4"),
+            html.H4("Clicca per il logout", className="text-center mt-6"),
             
             # Riga con due pulsanti
             dbc.Row(
@@ -632,27 +639,6 @@ def home_layout():
                     )
                 ],
                 className="mb-4"
-            ),
-            
-            # Container per output testuale 1
-            dbc.Card(
-                [
-                    dbc.CardHeader("Risultato Azione 1"),
-                    dbc.CardBody(
-                        dcc.Markdown(id="output-text-1", children="*Nessun risultato ancora*")
-                    )
-                ],
-                className="mb-4"
-            ),
-            
-            # Container per output testuale 2
-            dbc.Card(
-                [
-                    dbc.CardHeader("Risultato Azione 2"),
-                    dbc.CardBody(
-                        dcc.Markdown(id="output-text-2", children="*Nessun risultato ancora*")
-                    )
-                ]
             )
         ]
     )

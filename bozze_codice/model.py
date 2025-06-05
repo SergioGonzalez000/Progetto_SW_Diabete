@@ -506,6 +506,9 @@ def get_by_username(username_utente):
             if record:
                 presente_in_admin = True
 
+    # chiudo il cursore dopo aver effettuato tutte le query.
+    cursore_2.close()
+
     # se il record proviene da diabetologo, uso il costruttore del diabetologo, altrimenti del paziente
     # i dati nel recordo sarebbero (in ordine):
     # nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw

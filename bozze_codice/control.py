@@ -181,15 +181,10 @@ def registra_callbacks(app):
             return view.paziente_layout(), dash.no_update
         
         if pathname == "/diabetologo" and isinstance(current_user, model.Diabetologo) and current_user.is_authenticated:
-            return view.diabetologo_layout(), dash.no_update
+            return view.home_diabetologo_layout(), dash.no_update
         
         # IMPORTANTE
-        # altrimenti si potrebbe pensare un gateway? una specie di pagina intermedia in cui 
-        # si viene mandati dopo il login, in cui si mettono i controlli di routing "isinstance()"
-        # in modo da non doverli ripetere. Il login di defaulti mi porta su "/gateway" e
-        # da li se sono paziente vado su /paziente , ... etc. 
-
-        #**************************
+        # altrimenti si potrebbe pensare un gateway, a cui si arriva tramite login successful
 
         # QUI LA REDIRECT "/redirect", chiamata dopo un login con successo, che reidirizzerà
         # a "/admin" gli admin, "/paziente" i pazienti, etc...
@@ -198,12 +193,9 @@ def registra_callbacks(app):
             if isinstance(current_user, model.Admin):
                 return view.admin_layout(), "/admin"
             elif isinstance(current_user, model.Diabetologo):
-                return view.diabetologo_layout(), "/diabetologo"
+                return view.home_diabetologo_layout(), "/diabetologo"
             else:
                 return view.paziente_layout(), "/paziente"
-        
-
-        #**************************
         
         # in tutti gli altri casi, just in case...
         # se l'utente è autenticato --> home
