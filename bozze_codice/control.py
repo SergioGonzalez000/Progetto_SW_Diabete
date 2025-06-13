@@ -138,6 +138,7 @@ def registra_callbacks(app):
     # 1. cambiare i navlinks nella sidebar se ospite, paziente, medico, admin
     # 2. cambiare "page-content" in base all'url
     # 3. cambiare url
+    # NB: quando un utente accede, la callback entra nell' "else" corrrispondente
     @app.callback(
         [
             # 1: Modifico i navlinks
@@ -157,7 +158,7 @@ def registra_callbacks(app):
 
             # Accesso alla home
             if pathname == "/":
-                return view.guest_navlinks, html.H2("Home guest"), "/"
+                return view.guest_navlinks, view.home, "/"
             # Accesso al login
             elif pathname == "/login":
                 return view.guest_navlinks, view.login_layout(), "/login"
@@ -176,51 +177,55 @@ def registra_callbacks(app):
                 return view.patient_navlinks, view.patient_dashboard, "/patient-dashboard"
             # Se paziente nella pagina grafici
             elif pathname == "/grafici":
-                return view.patient_navlinks, html.H2("Da fare"), "/grafici"
+                return view.patient_navlinks, view.patient_graphs, "/grafici"
             # Se paziente nella chat
             elif pathname == "/chat":
                 return view.patient_navlinks, view.chat_content, "/chat"
             # Effettua il logout
             elif pathname == "/logout":
                 logout_user()
-                return view.guest_navlinks, html.H2("Logout"), "/login"
+                return view.guest_navlinks, dash.no_update, "/login"
             # Tenta di accedere a pagina protetta:
             else:
-                return dash.no_update, dash.no_update, "/patient-dashboard"
+                return view.patient_navlinks, view.patient_dashboard, "/patient-dashboard"
     
         # DIABETOLOGO
         elif isinstance(current_user, model.Diabetologo):
             # Se diabetologo nella dashboard
             if pathname == "/doctor-dashboard":
-                return view.doctor_navlinks, view.home_diabetologo_layout(), "/doctor-dashboard"
+                return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
             # Se diabetologo nella pagina grafici
             elif pathname == "/doctor-patient":
-                return view.doctor_navlinks, html.H2("Da fare"), "/doctor-patient"
+                return view.doctor_navlinks, view.doctor_patient, "/doctor-patient"
             # Se diabetologo nella chat
             elif pathname == "/chat":
                 return view.doctor_navlinks, view.chat_content, "/chat"
             # Effettua il logout
             elif pathname == "/logout":
                 logout_user()
-                return view.guest_navlinks, html.H2("Logout"), "/login"
+                return view.guest_navlinks, dash.no_update, "/login"
             # Tenta di accedere a pagina protetta:
             else:
-                return dash.no_update, dash.no_update, "/doctor-dashboard"
+                return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
     
         # ADMIN
         elif isinstance(current_user, model.Admin):
             # Se admin nella dashboard
             if pathname == "/admin-dashboard":
-                return view.admin_navlinks, html.H2("Da fare"), "/admin-dashboard"
+                return view.admin_navlinks, view.admin_dashboard, "/admin-dashboard"
             # Se admin nella lista delle richieste
             elif pathname == "/request":
-                return view.admin_navlinks, html.H2("Da fare"), "/request"
+                return view.admin_navlinks, view.admin_request, "/request"
             # Se admin nella lista dei pazienti
+            elif pathname == "/admin-patient":
+                return view.admin_navlinks, view.admin_patient, "/admin-patient"
+            # Logout dell'admin
             elif pathname == "/logout":
                 logout_user()
-                return view.guest_navlinks, html.H2("Logout"), "/login"
-            elif pathname == "/admin-patient":
-                return view.admin_navlinks, html.H2("Da fare"), "/admin-patient"
+                return view.guest_navlinks, dash.no_update, "/login"
+            # Tenta di accedere a pagina protetta:
+            else:
+                return view.admin_navlinks, view.admin_dashboard, "/admin-dashboard"
 
         # Caso pagina inesistente
         else:
