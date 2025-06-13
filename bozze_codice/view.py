@@ -6,204 +6,581 @@ from flask_login import UserMixin, login_user, logout_user, current_user
 
 # Layout dell'app, intero. Si aggiorna quando viene cambiato l'url.
 def getLayout():
-    return html.Div([
-        # html.Div("navbar-container"),
-        guest_navbar,
-        profile_offcanvas,
-        dcc.Location(id= "url", refresh= True),
-        html.Div(id= "contenuto-pagina")
-    ])
+    return html.Div(
+        [
+            dcc.Location(id="url", refresh=True),
+            # sidebar fissa, laterale sinistra
+            sidebar,
+
+            # Contenuto della pagina:
+            # Per testare c'è la patient dashboard
+            # patient_dashboard,
+            html.Div(id="page-content", style={"display" : "flex", "width" : "100vw", "height" : "100vh"})
+        ],
+        style={
+            "display": "flex",
+            # Page content e navbar occupano l'intera altezza della pagina
+            "minHeight": "100vh",
+            # Colore sfondo standard fisso
+            "background-color": "#e6f2ff",
+            # Nessun margine al contenuto affinché occupi tutta la pagina disponibile
+            "margin": 0
+        }
+    )
 
 # ******************************************************************************************************************
-# NAVBAR + OFFCANVAS
 
-# id = "profile-offcanvas"
-profile_offcanvas = dbc.Offcanvas(
+# Links di navigazione per gli ospiti
+guest_navlinks = dbc.Nav(
     [
+        # Link per la pagina iniziale
+        dbc.NavLink("Home", href="/", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        # Link della pagina della chat
+        dbc.NavLink("Login", href="/login", active="exact", style={"fontSize": "20px"}, className="mb-3"), 
+        # Link per la pagina dei pazienti
+        dbc.NavLink("Registration", href="/registration", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        html.Hr() 
+    ],
+    # Disposizione dei NavLink in verticale
+    vertical=True,
+    # I Link sono racchiusi in un contenitore a pillola
+    pills=True
+)
+
+# Link di navigazione per i pazienti
+patient_navlinks = dbc.Nav(
+    [
+        # Link della home/dashboard
+        dbc.NavLink("Dashboard", href="/patient-dashboard", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        # Link per la pagina di grafici
+        dbc.NavLink("Grafici", href="/grafici", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        # Link della pagina della chat
+        dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "20px"}, className="mb-3"),
         html.Hr(),
-        html.H5("** Qui i links**"),
+        # Link per il logout da spostare in fondo
+        html.A("Log out", href="/logout", className="text-danger")
+    ],
+    # Disposizione dei NavLink in verticale
+    vertical=True,
+    # I Link sono racchiusi in un contenitore a pillola
+    pills=True
+)
+
+# Links di navigazione per i dottori
+doctor_navlinks = dbc.Nav(
+    [
+        # Link per la pagina iniziale
+        dbc.NavLink("Dashboard", href="/doctor-dashboard", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        # Link per la pagina dei pazienti
+        dbc.NavLink("Pazienti", href="/doctor-patient", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        # Link della pagina della chat
+        dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+                html.Hr(),
+        # Link per il logout da spostare in fondo
+        html.A("Log out", href="/logout", className="text-danger")
+    ],
+    # Disposizione dei NavLink in verticale
+    vertical=True,
+    # I Link sono racchiusi in un contenitore a pillola
+    pills=True
+)
+
+# Links di navigazione per l'admin
+
+admin_navlinks = dbc.Nav(
+    [
+        # Link per la pagina iniziale
+        dbc.NavLink("Dashboard", href="/admin-dashboard", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        # Link della pagina della chat
+        dbc.NavLink("Richieste", href="/request", active="exact", style={"fontSize": "20px"}, className="mb-3"), 
+        # Link per la pagina dei pazienti
+        dbc.NavLink("Pazienti", href="/admin-patient", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        html.Hr(),
+        # Link per il logout da spostare in fondo
+        html.A("Log out", href="/logout", className="text-danger")       
+    ],
+    # Disposizione dei NavLink in verticale
+    vertical=True,
+    # I Link sono racchiusi in un contenitore a pillola
+    pills=True
+)
+
+# SIDEBAR 
+sidebar = html.Div(
+    [
+        # Titolo
+        html.H2("MyAPP", className="text-primary"),
         html.Hr(),
 
-        # DA COMPLETARE
-
-        html.Span("Chiudi sessione: "),
-        html.A(
-            "Logout",
-            href="/dashboard",
-            className="text-danger"
-        )
+        # Per testare è fissa quella del paziente, da modificare con la callback in base al tipo di utente
+        # patient_navlinks,
+        html.Div(id="navlinks"),
     ],
-    id="profile-offcanvas",
-    title=html.Div(
-        "Profilo",
-        style={"fontSize": "2rem", "fontWeight": "bold"}
-    ),
-    # Apri l'offcanvas sul lato destro della pagina
-    placement="end",
-    # Se True all'esecuzione è aperto
-    is_open=False
+    style={
+        "top": 0,
+        "left": 0,
+        "bottom" : 0,
+        # Larghezza scelta fissa a 250px
+        "width": "250px",
+        # Il primo (2rem) è il padding verticale, il secondo (1rem) è quello orizzontale
+        "padding": "2rem 1rem",
+        # Colore di sfondo bianco
+        "background-color": "#ffffff",
+        # Ombreggiatura esterna: 
+        # 0 offset orizzontale
+        # 4px ombra spostata di 4px verso il basso
+        # 8px raggio di sfocatura
+        # rgba() colore di sfocatura blu con opacità del 20%
+        "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+        # margine di 2px solido con colore #dee2e6 HEX
+        "border": "2px solid #dee2e6",
+        # Arrotonda gli angoli
+        "border-radius": "15px",
+        # Questo elemento diventa un contenitore "flessibile"
+        "display": "flex",
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+        "flex-direction": "column"
+    }
 )
 
-# Per modificare la dimensione di ogni link della navbar scrivere qua:
-dimensione_font = {"fontSize": "1.4rem"}
 
-# Navbar per pazienti
-patient_navbar = dbc.Nav(
-    [
-        dbc.NavItem(dbc.NavLink("Home", href="/home", className="mx-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Glicemia", href="/glicemia", className="me-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Grafici", href="/graph", className="me-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Chat", href="/chat", className="me-3", style=dimensione_font))
-    ],
-    navbar=True
-)
+# ******************************************************************************************************************
+# PAGE CONTENT DEL PAZIENTE:
 
-# Navbar per dottori
-doctor_navbar = dbc.Nav(
-    [
-        dbc.NavItem(dbc.NavLink("Home", href="/home", className="mx-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Pazienti", href="/patient", className="me-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Chat", href="/chat", className="me-3", style=dimensione_font))
-    ],
-    navbar=True
-)
+# Dashboard
+patient_dashboard = html.Div(
+    style={
+        # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
+        "flex": 1,
+        # Spazio dai margini esterni
+        "padding": "40px",
+        # divide lo spazio
+        "display": "flex",
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        "flex-direction": "row",
+        # Spazio tra le colonne
+        "gap": "40px" 
+    },
 
-# Navbar per admin
-admin_navbar = dbc.Nav(
-    [
-        dbc.NavItem(dbc.NavLink("Home", href="/home", className="mx-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Richieste", href="/request", className="me-3", style=dimensione_font)),
-        dbc.NavItem(dbc.NavLink("Pazienti", href="/patient", className="me-3", style=dimensione_font))        
-    ],
-    navbar=True
-)
+    children=[
+        # Layout finale:
+        # _____________
+        # | 3 | 4 |   |
+        # |___|___|   |
+        # |   5   | 6 |
+        # |_______|___|
+        #     1     2
+        # Colonna a sinistra 1 (divisa in due righe)
+        html.Div(
+            style={
+                # Occupa 2/3 della page content
+                "flex": 2, 
+                "display": "flex",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flexDirection": "column",
+                # Gli elementi qua dentro sono separati da 30px
+                "gap" : "30px"
+            },
+            children=[
+                # _________
+                # | 3 | 4 |
+                # |___|___|
+                #
+                # Prima riga della colonna centrale:
+                html.Div(
+                    style={
+                        "flex": 1,
+                        "display": "flex",
+                        "gap": "30px"
+                    },
+                    children=[
+                        # 3 : Card paziente
+                        html.Div(
+                            style={
+                                "flex": 1,
+                                # Gli elementi dentro questa Div sono a 30px da ogni bordo
+                                "padding": "30px",
+                                "background-color": "#ffffff", # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                                "border-radius": "15px" # bordi arrotondati
+                            },
+                            children=[
+                                html.H5("Paziente: ", style={"color" : "grey"}),
+                                html.Hr(),
 
-# Pulsante per aprire l'offcanvas di controllo
-# id = "open-offcanvas"
-profile_button = dbc.Button(
-    "≡", 
-    id="open-offcanvas",
-    style=dimensione_font, 
-    n_clicks=0, 
-    color="primary",
-    size="lg",
-    className="ms-auto"
-)
+                                # DA FARE
 
-# NAVBAR PER OSPITI
-guest_navbar = dbc.Navbar(
-    dbc.Container([
-        # Brand
-        dbc.NavbarBrand("App Diabete", href="/", style={"fontSize": "2rem"}),
+                            ]
+                        ),
+
+                        # 4 :Card Terapia
+                        html.Div(
+                            style={
+                                "flex": 1,
+                                # Gli elementi dentro questa Div sono a 30px da ogni bordo
+                                "padding": "30px",
+                                "background-color": "#ffffff", # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                                "border-radius": "15px" # bordi arrotondati
+                            },
+                            children=[
+                                html.H5("Terapia: ", style={"color" : "grey"}),
+                                html.Hr(),
+
+                                # Tabella della terapia
+                                #html.Div(id="tabella-terapia")
+                            ]
+                        )
+                    ]
+                ),
+
+                #  _______
+                # |   5   |
+                # |_______|
+                #
+                # Seconda riga colonna centrale:
+                html.Div(
+                    style={
+                        "flex": 1,
+                        "display": "flex"
+                    },
+                    children=[
+                        # 5: Card del grafico
+                        html.Div(
+                            style={
+                                "flex": 1,
+                                "padding": "30px",
+                                "background-color": "#ffffff", # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                                "border-radius": "15px" # bordi arrotondati
+                            },
+                            children=[
+                                html.H5("Grafico:", style={"color" : "grey"}),
+                                html.Hr()
+
+                                # DA FARE
+
+                            ]
+                        )
+                    ]
+                )
+            ]
+        ),
         
-        # Link di navigazione
-        dbc.Nav(
-            [
-                dbc.NavItem(dbc.NavLink("Home", href="/", className="mx-3", style=dimensione_font)),
-                dbc.NavItem(dbc.NavLink("Login", href="/login", className="me-3", style=dimensione_font)),
-                dbc.NavItem(dbc.NavLink("Registration", href="/register", className="me-3", style=dimensione_font)),
-            ], 
-            navbar=True,
-            className="me-auto"
-        )  
-    ]),
-    color="primary",
-    dark=True,
-    sticky="top",
-    # NavBar alta 80 pixels
-    style={"height": "80px"}
-) 
+        # _____
+        # |   |
+        # |   |
+        # | 6 |
+        # |___|
+        #
+        # 6: Colonna a destra 
+        html.Div(
+            style={
+                "flex": 1, # Occupa 1/3 del page content
+                "padding": "30px",
+                "background-color": "#ffffff", # sfondo bianco
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                "border-radius": "15px" # bordi arrotondati
+            },
+            children=[
+                html.H5("Glicemia:", style={"color": "grey"}),
+                html.Hr(),
 
-# NAVBAR PER UTENTI 
-# formata da: [Brand | NavLinks | ≡]
-# I navLinks vengono modificati con una callback in base allo stato di autenticaione
-# id = "authenticated-links"
-user_navbar = dbc.Navbar(
-    dbc.Container([
-        # Brand
-        dbc.NavbarBrand("App Diabete", href="/", style={"fontSize": "2rem"}),
+                # Cerchio della glicemia
+                # Da cambiare con un grafico a DONUT
+                html.Div(
+                    [
+                        html.Div("110", style={"fontSize": "48px", "fontWeight": "bold"}),
+                        html.H6("mg/dl", style={"color": "grey", "margin": 0}),
+                    ],
+                    style={
+                        # Fondamentali
+                        "width": "200px",
+                        "height": "200px",
+                        # Raggio del 50% rende la figura circolare:
+                        "border-radius": "50%",
+                        "display": "flex",
+                        # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                        "flexDirection": "column",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        # Ombra esterna + ombra interna
+                        "box-shadow": "0 0 8px rgba(255, 0, 0, 0.5), inset 0 0 8px rgba(255, 0, 0, 0.5)",
+                        "margin": "85px auto",
+                        "border": "20px solid red"
+                    }
+                ),
 
-        # Link delle pagine nel lato sinistro
-        # html.Div(id="authenticated-links"),
-        patient_navbar,                              # DA MODIFICARE CON LA CALLBACK
+                # Input glicemia
+                html.H6("Nuova misurazione:", style={"color": "grey"}),
+                html.Hr(),
+                dcc.Input(
+                    placeholder="Inserisci glicemia...",
+                    type="number",
+                    style={
+                        "width": "100%", # Occupa l'intera larghezza del box padre
+                        "padding": "15px 20px",
+                        "border-radius": "15px",
+                        "border": "none",
+                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                        "background-color": "#f0f0f0",
+                        "fontSize": "20px"
+                    },
+                    className="mb-3"
+                ),
 
-        # Pulsante del profilo a destra
-        profile_button
-    ]),
-    color="primary",
-    dark=True,
-    sticky="top",
-    # NavBar alta 90 pixels
-    style={"height": "90px"}
+                # Input Farmaco:
+                html.H6("Farmaco usato:", style={"color": "grey"}),
+                html.Hr(),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            # Inserimento del nome del farmaco
+                            dcc.Input(
+                                placeholder="Inserisci farmaco...",
+                                type="text",
+                                style={
+                                    "width": "100%",
+                                    "padding": "15px 20px",
+                                    "border-radius": "15px",
+                                    "border": "none",
+                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                    "background-color": "#f0f0f0",
+                                    "fontSize": "20px"
+                                }
+                            ),
+                            width=7
+                        ),
+
+                        dbc.Col(
+                            # Inserimento del dosaggio
+                            dcc.Input(
+                                placeholder="Dosaggio...",
+                                type="text",
+                                style={
+                                    "width": "100%",
+                                    "padding": "15px 20px",
+                                    "border-radius": "15px",
+                                    "border": "none",
+                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                    "background-color": "#f0f0f0",
+                                    "fontSize": "20px"
+                                }
+                            ),
+                            width=5
+                        )
+                    ],
+                    className="mb-3"
+                ),
+
+                html.H6("Sintomi riscontrati:", style={"color": "grey"}),
+                html.Hr(),
+                # Input Annotazione sintomi
+                # Input glicemia
+                dcc.Input(
+                    placeholder="Sintomi...",
+                    type="text",
+                    style={
+                        "width": "100%", # Occupa l'intera larghezza del box padre
+                        "padding": "15px 20px",
+                        "border-radius": "15px",
+                        "border": "none",
+                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                        "background-color": "#f0f0f0",
+                        "fontSize": "20px"
+                    }
+                ),
+            ]
+        )
+    ]
 )
 
-# ******************************************************************************************************************
-# buildato al volo, giusto per settare il login degli admin, le callback, 
-# il pulsante per visualizzare il grafico.
-# PAGINE MERDOSE SOLO DA TEST
-# DA CANCELLARE E RIPIAZZARE CON LE VERSIONI SERIE!!
-def admin_layout():
-    
-    admin_title = html.H2(
-        "Benvenuto amministratore",
-        style={"textAlign": "left"},
-        className="mt-2"
-    )
+# Pagina dei grafici per il paziente:
 
-    buttons_options = html.Div([
-        html.H6("Funzionalità disponibili"),
-        dbc.Button("Grafico complessivo andamento glicemia", id="bottone_grafico_complessivo", n_clicks=0)],
-        className="mb-2"
+# DA FARE
+
+# Chat per il paziente
+#   ____________
+#   |   |      |
+#   | 1 |   2  |
+#   |   |      |
+#   |___|______|
+
+chat_content = html.Div(
+    style={
+        "flex": 1,
+        "display": "flex",
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        "flex-direction": "row",
+        # spazio dai margini esterni
+        "padding": "40px",
+        # spazio tra le colonne
+        "gap": "40px"
+    },
+    children=[
+        # Pannello delle chat disponibili
+        #   _____
+        #   |   |
+        #   | 1 |
+        #   |   |
+        #   |___|
+
+        html.Div(
+            style={
+                # Occupa un terzo dello spazio disponibile nella pagina
+                "flex": 1,
+                # padding contenuto interno del Div
+                "padding": "2rem 2rem",
+                # Colore bianco di sfondo
+                "background-color": "#ffffff",
+                "display": "flex",
+                # Lieve ombra blu
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flex-direction": "column",
+                # Margine 
+                "border": "2px solid #dee2e6",
+                # Arrotonda gli angoli
+                "border-radius": "15px"
+            },
+            children=[
+                html.H2("Chat", style={"color": "grey"}),
+                html.Hr(),
+
+                # DA FARE
+
+                # Funzione che carica la lista delle chat disponibili per l'utente
+            ]
+        ),
+
+        # Box della chat
+        #   ________
+        #   |      |
+        #   |   2  |
+        #   |      |
+        #   |______|
+
+        html.Div(
+            style={
+                # Occupa 2/3 dello spazio disponibile
+                "flex": 2,
+                "display": "flex",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flexDirection": "column",
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                "border": "2px solid #dee2e6",
+                # Arrotonda gli angoli
+                "border-radius": "15px",
+                "overflow": "hidden",
+            },
+            children=[
+                # Nome del contatto e dati del contatto
+                html.Div(
+                    style={
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo il 10% dello spazio disponibile in altezza
+                        "height": "10%",
+                        # sfondo bianco
+                        "background-color": "#ffffff",
+                        "padding": "2rem 2rem",
+                        "borderBottom": "2px solid #dee2e6",
+                        
+                    },
+                    children=[
+                        
+                        # DA MODIFICARE
+
+                        html.H2("Nome contatto", style={"color": "grey"})
+                    ]
+                ),
+
+                # Contenitore dei messaggi:
+                html.Div(
+                    id="chat-box",
+                    style={
+                        "flex": "1",
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo l'80% dello spazio disponibile in altezza
+                        "height": "80%",
+                        'display': 'flex',
+                        # direzione degli elementi nel box: "column" = dall'alto al basso
+                        'flexDirection': 'column',
+                        # mostra la barra dello scroll verticale (y axis) : "auto" = solo se il contenuto
+                        # eccede l'altezza del contenitore
+                        'overflowY': 'auto',
+                        'padding': '20px',
+                        # Nessuno sfondo inserito
+                    },
+                    children=[
+                        # Qua verranno visualizzati i messaggi con una funzione che genera dinamicamente le bubbles
+                        # children= ***nome funzione***
+                    ]
+
+                ),
+
+                # Contenitore dell'Input:
+                html.Div(
+                    style={
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo il 10% dello spazio disponibile in altezza
+                        "height": "10%",
+                        # sfondo bianco
+                        "background-color": "#ffffff",
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        "borderTop": "2px solid #dee2e6",
+                        "gap": "30px"
+                    },
+                    children=[
+                        # Input text per il messaggio
+                        dbc.Input(
+                            placeholder="Invia un messaggio...",
+                            type="text",
+                            id="input-text",
+                            style={
+                                "width": "70%",
+                                "padding": "15px 20px",
+                                "border-radius": "15px",
+                                "border": "none",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "background-color": "#f0f0f0",
+                                "fontSize": "20px"
+                            }
+                        ),
+
+                        # Pulsante invio
+                        # NB: il "+" non è perfettamente centrato
+                        dbc.Button(
+                            "+", color="primary",
+                            id="send-btn",
+                            style={
+                                "display": "flex",
+                                "justifyContent": "center",
+                                "alignItems": "center",
+                                "width": "55px",
+                                "height": "55px",
+                                "border-radius": "50%",
+                                "margin": "0",
+                                "padding": "0",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "fontSize": "50px",
+                                "lineHeight": "normal"
+                            }
+                        )
+                    ]
+                )
+            ]
         )
-
-    return dbc.Container([
-        admin_title,
-        buttons_options
-    ])
-
-def diabetologo_layout():
-    
-    diab_title = html.H2(
-        "Benvenuto dottore",
-        style={"textAlign": "left"},
-        className="mt-2"
-    )
-
-    buttons_options = html.Div([
-        html.H6("Funzionalità disponibili"),
-        dbc.Button("Grafico glicemia pazienti in cura", id="bottone_grafico_diabetologo", n_clicks=0)],
-        className="mb-2"
-        )
-    
-    grafico_diabetologo = html.Div(
-        id="contenitore-grafico-diabetologo"
-    )
-
-    return dbc.Container([
-        diab_title,
-        buttons_options,
-        grafico_diabetologo
-    ])
-
-def paziente_layout():
-    
-    paziente_title = html.H2(
-        "Benvenuto paziente",
-        style={"textAlign": "left"},
-        className="mt-2"
-    )
-
-    buttons_options = html.Div([
-        html.H6("Funzionalità disponibili"),
-        dbc.Button("La mia glicemia", id="bottone_grafico_paziente", n_clicks=0)],
-        className="mb-2"
-        )
-
-    return dbc.Container([
-        paziente_title,
-        buttons_options
-    ])
-
+    ]
+)
 
 # ******************************************************************************************************************
 def login_layout():
@@ -607,40 +984,6 @@ def registration_layout():
         # d-flex: imposta l'elemento come un contenitore flexbox, utile per allineare
         # align-items-center: allinea verticalmente -> al centro verticale della pagina 
         className="mx-auto vh-100 d-flex align-items-center"
-    )
-
-# ******************************************************************************************************************
-
-# da fare e aggiungere nella callback del routing
-# implementazione aggiunta (AI) solo per fare un check delle classi nel model
-def home_layout():
-    return html.Div(
-        className="home-container",
-        children=[
-            # Titolo della pagina
-            html.H4("Clicca per il logout", className="text-center mt-6"),
-            
-            # Riga con due pulsanti
-            dbc.Row(
-                justify="center",
-                children=[
-                    dbc.Col(
-                        dbc.Button(
-                            "logout",
-                            id="btn-1",
-                            href="/logout",
-                            color="primary",
-                            className="mx-2"
-                        ),
-                        width="auto"
-                    ),
-                    dbc.Col(
-                        width="auto"
-                    )
-                ],
-                className="mb-4"
-            )
-        ]
     )
 
 # ******************************************************************************************************************

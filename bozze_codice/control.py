@@ -132,95 +132,102 @@ def registra_callbacks(app):
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
     # ******************************************************************************************************************
-
-    # callback per il routing, cambia il contenuto della pagina a seconda dell'url
-    # Problema nella gestione della logica del routing:
-    #   Se da barra dell'indirizzo si digita "/home" o qualsiasi altro indirizzo, lo mostra senza controllare
-    #   se l'utente è autenticato o meno.
+    # CALLBACK ROUTING CON NAVBAR
+    # !!!!! DA CONTROLLARE !!!!!
+    # Deve: 
+    # 1. cambiare i navlinks nella sidebar se ospite, paziente, medico, admin
+    # 2. cambiare "page-content" in base all'url
+    # 3. cambiare url
     @app.callback(
-        [Output("contenuto-pagina", "children"),
-        Output("url", "pathname", allow_duplicate=True)],
+        [
+            # 1: Modifico i navlinks
+            Output("navlinks", "children"),
+            # 2: Modifico il contenuto della pagina
+            Output("page-content", "children"),
+            # 3: Modifico l'url
+            Output("url", "pathname", allow_duplicate=True),
+        ],
+        # Prendo in input il pathname
         Input("url", "pathname"), prevent_initial_call=True
     )
-    def mostra_pagina(pathname):
-        # Se l'utente non è autenticato e prova ad accedere a una pagina protetta,
-        # viene reindirizzato sul login. (magari in futuro avremo una navbar per i guests, che verrà personalizzata
-        # per i diabetologi e i pazienti)
-        if not current_user.is_authenticated and pathname not in ["/login", "/register"]:
-            return view.login_layout(), "/login"
-        
-        # se (da utenti autenticati) si prova a scrivere "/login" o "/register" nella barra degli indirizzi,
-        # si torna diretti alla home (in futuro sarà una home caruccia con navbar etc)
-        if current_user.is_authenticated and pathname in ["/login", "/register"]:
-            return view.home_layout(), "/redirect"
-        
-        # per fare logout
-        if pathname == "/logout" and current_user.is_authenticated:
-            logout_user()
-            return view.login_layout(), "/login"
-        
-        # pagina di login, accessibile solo se l'utente non è autenticato
-        if pathname == "/login" and not current_user.is_authenticated:
-            return view.login_layout(), dash.no_update
-        
-        # pagina di registrazione, solo se l'utente non è autenticato
-        if pathname == "/register" and not current_user.is_authenticated:
-            return view.registration_layout(), dash.no_update
-        
-        # home, solo se l'utente è autenticato
-        if pathname == "/home" and current_user.is_authenticated:
-            return view.home_layout(), dash.no_update
-        
-        # per reidirizzare alla pagina dell'Admin. Controllo che l'utente 
-        # sia istanza della classe Admin. 
-        # Bisogna implementare sta roba anche per gli altri due tipi di utente.
-        if pathname == "/admin" and isinstance(current_user, model.Admin) and current_user.is_authenticated:
-            return view.admin_layout(), dash.no_update
-        
-        if pathname == "/paziente" and isinstance(current_user, model.Paziente) and current_user.is_authenticated:
-            return view.paziente_layout(), dash.no_update
-        
-        if pathname == "/diabetologo" and isinstance(current_user, model.Diabetologo) and current_user.is_authenticated:
-            return view.home_diabetologo_layout(), dash.no_update
-        
-        # IMPORTANTE
-        # altrimenti si potrebbe pensare un gateway, a cui si arriva tramite login successful
+    def routing(pathname):
 
-        # QUI LA REDIRECT "/redirect", chiamata dopo un login con successo, che reidirizzerà
-        # a "/admin" gli admin, "/paziente" i pazienti, etc...
+        # Caso GUEST - NON AUTENTICATI
+        if not current_user.is_authenticated:
 
-        if pathname == "/redirect" and current_user.is_authenticated:
-            if isinstance(current_user, model.Admin):
-                return view.admin_layout(), "/admin"
-            elif isinstance(current_user, model.Diabetologo):
-                return view.home_diabetologo_layout(), "/diabetologo"
+            # Accesso alla home
+            if pathname == "/":
+                return view.guest_navlinks, html.H2("Home guest"), "/"
+            # Accesso al login
+            elif pathname == "/login":
+                return view.guest_navlinks, view.login_layout(), "/login"
+            # Accesso alla registrazione
+            elif pathname == "/registration":
+                return view.guest_navlinks, view.registration_layout(), "/registration"
+            # Se il guest cerca di accedere ad una pagina protetta, reindirizza alla home
+            return view.guest_navlinks, html.H2("Accesso non autorizzato"), "/"
+        
+        # Caso UTENTI - AUTENTICATI
+        
+        # PAZIENTE
+        elif isinstance(current_user, model.Paziente):
+            # Se paziente nella dashboard
+            if pathname == "/patient-dashboard":
+                return view.patient_navlinks, view.patient_dashboard, "/patient-dashboard"
+            # Se paziente nella pagina grafici
+            elif pathname == "/grafici":
+                return view.patient_navlinks, html.H2("Da fare"), "/grafici"
+            # Se paziente nella chat
+            elif pathname == "/chat":
+                return view.patient_navlinks, view.chat_content, "/chat"
+            # Effettua il logout
+            elif pathname == "/logout":
+                logout_user()
+                return view.guest_navlinks, html.H2("Logout"), "/login"
+            # Tenta di accedere a pagina protetta:
             else:
-                return view.paziente_layout(), "/paziente"
-        
-        # in tutti gli altri casi, just in case...
-        # se l'utente è autenticato --> home
-        # se non è autenticato --> login
-        if current_user.is_authenticated:
-            return view.home_layout(), "/home"
+                return dash.no_update, dash.no_update, "/patient-dashboard"
+    
+        # DIABETOLOGO
+        elif isinstance(current_user, model.Diabetologo):
+            # Se diabetologo nella dashboard
+            if pathname == "/doctor-dashboard":
+                return view.doctor_navlinks, view.home_diabetologo_layout(), "/doctor-dashboard"
+            # Se diabetologo nella pagina grafici
+            elif pathname == "/doctor-patient":
+                return view.doctor_navlinks, html.H2("Da fare"), "/doctor-patient"
+            # Se diabetologo nella chat
+            elif pathname == "/chat":
+                return view.doctor_navlinks, view.chat_content, "/chat"
+            # Effettua il logout
+            elif pathname == "/logout":
+                logout_user()
+                return view.guest_navlinks, html.H2("Logout"), "/login"
+            # Tenta di accedere a pagina protetta:
+            else:
+                return dash.no_update, dash.no_update, "/doctor-dashboard"
+    
+        # ADMIN
+        elif isinstance(current_user, model.Admin):
+            # Se admin nella dashboard
+            if pathname == "/admin-dashboard":
+                return view.admin_navlinks, html.H2("Da fare"), "/admin-dashboard"
+            # Se admin nella lista delle richieste
+            elif pathname == "/request":
+                return view.admin_navlinks, html.H2("Da fare"), "/request"
+            # Se admin nella lista dei pazienti
+            elif pathname == "/logout":
+                logout_user()
+                return view.guest_navlinks, html.H2("Logout"), "/login"
+            elif pathname == "/admin-patient":
+                return view.admin_navlinks, html.H2("Da fare"), "/admin-patient"
+
+        # Caso pagina inesistente
         else:
-            return view.login_layout(), "/login"
-        
+            return dash.no_update, html.H2("404 - Page not found"), "/404"
 
     # ******************************************************************************************************************
-
-    # Callback per l'apertura del menu a tendina (profile_offcanvas)
-
-    @app.callback(
-        Output("profile-offcanvas", "is_open"),
-        Input("open-offcanvas", "n_clicks"),
-        [State("profile-offcanvas", "is_open")],
-    )
-    def toggle_offcanvas(n1, is_open):
-        if n1:
-            return not is_open
-        return is_open
-
-     # ******************************************************************************************************************
+    
     #permette di vedere i grafici paziente per paziente al diabetologo
     @app.callback(
         Output("dropdown-output","children"),
