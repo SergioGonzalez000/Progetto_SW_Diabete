@@ -267,7 +267,7 @@ def login_layout():
         # border: aggiunge un bordo sottile intorno all'elemento
         # rounded: arrotonda gli angoli del bordo
         # w-25: larghezza dell'elemento al 25% di quella del genitore
-        className="mx-auto p-5 bg-light border rounded w-25")
+        className="mx-auto p-5 bg-light border rounded w-50")
 
     return dbc.Container(
         [
@@ -277,7 +277,7 @@ def login_layout():
         # vh-100: viewport height 100, altezza dell'elemento al 100% dell'altezza della finestra del browser
         # d-flex: imposta l'elemento come un contenitore flexbox, utile per allineare
         # align-items-center: allinea verticalmente -> al centro verticale della pagina 
-        className="vh-100 d-flex align-items-center"
+        className="vh-100 d-flex align-items-center justify-content-center"
     )
 
 # REGISTRATION - Da rivedere
@@ -556,7 +556,7 @@ def registration_layout():
         # border: aggiunge un bordo sottile intorno all'elemento
         # rounded: arrotonda gli angoli del bordo
         # w-25: larghezza dell'elemento al 25% di quella del genitore
-        className="mx-auto p-5 bg-light border rounded w-25"
+        className="mx-auto p-5 bg-light border rounded w-50"
     )
 
     return dbc.Container(
@@ -568,7 +568,7 @@ def registration_layout():
         # vh-100: viewport height 100, altezza dell'elemento al 100% dell'altezza della finestra del browser
         # d-flex: imposta l'elemento come un contenitore flexbox, utile per allineare
         # align-items-center: allinea verticalmente -> al centro verticale della pagina 
-        className="mx-auto vh-100 d-flex align-items-center"
+        className="mx-auto vh-100 d-flex align-items-center justify-content-center"
     )
 
 # ******************************************************************************************************************
@@ -1068,7 +1068,20 @@ doctor_patient = html.Div(
         'gap': '40px'
     },
     children=[
-        html.H2("Da fare")
+        html.H2("La glicemia dei miei pazienti gang"),
+
+        # html.Div(                                     HO CERCATO DI METTERE IL GRAFICO NELLA PAGINA DIABETOLOGO, NON FUNZIA
+        # className="home_diab_container",
+        #     children=[
+        #         dcc.Dropdown(
+        #             id='dropdown-pazienti',
+        #             options= model.Diabetologo.visualizza_pazienti_associati(current_user.get_id_diabetologo()),
+        #             placeholder="Seleziona un paziente",
+        #             style={"width": "50%"}
+        #         ),
+        #         html.Div(id="dropdown-output")
+        #     ],
+        # )
     ]
 )
 

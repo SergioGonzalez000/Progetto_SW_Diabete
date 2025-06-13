@@ -30,24 +30,42 @@ def registra_callbacks(app):
         
         user = model.get_by_username(username)  
 
-        # qua andrebbe chiamata una fx che racchiude tutta la logica di creazione dello user etc., 
-        # e che restituisca semplicemente il booleano "valid"
-
         if user:        # è un oggetto Persona
             # controlliamo la password.
             # se la password va bene, chiamo login_user()
             valid = check_password_hash(user.pw, password_dal_form)  # ho eliminato la fx check_password mia, nel model.py
 
+            # 
+            #   **modificata questa roba, dovrebbe andare**
+            #
             if valid:
-                # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
-                # nella pratica all'oggetto Persona andrà messa la password_hash invece della password in chiaro + tutto il resto degli attributi.
-                login_user(user)    # loggo l'utente con flask
-                return "/redirect", dbc.Alert("Login effettuato!", color= "success")
-            else:
-                return dash.no_update, dbc.Alert("Password sbagliata!", color= "danger")
+                login_user(user)
 
-        else:
-            return dash.no_update, dbc.Alert("Username inesistente", color= "danger")
+                if current_user.is_authenticated and isinstance(user, model.Paziente):
+                    return "/patient-dashboard", dbc.Alert("Login effettuato!", color="success")
+                elif current_user.is_authenticated and isinstance(user, model.Diabetologo):
+                    return "/doctor-dashboard", dbc.Alert("Login effettuato!", color="success")
+                elif current_user.is_authenticated and isinstance(user, model.Admin):
+                    return "/admin-dashboard", dbc.Alert("Login effettuato!", color="success")
+                else:
+                    return dash.no_update, dbc.Alert("Credenziali sbagliate!", color="danger")
+            else:
+                    return dash.no_update, dbc.Alert("Credenziali sbagliate!", color="danger")      # nel caso in cui password non sia valid
+            
+        else: 
+            return dash.no_update, dbc.Alert("Credenziali sbagliate!", color="danger")              # nel caso in cui la query di get_by_username() non abbia trovato un User.
+
+
+        #     if valid:
+        #         # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
+        #         # nella pratica all'oggetto Persona andrà messa la password_hash invece della password in chiaro + tutto il resto degli attributi.
+        #         login_user(user)    # loggo l'utente con flask
+        #         return "/redirect", dbc.Alert("Login effettuato!", color= "success")
+        #     else:
+        #         return dash.no_update, dbc.Alert("Password sbagliata!", color= "danger")
+
+        # else:
+        #     return dash.no_update, dbc.Alert("Username inesistente", color= "danger")
     
     
     # ******************************************************************************************************************
