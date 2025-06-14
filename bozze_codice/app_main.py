@@ -4,7 +4,7 @@ from flask_login import LoginManager
 import os
 
 # funzioni fatte da me
-import view 
+import view
 import control
 import model 
 
