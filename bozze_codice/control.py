@@ -193,7 +193,7 @@ def registra_callbacks(app):
         elif isinstance(current_user, model.Diabetologo):
             # Se diabetologo nella dashboard
             if pathname == "/doctor-dashboard":
-                return view.doctor_navlinks, view.home_diabetologo_layout(), "/doctor-dashboard"
+                return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
             # Se diabetologo nella pagina grafici
             elif pathname == "/doctor-patient":
                 return view.doctor_navlinks, view.pazienti_diabetologo_layout(), "/doctor-patient"

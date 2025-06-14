@@ -57,7 +57,7 @@ patient_navlinks = dbc.Nav(
         # Link della pagina della chat
         dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "20px"}, className="mb-3"),
         html.Hr(),
-        # Link per il logout da spostare in fondo
+        # Link per il logout
         html.A("Log out", href="/logout", className="text-danger")
     ],
     # Disposizione dei NavLink in verticale
@@ -76,7 +76,7 @@ doctor_navlinks = dbc.Nav(
         # Link della pagina della chat
         dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "20px"}, className="mb-3"),
                 html.Hr(),
-        # Link per il logout da spostare in fondo
+        # Link per il logout
         html.A("Log out", href="/logout", className="text-danger")
     ],
     # Disposizione dei NavLink in verticale
@@ -96,7 +96,7 @@ admin_navlinks = dbc.Nav(
         # Link per la pagina dei pazienti
         dbc.NavLink("Pazienti", href="/admin-patient", active="exact", style={"fontSize": "20px"}, className="mb-3"),
         html.Hr(),
-        # Link per il logout da spostare in fondo
+        # Link per il logout
         html.A("Log out", href="/logout", className="text-danger")       
     ],
     # Disposizione dei NavLink in verticale
@@ -143,12 +143,15 @@ sidebar = html.Div(
     }
 )
 
-
 # ******************************************************************************************************************
-# PAGE CONTENT DEL PAZIENTE:
+# LAYOUT PER GLI OSPITI
+# 1. Home
+# 2. Login
+# 3. Registration
+# ******************************************************************************************************************
 
-# Dashboard
-patient_dashboard = html.Div(
+# HOME GUEST
+home = html.Div(
     style={
         # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
         "flex": 1,
@@ -161,428 +164,12 @@ patient_dashboard = html.Div(
         # Spazio tra le colonne
         "gap": "40px" 
     },
-
     children=[
-        # Layout finale:
-        # _____________
-        # | 3 | 4 |   |
-        # |___|___|   |
-        # |   5   | 6 |
-        # |_______|___|
-        #     1     2
-        # Colonna a sinistra 1 (divisa in due righe)
-        html.Div(
-            style={
-                # Occupa 2/3 della page content
-                "flex": 2, 
-                "display": "flex",
-                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
-                "flexDirection": "column",
-                # Gli elementi qua dentro sono separati da 30px
-                "gap" : "30px"
-            },
-            children=[
-                # _________
-                # | 3 | 4 |
-                # |___|___|
-                #
-                # Prima riga della colonna centrale:
-                html.Div(
-                    style={
-                        "flex": 1,
-                        "display": "flex",
-                        "gap": "30px"
-                    },
-                    children=[
-                        # 3 : Card paziente
-                        html.Div(
-                            style={
-                                "flex": 1,
-                                # Gli elementi dentro questa Div sono a 30px da ogni bordo
-                                "padding": "30px",
-                                "background-color": "#ffffff", # sfondo bianco
-                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                                "border-radius": "15px" # bordi arrotondati
-                            },
-                            children=[
-                                html.H5("Paziente: ", style={"color" : "grey"}),
-                                html.Hr(),
-
-                                # DA FARE
-
-                            ]
-                        ),
-
-                        # 4 :Card Terapia
-                        html.Div(
-                            style={
-                                "flex": 1,
-                                # Gli elementi dentro questa Div sono a 30px da ogni bordo
-                                "padding": "30px",
-                                "background-color": "#ffffff", # sfondo bianco
-                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                                "border-radius": "15px" # bordi arrotondati
-                            },
-                            children=[
-                                html.H5("Terapia: ", style={"color" : "grey"}),
-                                html.Hr(),
-
-                                # Tabella della terapia
-                                #html.Div(id="tabella-terapia")
-                            ]
-                        )
-                    ]
-                ),
-
-                #  _______
-                # |   5   |
-                # |_______|
-                #
-                # Seconda riga colonna centrale:
-                html.Div(
-                    style={
-                        "flex": 1,
-                        "display": "flex"
-                    },
-                    children=[
-                        # 5: Card del grafico
-                        html.Div(
-                            style={
-                                "flex": 1,
-                                "padding": "30px",
-                                "background-color": "#ffffff", # sfondo bianco
-                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                                "border-radius": "15px" # bordi arrotondati
-                            },
-                            children=[
-                                html.H5("Grafico:", style={"color" : "grey"}),
-                                html.Hr()
-
-                                # DA FARE
-
-                            ]
-                        )
-                    ]
-                )
-            ]
-        ),
-        
-        # _____
-        # |   |
-        # |   |
-        # | 6 |
-        # |___|
-        #
-        # 6: Colonna a destra 
-        html.Div(
-            style={
-                "flex": 1, # Occupa 1/3 del page content
-                "padding": "30px",
-                "background-color": "#ffffff", # sfondo bianco
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                "border-radius": "15px" # bordi arrotondati
-            },
-            children=[
-                html.H5("Glicemia:", style={"color": "grey"}),
-                html.Hr(),
-
-                # Cerchio della glicemia
-                # Da cambiare con un grafico a DONUT
-                html.Div(
-                    [
-                        html.Div("110", style={"fontSize": "48px", "fontWeight": "bold"}),
-                        html.H6("mg/dl", style={"color": "grey", "margin": 0}),
-                    ],
-                    style={
-                        # Fondamentali
-                        "width": "200px",
-                        "height": "200px",
-                        # Raggio del 50% rende la figura circolare:
-                        "border-radius": "50%",
-                        "display": "flex",
-                        # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
-                        "flexDirection": "column",
-                        "alignItems": "center",
-                        "justifyContent": "center",
-                        # Ombra esterna + ombra interna
-                        "box-shadow": "0 0 8px rgba(255, 0, 0, 0.5), inset 0 0 8px rgba(255, 0, 0, 0.5)",
-                        "margin": "85px auto",
-                        "border": "20px solid red"
-                    }
-                ),
-
-                # Input glicemia
-                html.H6("Nuova misurazione:", style={"color": "grey"}),
-                html.Hr(),
-                dcc.Input(
-                    placeholder="Inserisci glicemia...",
-                    type="number",
-                    style={
-                        "width": "100%", # Occupa l'intera larghezza del box padre
-                        "padding": "15px 20px",
-                        "border-radius": "15px",
-                        "border": "none",
-                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                        "background-color": "#f0f0f0",
-                        "fontSize": "20px"
-                    },
-                    className="mb-3"
-                ),
-
-                # Input Farmaco:
-                html.H6("Farmaco usato:", style={"color": "grey"}),
-                html.Hr(),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            # Inserimento del nome del farmaco
-                            dcc.Input(
-                                placeholder="Inserisci farmaco...",
-                                type="text",
-                                style={
-                                    "width": "100%",
-                                    "padding": "15px 20px",
-                                    "border-radius": "15px",
-                                    "border": "none",
-                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                    "background-color": "#f0f0f0",
-                                    "fontSize": "20px"
-                                }
-                            ),
-                            width=7
-                        ),
-
-                        dbc.Col(
-                            # Inserimento del dosaggio
-                            dcc.Input(
-                                placeholder="Dosaggio...",
-                                type="text",
-                                style={
-                                    "width": "100%",
-                                    "padding": "15px 20px",
-                                    "border-radius": "15px",
-                                    "border": "none",
-                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                    "background-color": "#f0f0f0",
-                                    "fontSize": "20px"
-                                }
-                            ),
-                            width=5
-                        )
-                    ],
-                    className="mb-3"
-                ),
-
-                html.H6("Sintomi riscontrati:", style={"color": "grey"}),
-                html.Hr(),
-                # Input Annotazione sintomi
-                # Input glicemia
-                dcc.Input(
-                    placeholder="Sintomi...",
-                    type="text",
-                    style={
-                        "width": "100%", # Occupa l'intera larghezza del box padre
-                        "padding": "15px 20px",
-                        "border-radius": "15px",
-                        "border": "none",
-                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                        "background-color": "#f0f0f0",
-                        "fontSize": "20px"
-                    }
-                ),
-            ]
-        )
+        html.H2("Da fare")
     ]
 )
 
-# Pagina dei grafici per il paziente:
-
-# DA FARE
-
-# Chat per il paziente
-#   ____________
-#   |   |      |
-#   | 1 |   2  |
-#   |   |      |
-#   |___|______|
-
-chat_content = html.Div(
-    style={
-        "flex": 1,
-        "display": "flex",
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
-        "flex-direction": "row",
-        # spazio dai margini esterni
-        "padding": "40px",
-        # spazio tra le colonne
-        "gap": "40px"
-    },
-    children=[
-        # Pannello delle chat disponibili
-        #   _____
-        #   |   |
-        #   | 1 |
-        #   |   |
-        #   |___|
-
-        html.Div(
-            style={
-                # Occupa un terzo dello spazio disponibile nella pagina
-                "flex": 1,
-                # padding contenuto interno del Div
-                "padding": "2rem 2rem",
-                # Colore bianco di sfondo
-                "background-color": "#ffffff",
-                "display": "flex",
-                # Lieve ombra blu
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
-                "flex-direction": "column",
-                # Margine 
-                "border": "2px solid #dee2e6",
-                # Arrotonda gli angoli
-                "border-radius": "15px"
-            },
-            children=[
-                html.H2("Chat", style={"color": "grey"}),
-                html.Hr(),
-
-                # DA FARE
-
-                # Funzione che carica la lista delle chat disponibili per l'utente
-            ]
-        ),
-
-        # Box della chat
-        #   ________
-        #   |      |
-        #   |   2  |
-        #   |      |
-        #   |______|
-
-        html.Div(
-            style={
-                # Occupa 2/3 dello spazio disponibile
-                "flex": 2,
-                "display": "flex",
-                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
-                "flexDirection": "column",
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                "border": "2px solid #dee2e6",
-                # Arrotonda gli angoli
-                "border-radius": "15px",
-                "overflow": "hidden",
-            },
-            children=[
-                # Nome del contatto e dati del contatto
-                html.Div(
-                    style={
-                        # Occupa il 100% dello spazio disponibile in larghezza
-                        "width": "100%",
-                        # Occupa solo il 10% dello spazio disponibile in altezza
-                        "height": "10%",
-                        # sfondo bianco
-                        "background-color": "#ffffff",
-                        "padding": "2rem 2rem",
-                        "borderBottom": "2px solid #dee2e6",
-                        
-                    },
-                    children=[
-                        
-                        # DA MODIFICARE
-
-                        html.H2("Nome contatto", style={"color": "grey"})
-                    ]
-                ),
-
-                # Contenitore dei messaggi:
-                html.Div(
-                    id="chat-box",
-                    style={
-                        "flex": "1",
-                        # Occupa il 100% dello spazio disponibile in larghezza
-                        "width": "100%",
-                        # Occupa solo l'80% dello spazio disponibile in altezza
-                        "height": "80%",
-                        'display': 'flex',
-                        # direzione degli elementi nel box: "column" = dall'alto al basso
-                        'flexDirection': 'column',
-                        # mostra la barra dello scroll verticale (y axis) : "auto" = solo se il contenuto
-                        # eccede l'altezza del contenitore
-                        'overflowY': 'auto',
-                        'padding': '20px',
-                        # Nessuno sfondo inserito
-                    },
-                    children=[
-                        # Qua verranno visualizzati i messaggi con una funzione che genera dinamicamente le bubbles
-                        # children= ***nome funzione***
-                    ]
-
-                ),
-
-                # Contenitore dell'Input:
-                html.Div(
-                    style={
-                        # Occupa il 100% dello spazio disponibile in larghezza
-                        "width": "100%",
-                        # Occupa solo il 10% dello spazio disponibile in altezza
-                        "height": "10%",
-                        # sfondo bianco
-                        "background-color": "#ffffff",
-                        "display": "flex",
-                        "alignItems": "center",
-                        "justifyContent": "center",
-                        "borderTop": "2px solid #dee2e6",
-                        "gap": "30px"
-                    },
-                    children=[
-                        # Input text per il messaggio
-                        dbc.Input(
-                            placeholder="Invia un messaggio...",
-                            type="text",
-                            id="input-text",
-                            style={
-                                "width": "70%",
-                                "padding": "15px 20px",
-                                "border-radius": "15px",
-                                "border": "none",
-                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                "background-color": "#f0f0f0",
-                                "fontSize": "20px"
-                            }
-                        ),
-
-                        # Pulsante invio
-                        # NB: il "+" non è perfettamente centrato
-                        dbc.Button(
-                            "+", color="primary",
-                            id="send-btn",
-                            style={
-                                "display": "flex",
-                                "justifyContent": "center",
-                                "alignItems": "center",
-                                "width": "55px",
-                                "height": "55px",
-                                "border-radius": "50%",
-                                "margin": "0",
-                                "padding": "0",
-                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                "fontSize": "50px",
-                                "lineHeight": "normal"
-                            }
-                        )
-                    ]
-                )
-            ]
-        )
-    ]
-)
-
-# ******************************************************************************************************************
+# LOGIN - Da rivedere
 def login_layout():
     # Titolo
     login_title = html.H1(
@@ -643,7 +230,7 @@ def login_layout():
         html.A(
             "Register",
             # Rimanda al link "/register" dove c'è la pagina con i form di registrazione
-            href="/register",
+            href="/registration",
             className="text-primary"
             )
         ],
@@ -693,9 +280,7 @@ def login_layout():
         className="vh-100 d-flex align-items-center"
     )
 
-
-# ******************************************************************************************************************
-
+# REGISTRATION - Da rivedere
 def registration_layout():
     # Titolo
     registration_title = html.H1(
@@ -987,85 +572,565 @@ def registration_layout():
     )
 
 # ******************************************************************************************************************
-#fil aggiunta per provare funzionalità visualizza grafico (doctor-dashboard) -> da cambiare poi
-def home_diabetologo_layout():
-    id = current_user.get_id_diabetologo()
-    options = model.Diabetologo.visualizza_pazienti_associati(id)
+# LAYOUT DEL PAZIENTE:
+# 1. Dashboard
+# 2. Grafici
+# 3. Chat
+# ******************************************************************************************************************
 
-    return html.Div(
-        className="home_diab_container",
-        style={
-            "width": "100%",
-            "maxWidth": "1200px",
-            "margin": "0 auto",
-            "padding": "20px",
-            "boxSizing": "border-box"
-        },
-        children=[
-            dcc.Dropdown(
-                id='dropdown-pazienti',
-                options=options,
-                placeholder="Seleziona un paziente",
-                style={"width": "100%", "marginBottom": "20px"}
-            ),
+# DASHBOARD DEL PAZIENTE
 
-            html.Div(
-                id="dropdown-output",
+patient_dashboard = html.Div(
+    style={
+        # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
+        "flex": 1,
+        # Spazio dai margini esterni
+        "padding": "40px",
+        # divide lo spazio
+        "display": "flex",
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        "flex-direction": "row",
+        # Spazio tra le colonne
+        "gap": "40px" 
+    },
+
+    children=[
+        # Layout finale:
+        # _____________
+        # | 3 | 4 |   |
+        # |___|___|   |
+        # |   5   | 6 |
+        # |_______|___|
+        #     1     2
+        # Colonna a sinistra 1 (divisa in due righe)
+        html.Div(
             style={
-                "width": "100%",
-                "overflowX": "auto",
-                "marginTop": "40px",
-                "border": "1px solid #ccc", 
-                "padding": "10px"
-                }
-            )
-        ]
-    )
+                # Occupa 2/3 della page content
+                "flex": 2, 
+                "display": "flex",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flexDirection": "column",
+                # Gli elementi qua dentro sono separati da 30px
+                "gap" : "30px"
+            },
+            children=[
+                # _________
+                # | 3 | 4 |
+                # |___|___|
+                #
+                # Prima riga della colonna centrale:
+                html.Div(
+                    style={
+                        "flex": 1,
+                        "display": "flex",
+                        "gap": "30px"
+                    },
+                    children=[
+                        # 3 : Card paziente
+                        html.Div(
+                            style={
+                                "flex": 1,
+                                # Gli elementi dentro questa Div sono a 30px da ogni bordo
+                                "padding": "30px",
+                                "background-color": "#ffffff", # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                                "border-radius": "15px" # bordi arrotondati
+                            },
+                            children=[
+                                html.H5("Paziente: ", style={"color" : "grey"}),
+                                html.Hr(),
 
+                                # DA FARE
+
+                            ]
+                        ),
+
+                        # 4 :Card Terapia
+                        html.Div(
+                            style={
+                                "flex": 1,
+                                # Gli elementi dentro questa Div sono a 30px da ogni bordo
+                                "padding": "30px",
+                                "background-color": "#ffffff", # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                                "border-radius": "15px" # bordi arrotondati
+                            },
+                            children=[
+                                html.H5("Terapia: ", style={"color" : "grey"}),
+                                html.Hr(),
+
+                                # Tabella della terapia
+                                #html.Div(id="tabella-terapia")
+                            ]
+                        )
+                    ]
+                ),
+
+                #  _______
+                # |   5   |
+                # |_______|
+                #
+                # Seconda riga colonna centrale:
+                html.Div(
+                    style={
+                        "flex": 1,
+                        "display": "flex"
+                    },
+                    children=[
+                        # 5: Card del grafico
+                        html.Div(
+                            style={
+                                "flex": 1,
+                                "padding": "30px",
+                                "background-color": "#ffffff", # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                                "border-radius": "15px" # bordi arrotondati
+                            },
+                            children=[
+                                html.H5("Grafico:", style={"color" : "grey"}),
+                                html.Hr()
+
+                                # DA FARE
+
+                            ]
+                        )
+                    ]
+                )
+            ]
+        ),
+        
+        # _____
+        # |   |
+        # |   |
+        # | 6 |
+        # |___|
+        #
+        # 6: Colonna a destra 
+        html.Div(
+            style={
+                "flex": 1, # Occupa 1/3 del page content
+                "padding": "30px",
+                "background-color": "#ffffff", # sfondo bianco
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                "border-radius": "15px" # bordi arrotondati
+            },
+            children=[
+                html.H5("Glicemia:", style={"color": "grey"}),
+                html.Hr(),
+
+                # Cerchio della glicemia
+                # Da cambiare con un grafico a DONUT
+                html.Div(
+                    [
+                        html.Div("110", style={"fontSize": "48px", "fontWeight": "bold"}),
+                        html.H6("mg/dl", style={"color": "grey", "margin": 0}),
+                    ],
+                    style={
+                        # Fondamentali
+                        "width": "200px",
+                        "height": "200px",
+                        # Raggio del 50% rende la figura circolare:
+                        "border-radius": "50%",
+                        "display": "flex",
+                        # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                        "flexDirection": "column",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        # Ombra esterna + ombra interna
+                        "box-shadow": "0 0 8px rgba(255, 0, 0, 0.5), inset 0 0 8px rgba(255, 0, 0, 0.5)",
+                        "margin": "85px auto",
+                        "border": "20px solid red"
+                    }
+                ),
+
+                # Input glicemia
+                html.H6("Nuova misurazione:", style={"color": "grey"}),
+                html.Hr(),
+                dcc.Input(
+                    placeholder="Inserisci glicemia...",
+                    type="number",
+                    style={
+                        "width": "100%", # Occupa l'intera larghezza del box padre
+                        "padding": "15px 20px",
+                        "border-radius": "15px",
+                        "border": "none",
+                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                        "background-color": "#f0f0f0",
+                        "fontSize": "20px"
+                    },
+                    className="mb-3"
+                ),
+
+                # Input Farmaco:
+                html.H6("Farmaco usato:", style={"color": "grey"}),
+                html.Hr(),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            # Inserimento del nome del farmaco
+                            dcc.Input(
+                                placeholder="Inserisci farmaco...",
+                                type="text",
+                                style={
+                                    "width": "100%",
+                                    "padding": "15px 20px",
+                                    "border-radius": "15px",
+                                    "border": "none",
+                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                    "background-color": "#f0f0f0",
+                                    "fontSize": "20px"
+                                }
+                            ),
+                            width=7
+                        ),
+
+                        dbc.Col(
+                            # Inserimento del dosaggio
+                            dcc.Input(
+                                placeholder="Dosaggio...",
+                                type="text",
+                                style={
+                                    "width": "100%",
+                                    "padding": "15px 20px",
+                                    "border-radius": "15px",
+                                    "border": "none",
+                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                    "background-color": "#f0f0f0",
+                                    "fontSize": "20px"
+                                }
+                            ),
+                            width=5
+                        )
+                    ],
+                    className="mb-3"
+                ),
+
+                html.H6("Sintomi riscontrati:", style={"color": "grey"}),
+                html.Hr(),
+                # Input Annotazione sintomi
+                # Input glicemia
+                dcc.Input(
+                    placeholder="Sintomi...",
+                    type="text",
+                    style={
+                        "width": "100%", # Occupa l'intera larghezza del box padre
+                        "padding": "15px 20px",
+                        "border-radius": "15px",
+                        "border": "none",
+                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                        "background-color": "#f0f0f0",
+                        "fontSize": "20px"
+                    }
+                ),
+            ]
+        )
+    ]
+)
+
+# GRAFICI DEL PAZIENTE
+patient_graphs = html.Div(
+    style={
+        # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
+        "flex": 1,
+        # Spazio dai margini esterni
+        "padding": "40px",
+        # divide lo spazio
+        "display": "flex",
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        "flex-direction": "row",
+        # Spazio tra le colonne
+        "gap": "40px" 
+    },
+    children=[
+        html.H2("Da fare")
+    ]
+)
+
+# CHAT
+#   ____________
+#   |   |      |
+#   | 1 |   2  |
+#   |   |      |
+#   |___|______|
+
+chat_content = html.Div(
+    style={
+        "flex": 1,
+        "display": "flex",
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        "flex-direction": "row",
+        # spazio dai margini esterni
+        "padding": "40px",
+        # spazio tra le colonne
+        "gap": "40px"
+    },
+    children=[
+        # Pannello delle chat disponibili
+        #   _____
+        #   |   |
+        #   | 1 |
+        #   |   |
+        #   |___|
+
+        html.Div(
+            style={
+                # Occupa un terzo dello spazio disponibile nella pagina
+                "flex": 1,
+                # padding contenuto interno del Div
+                "padding": "2rem 2rem",
+                # Colore bianco di sfondo
+                "background-color": "#ffffff",
+                "display": "flex",
+                # Lieve ombra blu
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flex-direction": "column",
+                # Margine 
+                "border": "2px solid #dee2e6",
+                # Arrotonda gli angoli
+                "border-radius": "15px"
+            },
+            children=[
+                html.H2("Chat", style={"color": "grey"}),
+                html.Hr(),
+
+                # DA FARE
+
+                # Funzione che carica la lista delle chat disponibili per l'utente
+            ]
+        ),
+
+        # Box della chat
+        #   ________
+        #   |      |
+        #   |   2  |
+        #   |      |
+        #   |______|
+
+        html.Div(
+            style={
+                # Occupa 2/3 dello spazio disponibile
+                "flex": 2,
+                "display": "flex",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flexDirection": "column",
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                "border": "2px solid #dee2e6",
+                # Arrotonda gli angoli
+                "border-radius": "15px",
+                "overflow": "hidden",
+            },
+            children=[
+                # Nome del contatto e dati del contatto
+                html.Div(
+                    style={
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo il 10% dello spazio disponibile in altezza
+                        "height": "10%",
+                        # sfondo bianco
+                        "background-color": "#ffffff",
+                        "padding": "2rem 2rem",
+                        "borderBottom": "2px solid #dee2e6",
+                        
+                    },
+                    children=[
+                        
+                        # DA MODIFICARE
+
+                        html.H2("Nome contatto", style={"color": "grey"})
+                    ]
+                ),
+
+                # Contenitore dei messaggi:
+                html.Div(
+                    id="chat-box",
+                    style={
+                        "flex": "1",
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo l'80% dello spazio disponibile in altezza
+                        "height": "80%",
+                        'display': 'flex',
+                        # direzione degli elementi nel box: "column" = dall'alto al basso
+                        'flexDirection': 'column',
+                        # mostra la barra dello scroll verticale (y axis) : "auto" = solo se il contenuto
+                        # eccede l'altezza del contenitore
+                        'overflowY': 'auto',
+                        'padding': '20px',
+                        # Nessuno sfondo inserito
+                    },
+                    children=[
+                        # Qua verranno visualizzati i messaggi con una funzione che genera dinamicamente le bubbles
+                        # children= ***nome funzione***
+                    ]
+
+                ),
+
+                # Contenitore dell'Input:
+                html.Div(
+                    style={
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo il 10% dello spazio disponibile in altezza
+                        "height": "10%",
+                        # sfondo bianco
+                        "background-color": "#ffffff",
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        "borderTop": "2px solid #dee2e6",
+                        "gap": "30px"
+                    },
+                    children=[
+                        # Input text per il messaggio
+                        dbc.Input(
+                            placeholder="Invia un messaggio...",
+                            type="text",
+                            id="input-text",
+                            style={
+                                "width": "70%",
+                                "padding": "15px 20px",
+                                "border-radius": "15px",
+                                "border": "none",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "background-color": "#f0f0f0",
+                                "fontSize": "20px"
+                            }
+                        ),
+
+                        # Pulsante invio
+                        # NB: il "+" non è perfettamente centrato
+                        dbc.Button(
+                            "+", color="primary",
+                            id="send-btn",
+                            style={
+                                "display": "flex",
+                                "justifyContent": "center",
+                                "alignItems": "center",
+                                "width": "55px",
+                                "height": "55px",
+                                "border-radius": "50%",
+                                "margin": "0",
+                                "padding": "0",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "fontSize": "50px",
+                                "lineHeight": "normal"
+                            }
+                        )
+                    ]
+                )
+            ]
+        )
+    ]
+)
 
 # ******************************************************************************************************************
-#fil aggiunta per provare funzionalità visualizza pazienti (doctor-pazienti) -> da cambiare poi
-def pazienti_diabetologo_layout():
-    id = current_user.get_id_diabetologo()
-    options = model.Diabetologo.visualizza_tutti_pazienti()
+# LAYOUT DEL DIABETOLOGO:
+# 1. Dashboard
+# 2. Pazienti
+# 3. Chat (uguale a chat pazienti)
+# ******************************************************************************************************************
 
-    return html.Div(
-        className="patient_diab_container",
-        style={
-            "width": "100%",
-            "maxWidth": "1200px",
-            "margin": "0 auto",
-            "padding": "20px",
-            "boxSizing": "border-box"
-        },
-        children=[
-            dbc.RadioItems(
-                id="filtro-pazienti",
-                options=[
-                    {"label": "Tutti i pazienti", "value": "PT"},
-                    {"label": "Pazienti associati", "value": "PA"},
-                ],
-                value="PT",
-                inline=True,
-                labelClassName="me-3"           
-            ),
-            dcc.Dropdown(
-                id='dropdown-tutti-pazienti',
-                options=options,
-                placeholder="Seleziona un paziente",
-                style={"width": "100%", "marginBottom": "20px"}
-            ),
+# DASHBOARD DIABETOLOGO
+doctor_dashboard = html.Div(
+    style={
+        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
+        'flex' : 1,
+        'display': 'flex',
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        'flex-direction': 'row',
+        # Spazio dai margini esterni
+        'padding': '40px',
+        # Spazio interno tra le colonne
+        'gap': '40px'
+    },
+    children=[
+        html.H2("Da fare")
+    ]
+)
 
-            html.Div(
-                id="dropdown-output-tutti",
-                style={
-                    "width": "100%",
-                    "maxHeight": "95vh",      # limita l'altezza al 95% della finestra
-                    "overflowY": "auto",      # scroll verticale se serve
-                    "boxSizing": "border-box",
-                    "padding": "20px"
-                }
-            )
-        ]
-    )
+# PAZIENTI DIABETOLOGO
+doctor_patient = html.Div(
+    style={
+        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
+        'flex' : 1,
+        'display': 'flex',
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        'flex-direction': 'row',
+        # Spazio dai margini esterni
+        'padding': '40px',
+        # Spazio interno tra le colonne
+        'gap': '40px'
+    },
+    children=[
+        html.H2("Da fare")
+    ]
+)
 
+# CHAT (= chat_content) -> Già fatta
+
+# ******************************************************************************************************************
+# LAYOUT DELL'ADMIN:
+# 1. Dashboard
+# 2. Richieste
+# 3. Pazienti
+# ******************************************************************************************************************
+
+# DASHBOARD ADMIN
+admin_dashboard = html.Div(
+    style={
+        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
+        'flex' : 1,
+        'display': 'flex',
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        'flex-direction': 'row',
+        # Spazio dai margini esterni
+        'padding': '40px',
+        # Spazio interno tra le colonne
+        'gap': '40px'
+    },
+    children=[
+        html.H2("Da fare")
+    ]
+)
+
+# RICHIESTE
+admin_request = html.Div(
+    style={
+        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
+        'flex' : 1,
+        'display': 'flex',
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        'flex-direction': 'row',
+        # Spazio dai margini esterni
+        'padding': '40px',
+        # Spazio interno tra le colonne
+        'gap': '40px'
+    },
+    children=[
+        html.H2("Da fare")
+    ]
+)
+
+# PAZIENTI ADMIN
+admin_patient = html.Div(
+    style={
+        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
+        'flex' : 1,
+        'display': 'flex',
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        'flex-direction': 'row',
+        # Spazio dai margini esterni
+        'padding': '40px',
+        # Spazio interno tra le colonne
+        'gap': '40px'
+    },
+    children=[
+        html.H2("Da fare")
+    ]
+)
