@@ -193,10 +193,10 @@ def registra_callbacks(app):
         elif isinstance(current_user, model.Diabetologo):
             # Se diabetologo nella dashboard
             if pathname == "/doctor-dashboard":
-                return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
+                return view.doctor_navlinks,view.pazienti_diabetologo_layout(), "/doctor-dashboard"
             # Se diabetologo nella pagina grafici
             elif pathname == "/doctor-patient":
-                return view.doctor_navlinks, view.pazienti_diabetologo_layout(), "/doctor-patient"
+                return view.doctor_navlinks,  view.home_diabetologo_layout(), "/doctor-patient"
             # Se diabetologo nella chat
             elif pathname == "/chat":
                 return view.doctor_navlinks, view.chat_content, "/chat"
@@ -206,7 +206,7 @@ def registra_callbacks(app):
                 return view.guest_navlinks, dash.no_update, "/login"
             # Tenta di accedere a pagina protetta:
             else:
-                return view.doctor_navlinks, view.home_diabetologo_layout(), "/doctor-dashboard"
+                return view.doctor_navlinks, view.pazienti_diabetologo_layout(), "/doctor-dashboard"
     
         # ADMIN
         elif isinstance(current_user, model.Admin):
