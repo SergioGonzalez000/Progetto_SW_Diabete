@@ -987,7 +987,7 @@ def registration_layout():
     )
 
 # ******************************************************************************************************************
-#fil aggiunta per provare funzionalità diabetologo -> da cambiare poi
+#fil aggiunta per provare funzionalità visualizza grafico (doctor-dashboard) -> da cambiare poi
 def home_diabetologo_layout():
     id = current_user.get_id_diabetologo()
     options = model.Diabetologo.visualizza_pazienti_associati(id)
@@ -1017,6 +1017,53 @@ def home_diabetologo_layout():
                 "marginTop": "40px",
                 "border": "1px solid #ccc", 
                 "padding": "10px"
+                }
+            )
+        ]
+    )
+
+
+# ******************************************************************************************************************
+#fil aggiunta per provare funzionalità visualizza pazienti (doctor-pazienti) -> da cambiare poi
+def pazienti_diabetologo_layout():
+    id = current_user.get_id_diabetologo()
+    options = model.Diabetologo.visualizza_tutti_pazienti()
+
+    return html.Div(
+        className="patient_diab_container",
+        style={
+            "width": "100%",
+            "maxWidth": "1200px",
+            "margin": "0 auto",
+            "padding": "20px",
+            "boxSizing": "border-box"
+        },
+        children=[
+            dbc.RadioItems(
+                id="filtro-pazienti",
+                options=[
+                    {"label": "Tutti i pazienti", "value": "PT"},
+                    {"label": "Pazienti associati", "value": "PA"},
+                ],
+                value="PT",
+                inline=True,
+                labelClassName="me-3"           
+            ),
+            dcc.Dropdown(
+                id='dropdown-tutti-pazienti',
+                options=options,
+                placeholder="Seleziona un paziente",
+                style={"width": "100%", "marginBottom": "20px"}
+            ),
+
+            html.Div(
+                id="dropdown-output-tutti",
+                style={
+                    "width": "100%",
+                    "maxHeight": "95vh",      # limita l'altezza al 95% della finestra
+                    "overflowY": "auto",      # scroll verticale se serve
+                    "boxSizing": "border-box",
+                    "padding": "20px"
                 }
             )
         ]

@@ -206,6 +206,14 @@ class Diabetologo(Persona):
         pazienti=[r[0] for r in result]
         return pazienti
     
+    def visualizza_tutti_pazienti():
+        cur.execute("""SELECT p.username 
+                    FROM Paziente p""",
+                    (id,))
+        result=cur.fetchall()
+        pazienti=[r[0] for r in result]
+        return pazienti
+    
     def visualizza_glicemia_paziente(username):
         cur.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
         id_paziente=cur.fetchone()
