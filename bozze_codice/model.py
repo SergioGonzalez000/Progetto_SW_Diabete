@@ -524,6 +524,35 @@ def get_by_username(username_utente):
     return None
 
 
+# funzione che ritorna tutte le richieste di creazione account
+def get_all_richieste_account():
+    cur.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount")
+    result = cur.fetchall()
+    
+    # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
+    options = [
+        {"label": f"{nome} {cognome} {codice_fiscale}", "value": id_richiesta}
+        for id_richiesta, nome, cognome, codice_fiscale in result
+    ]
+    return options
+
+# funzione che prende un diab/paz e ne mostra i dati nella richiesta. 
+# viene triggerata dalla callback del dropdown.
+def get_dati_richiesta_account_by_id(id_richiesta):
+    cur.execute("""
+        SELECT nome, cognome, data_nascita, sesso, codice_fiscale,
+               indirizzo, citta, cap, telefono, email, paziente, data_richiesta, stato_richiesta
+        FROM richiesteaccount
+        WHERE id_richiesta = %s
+    """, (id_richiesta,))
+    result = cur.fetchone()
+
+    if result:
+        chiavi = ["nome", "cognome", "data_nascita", "sesso", "codice_fiscale",
+                  "indirizzo", "citta", "cap", "telefono", "email", "paziente", "data_richiesta", "stato_richiesta"]
+        return dict(zip(chiavi, result))
+    return None
+
 
 if __name__ == '__main__':
     #Paziente.inserisci_glicemia(17,180,'fentanylo',20.5, 'geekd up')

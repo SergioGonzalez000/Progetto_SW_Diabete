@@ -237,6 +237,9 @@ def registra_callbacks(app):
             # Se admin nella lista dei pazienti
             elif pathname == "/admin-patient":
                 return view.admin_navlinks, view.admin_patient, "/admin-patient"
+            # Se admin nella lista dei diabetologi
+            elif pathname == "/admin-doctor":
+                return view.admin_navlinks, view.admin_doctor, "/admin-doctor"
             # Logout dell'admin
             elif pathname == "/logout":
                 logout_user()
@@ -262,4 +265,59 @@ def registra_callbacks(app):
     
         fig = model.Diabetologo.visualizza_glicemia_paziente(value)
         return dcc.Graph(figure=fig)
-       
+    
+
+    # ************************
+    # callback del dropdown della richiesta admin
+    @app.callback(
+        Output("contenitore-informazioni-richiesta", "children"),
+        Input("dropdown-selezione-richiesta-account", "value"),
+    )
+    def mostra_dettagli_richiesta(id_richiesta):
+        if not id_richiesta:
+            return "Seleziona una richiesta per vedere i dettagli."
+
+        dati = model.get_dati_richiesta_account_by_id(id_richiesta)
+        if not dati:
+            return "Nessuna richiesta trovata."
+
+        # crea lista di paragrafi con i dati
+        return [html.P(f"{k.replace('_', ' ').capitalize()}: {v}") for k, v in dati.items()]
+    
+    # **********************
+    # callback dei bottoni nella pagina delle richieste, dell'admin.
+    @app.callback(
+    Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),  # aggiorna magari con un messaggio di conferma
+    [Input("btn-accetta-richiesta", "n_clicks"),
+     Input("btn-rifiuta-richiesta", "n_clicks")],
+    State("dropdown-selezione-richiesta-account", "value"), 
+    prevent_initial_call=True
+    )
+    def gestisci_richiesta_accetta_o_rifiuta(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            return dash.no_update
+
+        # Nessuna richiesta selezionata
+        if not id_richiesta:
+            return "Seleziona una richiesta prima di accettare o rifiutare."
+
+        # Se multi=True e id_richiesta è lista, prendi il primo
+        if isinstance(id_richiesta, list):
+            id_richiesta = id_richiesta[0]
+
+        bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        if bottone_premuto == "btn-accetta-richiesta":
+            # funzione per accettare la richiesta
+            model.Admin.approva_richiesta(id_richiesta)  # definita da te
+            return f"Richiesta {id_richiesta} accettata con successo."
+        elif bottone_premuto == "btn-rifiuta-richiesta":
+            # chiamo la funzione che gestisce il rifiuto
+            rifiuta_richiesta(id_richiesta)                 # da definire!
+            return f"Richiesta {id_richiesta} rifiutata con successo."
+        else:
+            pass
+
+        return dash.no_update
+        

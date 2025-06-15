@@ -95,6 +95,8 @@ admin_navlinks = dbc.Nav(
         dbc.NavLink("Richieste", href="/request", active="exact", style={"fontSize": "20px"}, className="mb-3"), 
         # Link per la pagina dei pazienti
         dbc.NavLink("Pazienti", href="/admin-patient", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        # Link per la pagina dei diabetologi. Servirà a mostrare l'elenco dei diabetologi sulla piattaforma, per poterli manipolare.
+        dbc.NavLink("Diabetologi", href="/admin-doctor", active="exact", style={"fontSize": "20px"}, className="mb-3"),
         html.Hr(),
         # Link per il logout
         html.A("Log out", href="/logout", className="text-danger")       
@@ -1108,7 +1110,66 @@ admin_dashboard = html.Div(
         'gap': '40px'
     },
     children=[
-        html.H2("Da fare")
+        
+        # Colonna con grafico generale di tutti i pazienti a sinistra, statistiche sui pazienti a destra (?)  
+        # Colonna a sinistra 1 (divisa in due righe)
+        html.Div(
+            style={
+                # Occupa 2/3 della page content
+                "flex": 2, 
+                "display": "flex",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flexDirection": "column",
+                # Gli elementi qua dentro sono separati da 30px
+                "gap" : "30px"
+            },
+            children=[
+                
+                # colonna a sx
+                html.Div(
+                    style={
+                        "flex": 1,
+                        "display": "flex"
+                    },
+                    children=[
+                        # 5: Card del grafico
+                        html.Div(
+                            style={
+                                "flex": 1,
+                                "padding": "30px",
+                                "background-color": "#ffffff", # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                                "border-radius": "15px" # bordi arrotondati
+                            },
+                            children=[
+                                html.H5("Grafico:", style={"color" : "grey"}),
+                                html.Hr()
+
+                                # DA FARE
+
+                            ]
+                        )
+                    ]
+                )
+            ]
+        ),
+        
+        # Colonna a destra, con le statistiche sui pazienti
+        html.Div(
+            style={
+                "flex": 1, # Occupa 1/3 del page content
+                "padding": "30px",
+                "background-color": "#ffffff", # sfondo bianco
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+                "border": "2px solid #dee2e6", # bordo di 2px grigio
+                "border-radius": "15px" # bordi arrotondati
+            },
+            children=[
+                html.H5("Statistiche: ", style={"color": "grey"}),
+                html.Hr(),
+            ]
+        )
     ]
 )
 
@@ -1119,14 +1180,72 @@ admin_request = html.Div(
         'flex' : 1,
         'display': 'flex',
         # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
-        'flex-direction': 'row',
+        'flex-direction': 'column',
         # Spazio dai margini esterni
         'padding': '40px',
         # Spazio interno tra le colonne
         'gap': '40px'
     },
     children=[
-        html.H2("Da fare")
+        html.Div(
+            style={
+                "padding": "30px",
+                "background-color": "#ffffff",
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                "border": "2px solid #dee2e6",
+                "border-radius": "15px",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "20px"
+            },
+            children=[
+                html.H4("Elenco richieste", style={"color": "grey"}),
+
+                # dropdown contenente le richieste
+                dcc.Dropdown(
+                    id="dropdown-selezione-richiesta-account",
+                    options= model.get_all_richieste_account(),  # lo riempo via callback. 
+                    multi=False,
+                    placeholder="Seleziona una o più richieste...",
+                    style={
+                        "fontSize": "18px"
+                    }
+                ),
+                
+                # contenitore delle informazioni nella richiesta (output)
+                html.Div(
+                    id="contenitore-informazioni-richiesta",
+                    children=["Seleziona una richiesta per vederne i dettagli"],
+                    style={
+                        "height": "300px",
+                        "overflowY": "auto",
+                        "border": "1px dashed #ccc",
+                        "padding": "20px",
+                        "textAlign": "center"
+                    }
+                ),
+
+                # bottoni per rifiutare o accettare la richiesta
+                html.Div(
+                    children=[
+                        dbc.Button(
+                            "Accetta richiesta",
+                            id="btn-accetta-richiesta",
+                            color="success",
+                            className="me-2",  # margin-end
+                            n_clicks=0
+                        ),
+                        dbc.Button(
+                            "Rifiuta richiesta",
+                            id="btn-rifiuta-richiesta",
+                            color="danger",
+                            n_clicks=0
+                        )
+                    ],
+                    style={"marginTop": "20px", "textAlign": "right"}
+                )
+            ]
+        )
     ]
 )
 
@@ -1145,5 +1264,25 @@ admin_patient = html.Div(
     },
     children=[
         html.H2("Da fare")
+    ]
+)
+
+
+# DIABETOLOGI ADMIN
+admin_doctor = html.Div(
+    style={
+        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
+        'flex' : 1,
+        'display': 'flex',
+        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        'flex-direction': 'row',
+        # Spazio dai margini esterni
+        'padding': '40px',
+        # Spazio interno tra le colonne
+        'gap': '40px'
+    },
+    children=[
+        html.H3("Elenco dei diabetologi"),
+        dbc.Container("Hoochie Coochie")
     ]
 )
