@@ -275,14 +275,14 @@ def registra_callbacks(app):
     )
     def mostra_dettagli_richiesta(id_richiesta):
         if not id_richiesta:
-            return "Seleziona una richiesta per vedere i dettagli."
+            return dbc.Alert("Seleziona una richiesta per vedere i dettagli.", color="secondary")
 
         dati = model.get_dati_richiesta_account_by_id(id_richiesta)
         if not dati:
-            return "Nessuna richiesta trovata."
+            return dbc.Alert("Non ci sono dati", color="danger")
 
         # crea lista di paragrafi con i dati
-        return [html.P(f"{k.replace('_', ' ').capitalize()}: {v}") for k, v in dati.items()]
+        return view.render_dati_richiesta(dati)
     
     # **********************
     # callback dei bottoni nella pagina delle richieste, dell'admin.
@@ -328,5 +328,4 @@ def registra_callbacks(app):
         options = [{"label": f"{r[1]}", "value": r[0]} for r in richieste]
 
         return alert, options
-
         

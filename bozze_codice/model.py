@@ -579,6 +579,51 @@ def get_dati_richiesta_account_by_id(id_richiesta):
     return None
 
 
+# funzione che prende tutti i pazienti nella db
+def get_all_pazienti():
+    cursore_6 = connection.cursor()
+    cursore_6.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente")
+    result = cursore_6.fetchall()
+
+    # Conversione in lista di dizionari
+    pazienti = [
+        {
+            "id": r[0],
+            "nome": r[1],
+            "cognome": r[2],
+            "codice_fiscale": r[3],
+            "data_nascita": r[4],
+            "email": r[5],
+            "telefono": r[6]
+        }
+        for r in result
+    ]
+
+    cursore_6.close()
+    return pazienti
+
+# funzione che prende tutti i diabetologi nella db
+def get_all_diabetologi():
+    cursore_7 = connection.cursor()
+    cursore_7.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo")
+    result = cursore_7.fetchall()
+
+    diabetologi = [
+        {
+            "id": r[0],
+            "nome": r[1],
+            "cognome": r[2],
+            "codice_fiscale": r[3],
+            "data_nascita": r[4],
+            "email": r[5],
+            "telefono": r[6]
+        }
+        for r in result
+    ]
+
+    cursore_7.close()
+    return diabetologi
+
 
 if __name__ == '__main__':
     #Paziente.inserisci_glicemia(17,180,'fentanylo',20.5, 'geekd up')

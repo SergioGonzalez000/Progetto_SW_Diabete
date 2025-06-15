@@ -1217,7 +1217,7 @@ admin_request = html.Div(
                     id="contenitore-informazioni-richiesta",
                     children=["Seleziona una richiesta per vederne i dettagli"],
                     style={
-                        "height": "300px",
+                        "maxHeight": "320px",
                         "overflowY": "auto",
                         "border": "1px dashed #ccc",
                         "padding": "20px",
@@ -1227,13 +1227,13 @@ admin_request = html.Div(
 
                 # bottoni per rifiutare o accettare la richiesta
                 html.Div(
-                    className="d-flex justify-content-center gap-2 mt-3",
+                    className="d-flex justify-content-center gap-2 mt-1",
                     children=[
                         dbc.Button(
                             "Accetta richiesta",
                             id="btn-accetta-richiesta",
                             color="success",
-                            className="me-2",  # margin-end
+                            className="me-3",  # margin-end
                             n_clicks=0
                         ),
                         dbc.Button(
@@ -1243,12 +1243,107 @@ admin_request = html.Div(
                             n_clicks=0
                         )
                     ],
-                    style={"marginTop": "20px", "textAlign": "right"}
+                    style={"marginTop": "10px", "textAlign": "left"}
                 )
             ]
         )
     ]
 )
+
+# funzione che prende i dati e li rende sotto forma di card piu carin e leggibile 
+def render_dati_richiesta(dati):
+    if not dati:
+        return dbc.Alert("Nessuna richiesta trovata.", color="warning")
+
+    return dbc.Card(
+        dbc.CardBody([
+            html.H5(f"{dati['nome']} {dati['cognome']}", className="mb-2"),
+            
+            dbc.Row([
+                dbc.Col([
+                    html.Span("Codice Fiscale: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["codice_fiscale"]))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+                dbc.Col([
+                    html.Span("Data di nascita: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["data_nascita"]))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+            ]),
+            
+            dbc.Row([
+                dbc.Col([
+                    html.Span("Sesso: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["sesso"]))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+                dbc.Col([
+                    html.Span("Città: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati['citta']))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+            ]),
+            
+            dbc.Row([
+                dbc.Col([
+                    html.Span("Indirizzo: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["indirizzo"]))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+                dbc.Col([
+                    html.Span("CAP: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati['cap']))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+            ]),
+            
+            dbc.Row([
+                dbc.Col([
+                    html.Span("Telefono: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["telefono"]))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+                dbc.Col([
+                    html.Span("Email: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["email"]))
+                ], width=6, style={"marginBottom": "0.25rem"}),
+            ]),
+
+            html.Hr(style={"margin": "0.5rem 0"}),
+
+            dbc.Row([
+                dbc.Col([
+                    html.Span("Tipo account: ", style={"fontWeight": "600"}),
+                    html.Span("Paziente" if dati["paziente"] else "Diabetologo")
+                ], width=4, style={"marginBottom": "0.25rem"}),
+                dbc.Col([
+                    html.Span("Data richiesta: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["data_richiesta"]))
+                ], width=4, style={"marginBottom": "0.25rem"}),
+                dbc.Col([
+                    html.Span("Stato: ", style={"fontWeight": "600"}),
+                    html.Span(str(dati["stato_richiesta"]))
+                ], width=4, style={"marginBottom": "0.25rem"}),
+            ]),
+
+        ]),
+        className="shadow-sm w-100",
+        style={"flex": "1", "padding": "1rem"}
+    )
+
+
+def render_lista_pazienti():
+    pazienti = model.get_all_pazienti()
+
+    if not pazienti:
+        return dbc.Alert("Nessun diabetologo registrato.", color="warning")
+
+    return dbc.ListGroup(
+        [
+            dbc.ListGroupItem(
+                [
+                    html.H5(f"{d['nome']} {d['cognome']}", className="mb-1"),
+                    html.Small(d['email'], className="text-muted")
+                ]
+            )
+            for d in pazienti
+        ]
+    )
+
 
 # PAZIENTI ADMIN
 admin_patient = html.Div(
@@ -1264,9 +1359,29 @@ admin_patient = html.Div(
         'gap': '40px'
     },
     children=[
-        html.H2("Da fare")
+        html.H3("Elenco dei pazienti", className="mb-3"),
+        render_lista_pazienti()
     ]
 )
+
+# funzione per il layout dell'elenco diabetologi
+def render_lista_diabetologi():
+    diabetologi = model.get_all_diabetologi()
+
+    if not diabetologi:
+        return dbc.Alert("Nessun diabetologo registrato.", color="warning")
+
+    return dbc.ListGroup(
+        [
+            dbc.ListGroupItem(
+                [
+                    html.H5(f"{d['nome']} {d['cognome']}", className="mb-1"),
+                    html.Small(d['email'], className="text-muted")
+                ]
+            )
+            for d in diabetologi
+        ]
+    )
 
 
 # DIABETOLOGI ADMIN
@@ -1283,7 +1398,8 @@ admin_doctor = html.Div(
         'gap': '40px'
     },
     children=[
-        html.H3("Elenco dei diabetologi"),
-        dbc.Container("Hoochie Coochie")
+        html.H3("Elenco dei diabetologi", className="mb-3"),
+        render_lista_diabetologi()
     ]
 )
+
