@@ -565,9 +565,14 @@ def get_by_username(username_utente):
 
 # funzione che ritorna tutte le richieste di creazione account con stato "in_attesa"
 def get_all_richieste_account():
-    cur.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s", ("in_attesa",))
-    result = cur.fetchall()
     
+    cursore_8 = connection.cursor()
+
+    cursore_8.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s", ("in_attesa",))
+    result = cursore_8.fetchall()
+    
+    cursore_8.close()
+
     # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
     options = [
         {"label": f"{nome} {cognome} {codice_fiscale}", "value": id_richiesta}

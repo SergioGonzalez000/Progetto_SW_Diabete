@@ -324,7 +324,7 @@ def registra_callbacks(app):
             return dash.no_update, dash.no_update
 
         # aggiorna il dropdown con le richieste rimanenti
-        richieste = model.get_richieste_in_attesa()                             # deve restituire lista di tuple/dict
+        richieste = model.get_all_richieste_account()                             # deve restituire lista di tuple/dict
         options = [{"label": f"{r[1]}", "value": r[0]} for r in richieste]
 
         return alert, options
