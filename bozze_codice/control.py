@@ -287,37 +287,46 @@ def registra_callbacks(app):
     # **********************
     # callback dei bottoni nella pagina delle richieste, dell'admin.
     @app.callback(
-    Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),  # aggiorna magari con un messaggio di conferma
-    [Input("btn-accetta-richiesta", "n_clicks"),
-     Input("btn-rifiuta-richiesta", "n_clicks")],
-    State("dropdown-selezione-richiesta-account", "value"), 
-    prevent_initial_call=True
+        [Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),  # aggiorna magari con un messaggio di conferma
+        Output("dropdown-selezione-richiesta-account", "options")],
+        [Input("btn-accetta-richiesta", "n_clicks"),
+        Input("btn-rifiuta-richiesta", "n_clicks")],
+        State("dropdown-selezione-richiesta-account", "value"),
+        prevent_initial_call=True,
+        allow_duplicate=True
     )
     def gestisci_richiesta_accetta_o_rifiuta(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
         ctx = dash.callback_context
+
+        # controlla se è stato effettivamente premuto un bottone
         if not ctx.triggered:
-            return dash.no_update
-
-        # Nessuna richiesta selezionata
-        if not id_richiesta:
-            return "Seleziona una richiesta prima di accettare o rifiutare."
-
-        # Se multi=True e id_richiesta è lista, prendi il primo
-        if isinstance(id_richiesta, list):
-            id_richiesta = id_richiesta[0]
+            return dash.no_update, dash.no_update
 
         bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
 
+        # nessuna richiesta selezionata
+        if not id_richiesta:
+            # ritorna un Alert in caso di azione a vuoto
+            return dbc.Alert("Seleziona una richiesta prima di accettare o rifiutare.", color="warning", dismissable=True), dash.no_update
+
+        # azioni da compiere in base al bottone premuto
         if bottone_premuto == "btn-accetta-richiesta":
             # funzione per accettare la richiesta
-            model.Admin.approva_richiesta(id_richiesta)  # definita da te
-            return f"Richiesta {id_richiesta} accettata con successo."
+            model.Admin.approva_richiesta(id_richiesta)     # gia definita
+            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
+
         elif bottone_premuto == "btn-rifiuta-richiesta":
             # chiamo la funzione che gestisce il rifiuto
-            rifiuta_richiesta(id_richiesta)                 # da definire!
-            return f"Richiesta {id_richiesta} rifiutata con successo."
-        else:
-            pass
+            rifiuta_richiesta(id_richiesta)                 # da fare
+            alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
 
-        return dash.no_update
+        else:
+            return dash.no_update, dash.no_update
+
+        # aggiorna il dropdown con le richieste rimanenti
+        richieste = model.get_richieste_in_attesa()                             # deve restituire lista di tuple/dict
+        options = [{"label": f"{r[1]}", "value": r[0]} for r in richieste]
+
+        return alert, options
+
         

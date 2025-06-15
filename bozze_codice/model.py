@@ -291,15 +291,26 @@ class Admin(Persona):
                     (d.nome, d.cognome, d.data_nascita, d.sesso, d.cf, d.indirizzo, d.citta, d.cap, d.tel, d.email, d.username, d.pw))
         connection.commit()
 
+    
     def approva_richiesta(id_richiesta):
-        cur.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
-        richiesta = cur.fetchone()
+        
+        cursore_4 = connection.cursor()
+
+        cursore_4.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ", (id_richiesta,))
+        richiesta = cursore_4.fetchone()
         _,nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, flag_paziente, _,_, password=richiesta
         
 
         tipo = "paziente" if flag_paziente else "diabetologo"
         username=Admin.genera_username(id_richiesta)
         persona = PersonaFactory.crea_persona(tipo, nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, password)
+
+        # aggiunta modifica dello stato della richiesta nel database.
+        cursore_4.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta = 'approvata' WHERE id_richiesta = %s", (id_richiesta,))
+        connection.commit()
+
+        cursore_4.close()
 
         if flag_paziente:
             Admin.inserisci_paziente(persona)
@@ -465,11 +476,16 @@ class Glicemia():
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
 #      procede ad inserirle effettivamente nella base di dati 
 def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password):
-    cur.execute("""INSERT INTO RichiesteAccount 
+    
+    # aggiunto cursore nuovo, per evitare errori di buffer
+    cursore_3 = connection.cursor()
+    
+    cursore_3.execute("""INSERT INTO RichiesteAccount 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, paziente, password) 
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, generate_password_hash(password)))
     connection.commit()
+    cursore_3.close()       # chiudo il cursore per evitare leaks
         
 
 # Funzione che prende un utente dato lo username, e restituisce un oggetto Persona.diabetologo o Persona.paziente
@@ -524,9 +540,11 @@ def get_by_username(username_utente):
     return None
 
 
-# funzione che ritorna tutte le richieste di creazione account
+
+
+# funzione che ritorna tutte le richieste di creazione account con stato "in_attesa"
 def get_all_richieste_account():
-    cur.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount")
+    cur.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s", ("in_attesa",))
     result = cur.fetchall()
     
     # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
@@ -536,22 +554,30 @@ def get_all_richieste_account():
     ]
     return options
 
+
+
 # funzione che prende un diab/paz e ne mostra i dati nella richiesta. 
 # viene triggerata dalla callback del dropdown.
 def get_dati_richiesta_account_by_id(id_richiesta):
-    cur.execute("""
+    
+    cursore_5 = connection.cursor()
+
+    cursore_5.execute("""
         SELECT nome, cognome, data_nascita, sesso, codice_fiscale,
                indirizzo, citta, cap, telefono, email, paziente, data_richiesta, stato_richiesta
         FROM richiesteaccount
         WHERE id_richiesta = %s
     """, (id_richiesta,))
-    result = cur.fetchone()
+    result = cursore_5.fetchone()
+
+    cursore_5.close()
 
     if result:
         chiavi = ["nome", "cognome", "data_nascita", "sesso", "codice_fiscale",
                   "indirizzo", "citta", "cap", "telefono", "email", "paziente", "data_richiesta", "stato_richiesta"]
         return dict(zip(chiavi, result))
     return None
+
 
 
 if __name__ == '__main__':

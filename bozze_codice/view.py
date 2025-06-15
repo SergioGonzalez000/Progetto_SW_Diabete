@@ -1227,6 +1227,7 @@ admin_request = html.Div(
 
                 # bottoni per rifiutare o accettare la richiesta
                 html.Div(
+                    className="d-flex justify-content-center gap-2 mt-3",
                     children=[
                         dbc.Button(
                             "Accetta richiesta",
