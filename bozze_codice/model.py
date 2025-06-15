@@ -206,6 +206,14 @@ class Diabetologo(Persona):
         pazienti=[r[0] for r in result]
         return pazienti
     
+    def visualizza_tutti_pazienti():
+        cur.execute("""SELECT p.username 
+                    FROM Paziente p""",
+                    (id,))
+        result=cur.fetchall()
+        pazienti=[r[0] for r in result]
+        return pazienti
+    
     def visualizza_glicemia_paziente(username):
         cur.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
         id_paziente=cur.fetchone()
@@ -316,6 +324,19 @@ class Admin(Persona):
             Admin.inserisci_paziente(persona)
         else:
             Admin.inserisci_diabetologo(persona)
+
+        cur.execute(""" SELECT d.id_diabetologo
+                        FROM diabetologo d
+                        LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
+                        GROUP BY d.id_diabetologo
+                        ORDER BY COUNT(p.id_paziente) ASC
+                        LIMIT 1;
+                    """)
+        id_diabetologo=cur.fetchone()[0]
+        cur.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,persona.cf))
+        cur.execute("UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s ",('approvata',id_richiesta))
+        connection.commit()
+
         
 
 #fil - design pattern factory, per rendere la creazione di oggetti riguardanti gli attori principali più 'elegante'
@@ -626,10 +647,7 @@ def get_all_diabetologi():
 
 
 if __name__ == '__main__':
-    #Paziente.inserisci_glicemia(17,180,'fentanylo',20.5, 'geekd up')
-    # Esempio: 31 dicembre 2025, ore 10:30
-    data_i= datetime.datetime(2025, 12, 31, 10, 30, 0)
+    
     # Esempio: 31 dicembre 2025, ore 10:30
     data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
-    Admin.approva_richiesta(47)
-    # Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)
+    Admin.approva_richiesta(49)

@@ -211,10 +211,10 @@ def registra_callbacks(app):
         elif isinstance(current_user, model.Diabetologo):
             # Se diabetologo nella dashboard
             if pathname == "/doctor-dashboard":
-                return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
+                return view.doctor_navlinks,view.pazienti_diabetologo_layout(), "/doctor-dashboard"
             # Se diabetologo nella pagina grafici
             elif pathname == "/doctor-patient":
-                return view.doctor_navlinks, view.doctor_patient, "/doctor-patient"
+                return view.doctor_navlinks,  view.home_diabetologo_layout(), "/doctor-patient"
             # Se diabetologo nella chat
             elif pathname == "/chat":
                 return view.doctor_navlinks, view.chat_content, "/chat"
@@ -224,7 +224,7 @@ def registra_callbacks(app):
                 return view.guest_navlinks, dash.no_update, "/login"
             # Tenta di accedere a pagina protetta:
             else:
-                return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
+                return view.doctor_navlinks, view.pazienti_diabetologo_layout(), "/doctor-dashboard"
     
         # ADMIN
         elif isinstance(current_user, model.Admin):
@@ -252,18 +252,18 @@ def registra_callbacks(app):
         else:
             return dash.no_update, html.H2("404 - Page not found"), "/404"
 
-    # ******************************************************************************************************************
+# ******************************************************************************************************************
     
     #permette di vedere i grafici paziente per paziente al diabetologo
     @app.callback(
         Output("dropdown-output","children"),
         Input("dropdown-pazienti","value"),
     )
-    def visualizza_grafico_paziente(value):
-        if not value:
+    def visualizza_grafico_paziente(paziente):
+        if not paziente:
             return "Seleziona un paziente per visualizzare il grafico."
     
-        fig = model.Diabetologo.visualizza_glicemia_paziente(value)
+        fig = model.Diabetologo.visualizza_glicemia_paziente(paziente)
         return dcc.Graph(figure=fig)
     
 
@@ -329,3 +329,28 @@ def registra_callbacks(app):
 
         return alert, options
         
+# ******************************************************************************************************************
+    
+    #permette di vedere i grafici paziente per paziente al diabetologo
+    @app.callback(
+        Output("dropdown-output-tutti","children"),
+        Output("dropdown-tutti-pazienti","options"),
+        Input("dropdown-tutti-pazienti","value"),
+        Input("filtro-pazienti","value")
+    )
+    def visualizza_lista_pazienti(paziente,scelta):
+        
+        id = current_user.get_id_diabetologo()
+
+        if scelta=='PA':
+            lista=model.Diabetologo.visualizza_pazienti_associati(id)
+        else:
+            lista=model.Diabetologo.visualizza_tutti_pazienti()
+
+        opzioni = [{"label": nome, "value": nome} for nome in lista]
+
+        if not paziente:
+            return "Seleziona un paziente per visualizzare il grafico.",opzioni
+        #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
+        return view.patient_dashboard,opzioni
+       
