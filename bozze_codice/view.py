@@ -1224,9 +1224,17 @@ admin_dashboard = html.Div(
                             },
                             children=[
                                 html.H5("Grafico:", style={"color" : "grey"}),
-                                html.Hr()
-
-                                # DA FARE
+                                html.Hr(),
+                                
+                                dcc.Graph(
+                                    id= "grafico-glicemia-tutti",
+                                    figure= model.visualizza_glicemia_tutti_pazienti(),
+                                    style={ "height": "70vh"},
+                                    config={
+                                        "displayModeBar": False,           # mostra la barra (puoi anche usare False per nasconderla)
+                                    }
+                                )
+                                
 
                             ]
                         )
@@ -1235,21 +1243,21 @@ admin_dashboard = html.Div(
             ]
         ),
         
-        # Colonna a destra, con le statistiche sui pazienti
-        html.Div(
-            style={
-                "flex": 1, # Occupa 1/3 del page content
-                "padding": "30px",
-                "background-color": "#ffffff", # sfondo bianco
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                "border-radius": "15px" # bordi arrotondati
-            },
-            children=[
-                html.H5("Statistiche: ", style={"color": "grey"}),
-                html.Hr(),
-            ]
-        )
+        # # Colonna a destra, con le statistiche sui pazienti
+        # html.Div(
+        #     style={
+        #         "flex": 0.5, # Occupa 1/6 del page content
+        #         "padding": "30px",
+        #         "background-color": "#ffffff", # sfondo bianco
+        #         "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
+        #         "border": "2px solid #dee2e6", # bordo di 2px grigio
+        #         "border-radius": "15px" # bordi arrotondati
+        #     },
+        #     children=[
+        #         html.H5("Statistiche: ", style={"color": "grey"}),
+        #         html.Hr(),
+        #     ]
+        # )
     ]
 )
 
