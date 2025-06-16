@@ -317,7 +317,7 @@ def registra_callbacks(app):
 
         elif bottone_premuto == "btn-rifiuta-richiesta":
             # chiamo la funzione che gestisce il rifiuto
-            rifiuta_richiesta(id_richiesta)                 # da fare
+            model.rifiuta_richiesta(id_richiesta)                 # da fare
             alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
             
         else:
