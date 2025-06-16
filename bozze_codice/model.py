@@ -183,47 +183,71 @@ class Diabetologo(Persona):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
     def get_id_diabetologo(self):
-        cur.execute("""SELECT id_diabetologo
+        
+        cursore_9 = connection.cursor()
+        
+        cursore_9.execute("""SELECT id_diabetologo
                     FROM Diabetologo 
                     WHERE codice_fiscale = %s""", (self.cf,))
-        id=cur.fetchone()[0]
+        id=cursore_9.fetchone()[0]
+        cursore_9.close()
+        
         return id
     
     def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine):
-        cur.execute("""INSERT INTO Terapia 
+        
+        cursore_10 = connection.cursor()
+        
+        cursore_10.execute("""INSERT INTO Terapia 
                     (paziente, diabetologo, farmaco, dosaggio, assunzioni_gg, data_inizio, data_fine) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
                     (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine))
         connection.commit()
+        cursore_10.close()
 
     def visualizza_pazienti_associati(id):
-        cur.execute("""SELECT p.username 
+        
+        cursore_11 = connection.cursor()
+        
+        cursore_11.execute("""SELECT p.username 
                     FROM Paziente p, Diabetologo d 
                     WHERE p.diabetologo_associato=d.id_diabetologo 
                     AND d.id_diabetologo = %s""",
                     (id,))
-        result=cur.fetchall()
+        result=cursore_11.fetchall()
+        cursore_11.close()
+
         pazienti=[r[0] for r in result]
         return pazienti
     
     def visualizza_tutti_pazienti():
-        cur.execute("""SELECT p.username 
+        
+        cursore_12 = connection.cursor()
+
+        cursore_12.execute("""SELECT p.username 
                     FROM Paziente p""",
                     (id,))
-        result=cur.fetchall()
+        result=cursore_12.fetchall()
+        cursore_12.close()
+
         pazienti=[r[0] for r in result]
         return pazienti
     
     def visualizza_glicemia_paziente(username):
-        cur.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
-        id_paziente=cur.fetchone()
-        cur.execute("""
+        
+        cursore_13 = connection.cursor()
+
+        cursore_13.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
+        id_paziente=cursore_13.fetchone()
+        cursore_13.execute("""
             SELECT g.valore, g.data_inserimento 
             FROM Glicemia g  
             WHERE g.paziente = %s
             ORDER BY g.data_inserimento"""
             , (id_paziente[0],))
-        dati = cur.fetchall()
+        dati = cursore_13.fetchall()
+
+        cursore_13.close()
 
         # Separare i dati della tupla 
         valori = [r[0] for r in dati]
@@ -245,8 +269,8 @@ class Diabetologo(Persona):
         return fig
 
 
-
-
+# ***********
+# da fare?
 
     def aggiorna_terapia_paziente():
         pass
@@ -266,38 +290,50 @@ class Admin(Persona):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
     def genera_username(id_richiesta):
-        cur.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
-        richiesta = cur.fetchone()
+        
+        cursore_14 = connection.cursor()
+        
+        cursore_14.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
+        richiesta = cursore_14.fetchone()
         nome=richiesta[1]
         cognome=richiesta[2]
         paziente=richiesta[11]
 
         if paziente:
-            cur.execute("SELECT * FROM Paziente WHERE nome = %s AND cognome = %s",(nome,cognome))
-            righe = cur.fetchall()
+            cursore_14.execute("SELECT * FROM Paziente WHERE nome = %s AND cognome = %s",(nome,cognome))
+            righe = cursore_14.fetchall()
             num=len(righe)
             username=f"{nome}.{cognome}{num}_P"
         else:
-            cur.execute("SELECT * FROM Diabetologo WHERE nome = %s AND  cognome = %s",(nome,cognome))
-            righe = cur.fetchall()
+            cursore_14.execute("SELECT * FROM Diabetologo WHERE nome = %s AND  cognome = %s",(nome,cognome))
+            righe = cursore_14.fetchall()
             num=len(righe)
             username=f"{nome}.{cognome}{num}_D"
 
+        cursore_14.close()
         return username
 
     def inserisci_paziente(p: Paziente):
-        cur.execute("""INSERT INTO Paziente 
+        
+        cursore_15 = connection.cursor()
+
+        cursore_15.execute("""INSERT INTO Paziente 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
                     (p.nome, p.cognome, p.data_nascita, p.sesso, p.cf, p.indirizzo, p.citta, p.cap, p.tel, p.email, p.username, p.pw))
         connection.commit()
+        cursore_15.close()
 
     def inserisci_diabetologo(d: Diabetologo):
-        cur.execute("""INSERT INTO Diabetologo 
+        
+        cursore_16 = connection.cursor()
+        
+        cursore_16.execute("""INSERT INTO Diabetologo 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
                     (d.nome, d.cognome, d.data_nascita, d.sesso, d.cf, d.indirizzo, d.citta, d.cap, d.tel, d.email, d.username, d.pw))
         connection.commit()
+        cursore_16.close()
 
     
     def approva_richiesta(id_richiesta):
@@ -318,24 +354,24 @@ class Admin(Persona):
             "UPDATE RichiesteAccount SET stato_richiesta = 'approvata' WHERE id_richiesta = %s", (id_richiesta,))
         connection.commit()
 
-        cursore_4.close()
-
         if flag_paziente:
             Admin.inserisci_paziente(persona)
         else:
             Admin.inserisci_diabetologo(persona)
 
-        cur.execute(""" SELECT d.id_diabetologo
+        cursore_4.execute(""" SELECT d.id_diabetologo
                         FROM diabetologo d
                         LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
                         GROUP BY d.id_diabetologo
                         ORDER BY COUNT(p.id_paziente) ASC
                         LIMIT 1;
                     """)
-        id_diabetologo=cur.fetchone()[0]
-        cur.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,persona.cf))
-        cur.execute("UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s ",('approvata',id_richiesta))
+        id_diabetologo=cursore_4.fetchone()[0]
+        cursore_4.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,persona.cf))
+        cursore_4.execute("UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s ",('approvata',id_richiesta))
         connection.commit()
+        
+        cursore_4.close()
 
         
 
@@ -649,6 +685,58 @@ def get_all_diabetologi():
 
     cursore_7.close()
     return diabetologi
+
+
+# funzione che permette di visualizzare il grafico di tutti i pazienti nella db.
+# problema: come fare i filtri?
+def visualizza_glicemia_tutti_pazienti():
+    
+    cursore_17 = connection.cursor()
+
+    cursore_17.execute("SELECT id_paziente, username FROM Paziente")
+    pazienti = cursore_17.fetchall()
+
+    fig = go.Figure()
+
+    for id_paziente, username in pazienti:
+        cursore_17.execute("""
+            SELECT valore, data_inserimento 
+            FROM Glicemia 
+            WHERE paziente = %s
+            ORDER BY data_inserimento
+        """, (id_paziente,))
+        dati = cursore_17.fetchall()
+
+        if not dati:
+            continue                    # per i pazienti senza dati
+
+        valori = [r[0] for r in dati]
+        date = [r[1] for r in dati]
+
+        fig.add_trace(go.Scatter(
+            x=date,
+            y=valori,
+            mode='lines+markers',
+            name=f"{username}"
+        ))
+
+    # layout del grafico
+    fig.update_layout(
+        xaxis_title="data di inserimento",
+        yaxis_title="glicemia (mg/dL)",
+         legend=dict(
+            orientation="h",  # orizzontale
+            yanchor="bottom",
+            y=1.02,  # poco sopra il grafico (usa y=0 per sotto)
+            xanchor="left",
+            x=0
+        ),
+        margin=dict(l=10, r=10, t=5, b=10),  # riduco i margini del grafico
+    )
+
+    cursore_17.close()
+
+    return fig
 
 
 if __name__ == '__main__':

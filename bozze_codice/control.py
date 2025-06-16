@@ -319,7 +319,7 @@ def registra_callbacks(app):
             # chiamo la funzione che gestisce il rifiuto
             rifiuta_richiesta(id_richiesta)                 # da fare
             alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
-
+            
         else:
             return dash.no_update, dash.no_update
 
