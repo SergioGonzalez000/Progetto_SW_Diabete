@@ -7,6 +7,9 @@ from werkzeug.security import generate_password_hash #password criptate
 import psycopg2
 from flask_login import UserMixin, login_user, logout_user, current_user 
 import dash
+import plotly.express as px
+import plotly.graph_objects as go
+
 
 connection = psycopg2.connect(
     host='aws-0-eu-central-2.pooler.supabase.com',
@@ -150,7 +153,9 @@ class Persona(UserMixin):
 class autenticabile():
     pass
     
-      
+
+
+
 class Paziente(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
@@ -168,28 +173,106 @@ class Paziente(Persona):
     def associa_a_diabetologo():
         pass
 
-        
+
+
+
+
 
 class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
+
+    def get_id_diabetologo(self):
+        
+        cursore_9 = connection.cursor()
+        
+        cursore_9.execute("""SELECT id_diabetologo
+                    FROM Diabetologo 
+                    WHERE codice_fiscale = %s""", (self.cf,))
+        id=cursore_9.fetchone()[0]
+        cursore_9.close()
+        
+        return id
     
     def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine):
-        cur.execute("""INSERT INTO Terapia 
+        
+        cursore_10 = connection.cursor()
+        
+        cursore_10.execute("""INSERT INTO Terapia 
                     (paziente, diabetologo, farmaco, dosaggio, assunzioni_gg, data_inizio, data_fine) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
                     (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine))
         connection.commit()
+        cursore_10.close()
 
-    # Funzione per aggiornare la terapia corrente/i singoli campi della terapia corrente? 
-    # ad es. in caso di errori
+    def visualizza_pazienti_associati(id):
+        
+        cursore_11 = connection.cursor()
+        
+        cursore_11.execute("""SELECT p.username 
+                    FROM Paziente p, Diabetologo d 
+                    WHERE p.diabetologo_associato=d.id_diabetologo 
+                    AND d.id_diabetologo = %s""",
+                    (id,))
+        result=cursore_11.fetchall()
+        cursore_11.close()
+
+        pazienti=[r[0] for r in result]
+        return pazienti
+    
+    def visualizza_tutti_pazienti():
+        
+        cursore_12 = connection.cursor()
+
+        cursore_12.execute("""SELECT p.username 
+                    FROM Paziente p""",
+                    (id,))
+        result=cursore_12.fetchall()
+        cursore_12.close()
+
+        pazienti=[r[0] for r in result]
+        return pazienti
+    
+    def visualizza_glicemia_paziente(username):
+        
+        cursore_13 = connection.cursor()
+
+        cursore_13.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
+        id_paziente=cursore_13.fetchone()
+        cursore_13.execute("""
+            SELECT g.valore, g.data_inserimento 
+            FROM Glicemia g  
+            WHERE g.paziente = %s
+            ORDER BY g.data_inserimento"""
+            , (id_paziente[0],))
+        dati = cursore_13.fetchall()
+
+        cursore_13.close()
+
+        # Separare i dati della tupla 
+        valori = [r[0] for r in dati]
+        date = [r[1] for r in dati]
+
+        fig = go.Figure(
+            data=go.Scatter(
+                x=date,
+                y=valori,
+                mode='lines+markers',  # Mostra punti e linee
+                line=dict(color='blue'),
+                marker=dict(size=8)
+            )
+        )
+
+        fig.update_layout(title="Andamento completo",
+                        xaxis_title="Momento rilevazione",
+                        yaxis_title="Valori")
+        return fig
+
+
+# ***********
+# da fare?
+
     def aggiorna_terapia_paziente():
-        pass
-
-    # Da buildare in un secondo momento.
-    # Come detto dal prof, il diabetologo deve essere in grado di vedere solo i grafici delle glicemie dei pazienti 
-    # a lui associati.
-    def visualizza_glicemia_pazienti_associati():
         pass
 
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
@@ -199,47 +282,66 @@ class Diabetologo(Persona):
         pass
 
 
+
+
+    
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
     def genera_username(id_richiesta):
-        cur.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
-        richiesta = cur.fetchone()
+        
+        cursore_14 = connection.cursor()
+        
+        cursore_14.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
+        richiesta = cursore_14.fetchone()
         nome=richiesta[1]
         cognome=richiesta[2]
         paziente=richiesta[11]
 
         if paziente:
-            cur.execute("SELECT * FROM Paziente WHERE nome = %s AND cognome = %s",(nome,cognome))
-            righe = cur.fetchall()
+            cursore_14.execute("SELECT * FROM Paziente WHERE nome = %s AND cognome = %s",(nome,cognome))
+            righe = cursore_14.fetchall()
             num=len(righe)
             username=f"{nome}.{cognome}{num}_P"
         else:
-            cur.execute("SELECT * FROM Diabetologo WHERE nome = %s AND  cognome = %s",(nome,cognome))
-            righe = cur.fetchall()
+            cursore_14.execute("SELECT * FROM Diabetologo WHERE nome = %s AND  cognome = %s",(nome,cognome))
+            righe = cursore_14.fetchall()
             num=len(righe)
             username=f"{nome}.{cognome}{num}_D"
 
+        cursore_14.close()
         return username
 
     def inserisci_paziente(p: Paziente):
-        cur.execute("""INSERT INTO Paziente 
+        
+        cursore_15 = connection.cursor()
+
+        cursore_15.execute("""INSERT INTO Paziente 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
                     (p.nome, p.cognome, p.data_nascita, p.sesso, p.cf, p.indirizzo, p.citta, p.cap, p.tel, p.email, p.username, p.pw))
         connection.commit()
+        cursore_15.close()
 
     def inserisci_diabetologo(d: Diabetologo):
-        cur.execute("""INSERT INTO Diabetologo 
+        
+        cursore_16 = connection.cursor()
+        
+        cursore_16.execute("""INSERT INTO Diabetologo 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
                     (d.nome, d.cognome, d.data_nascita, d.sesso, d.cf, d.indirizzo, d.citta, d.cap, d.tel, d.email, d.username, d.pw))
         connection.commit()
+        cursore_16.close()
 
+    
     def approva_richiesta(id_richiesta):
-        cur.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
-        richiesta = cur.fetchone()
+        
+        cursore_4 = connection.cursor()
+
+        cursore_4.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ", (id_richiesta,))
+        richiesta = cursore_4.fetchone()
         _,nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, flag_paziente, _,_, password=richiesta
         
 
@@ -247,10 +349,30 @@ class Admin(Persona):
         username=Admin.genera_username(id_richiesta)
         persona = PersonaFactory.crea_persona(tipo, nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, password)
 
+        # aggiunta modifica dello stato della richiesta nel database.
+        cursore_4.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta = 'approvata' WHERE id_richiesta = %s", (id_richiesta,))
+        connection.commit()
+
         if flag_paziente:
             Admin.inserisci_paziente(persona)
         else:
             Admin.inserisci_diabetologo(persona)
+
+        cursore_4.execute(""" SELECT d.id_diabetologo
+                        FROM diabetologo d
+                        LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
+                        GROUP BY d.id_diabetologo
+                        ORDER BY COUNT(p.id_paziente) ASC
+                        LIMIT 1;
+                    """)
+        id_diabetologo=cursore_4.fetchone()[0]
+        cursore_4.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,persona.cf))
+        cursore_4.execute("UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s ",('approvata',id_richiesta))
+        connection.commit()
+        
+        cursore_4.close()
+
         
 
 #fil - design pattern factory, per rendere la creazione di oggetti riguardanti gli attori principali più 'elegante'
@@ -266,6 +388,9 @@ class PersonaFactory:
             return Admin(nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw)
         else:
             raise ValueError("Tipo di persona non valido")
+
+
+
 
 
 # classi Terapia, Farmaco e Glicemia abbozzate, variabili d'istanza minime necessarie, qualche idea per i metodi
@@ -312,7 +437,10 @@ class Terapia():
     def periodo_terapia(self, value):
         self._periodo_terapia = value
         
-        
+
+
+
+
 class Farmaco():
     def __init__(self, nome, tipologia, unita_misura, codice_univoco):
         self.nome = nome
@@ -360,6 +488,9 @@ class Farmaco():
     def aggiungi_farmaco():
         pass
 
+
+
+
     
 class Glicemia():
     def __init__(self, valore, data_assunzione, ora_assunzione):
@@ -395,35 +526,61 @@ class Glicemia():
         self._ora_assunzione = ora_assunzione
         
 
+
+#da qua in poi metodi generali non appartenenti a classi specifiche
+
+
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
 #      procede ad inserirle effettivamente nella base di dati 
 def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password):
-    cur.execute("""INSERT INTO RichiesteAccount 
+    
+    # aggiunto cursore nuovo, per evitare errori di buffer
+    cursore_3 = connection.cursor()
+    
+    cursore_3.execute("""INSERT INTO RichiesteAccount 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, paziente, password) 
                     VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
                     (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, generate_password_hash(password)))
     connection.commit()
+    cursore_3.close()       # chiudo il cursore per evitare leaks
         
 
 # Funzione che prende un utente dato lo username, e restituisce un oggetto Persona.diabetologo o Persona.paziente
 # n.b lo username deve essere univoco altrimenti disastro dc
+# esteso per aggiungere la query sulla tabella "amministratore"
 def get_by_username(username_utente):
-    '''se l'utente esiste ritorna un oggetto paziente/diabetologo con i campi compilati, se non esiste, ritorna None '''
+    '''se l'utente esiste ritorna un oggetto paziente/diabetologo/admin con i campi compilati, se non esiste, ritorna None '''
     
-    presente_in_paziente = False  # flag per controllare se l'utente è un paz/diab
+    # ho dovuto aggiungere questo cursore locale per evitare letture sporche e sovrapposizioni nelle query (dava errori strani)
+    cursore_2 = connection.cursor()
 
-    # non ho messo questa query direttamente nel main perchè avrei dovuto creare un cursore anche lì
-    query_ricerca_paziente = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM paziente WHERE username= %s" # pw deve essere la hash
-    cur.execute(query_ricerca_paziente, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
-    record = cur.fetchone()
+    presente_in_paziente = False     # flag per controllare se l'utente è un paz/diab
+    presente_in_diabetologo = False  # flag per controllare se l'utente è un diab
+    presente_in_admin = False        # flag per controllare se l'utente è un admin
 
-    if record:      # se non c'è in paziente, cerchiamo se c'è in diabetologo. se non c'è --> return None
+    # uso il cursore che c'è già a livello globale
+    query_ricerca = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM paziente WHERE username= %s" # pw deve essere la hash
+    cursore_2.execute(query_ricerca, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
+    record = cursore_2.fetchone()
+
+    if record:      # se non c'è in paziente, cerchiamo se c'è in diabetologo. se non c'è --> controlliamo admin. se non c'è --> return None
         presente_in_paziente = True
     else:
-        query_ricerca_paziente = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM diabetologo WHERE username= %s" # pw deve essere la hash
-        cur.execute(query_ricerca_paziente, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
-        record = cur.fetchone()
+        query_ricerca = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM diabetologo WHERE username= %s" # pw deve essere la hash
+        cursore_2.execute(query_ricerca, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
+        record = cursore_2.fetchone()
 
+        if record:
+            presente_in_diabetologo = True
+        else:
+            query_ricerca = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM amministratore WHERE username= %s" # pw deve essere la hash
+            cursore_2.execute(query_ricerca, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
+            record = cursore_2.fetchone()
+            if record:
+                presente_in_admin = True
+
+    # chiudo il cursore dopo aver effettuato tutte le query.
+    cursore_2.close()
 
     # se il record proviene da diabetologo, uso il costruttore del diabetologo, altrimenti del paziente
     # i dati nel recordo sarebbero (in ordine):
@@ -431,17 +588,159 @@ def get_by_username(username_utente):
     if record and presente_in_paziente:
         return PersonaFactory.crea_persona(
             "paziente", record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
-    elif record and not presente_in_paziente:
+    elif record and presente_in_diabetologo:
         return PersonaFactory.crea_persona(
             "diabetologo", record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
+    elif record and presente_in_admin:
+        return PersonaFactory.crea_persona(
+            "admin", record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
     return None
 
 
+
+
+# funzione che ritorna tutte le richieste di creazione account con stato "in_attesa"
+def get_all_richieste_account():
+    
+    cursore_8 = connection.cursor()
+
+    cursore_8.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s", ("in_attesa",))
+    result = cursore_8.fetchall()
+    
+    cursore_8.close()
+
+    # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
+    options = [
+        {"label": f"{nome} {cognome} {codice_fiscale}", "value": id_richiesta}
+        for id_richiesta, nome, cognome, codice_fiscale in result
+    ]
+    return options
+
+
+
+# funzione che prende un diab/paz e ne mostra i dati nella richiesta. 
+# viene triggerata dalla callback del dropdown.
+def get_dati_richiesta_account_by_id(id_richiesta):
+    
+    cursore_5 = connection.cursor()
+
+    cursore_5.execute("""
+        SELECT nome, cognome, data_nascita, sesso, codice_fiscale,
+               indirizzo, citta, cap, telefono, email, paziente, data_richiesta, stato_richiesta
+        FROM richiesteaccount
+        WHERE id_richiesta = %s
+    """, (id_richiesta,))
+    result = cursore_5.fetchone()
+
+    cursore_5.close()
+
+    if result:
+        chiavi = ["nome", "cognome", "data_nascita", "sesso", "codice_fiscale",
+                  "indirizzo", "citta", "cap", "telefono", "email", "paziente", "data_richiesta", "stato_richiesta"]
+        return dict(zip(chiavi, result))
+    return None
+
+
+# funzione che prende tutti i pazienti nella db
+def get_all_pazienti():
+    cursore_6 = connection.cursor()
+    cursore_6.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente")
+    result = cursore_6.fetchall()
+
+    # Conversione in lista di dizionari
+    pazienti = [
+        {
+            "id": r[0],
+            "nome": r[1],
+            "cognome": r[2],
+            "codice_fiscale": r[3],
+            "data_nascita": r[4],
+            "email": r[5],
+            "telefono": r[6]
+        }
+        for r in result
+    ]
+
+    cursore_6.close()
+    return pazienti
+
+# funzione che prende tutti i diabetologi nella db
+def get_all_diabetologi():
+    cursore_7 = connection.cursor()
+    cursore_7.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo")
+    result = cursore_7.fetchall()
+
+    diabetologi = [
+        {
+            "id": r[0],
+            "nome": r[1],
+            "cognome": r[2],
+            "codice_fiscale": r[3],
+            "data_nascita": r[4],
+            "email": r[5],
+            "telefono": r[6]
+        }
+        for r in result
+    ]
+
+    cursore_7.close()
+    return diabetologi
+
+
+# funzione che permette di visualizzare il grafico di tutti i pazienti nella db.
+# problema: come fare i filtri?
+def visualizza_glicemia_tutti_pazienti():
+    
+    cursore_17 = connection.cursor()
+
+    cursore_17.execute("SELECT id_paziente, username FROM Paziente")
+    pazienti = cursore_17.fetchall()
+
+    fig = go.Figure()
+
+    for id_paziente, username in pazienti:
+        cursore_17.execute("""
+            SELECT valore, data_inserimento 
+            FROM Glicemia 
+            WHERE paziente = %s
+            ORDER BY data_inserimento
+        """, (id_paziente,))
+        dati = cursore_17.fetchall()
+
+        if not dati:
+            continue                    # per i pazienti senza dati
+
+        valori = [r[0] for r in dati]
+        date = [r[1] for r in dati]
+
+        fig.add_trace(go.Scatter(
+            x=date,
+            y=valori,
+            mode='lines+markers',
+            name=f"{username}"
+        ))
+
+    # layout del grafico
+    fig.update_layout(
+        xaxis_title="data di inserimento",
+        yaxis_title="glicemia (mg/dL)",
+         legend=dict(
+            orientation="h",  # orizzontale
+            yanchor="bottom",
+            y=1.02,  # poco sopra il grafico (usa y=0 per sotto)
+            xanchor="left",
+            x=0
+        ),
+        margin=dict(l=10, r=10, t=5, b=10),  # riduco i margini del grafico
+    )
+
+    cursore_17.close()
+
+    return fig
+
+
 if __name__ == '__main__':
-    #Paziente.inserisci_glicemia(17,180,'fentanylo',20.5, 'geekd up')
-    # Esempio: 31 dicembre 2025, ore 10:30
-    data_i= datetime.datetime(2025, 12, 31, 10, 30, 0)
+    
     # Esempio: 31 dicembre 2025, ore 10:30
     data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
-
-    # Diabetologo.inserisci_terapia(17,1,'molly', 10.3, 3, data_i, data_f)
+    Admin.approva_richiesta(49)

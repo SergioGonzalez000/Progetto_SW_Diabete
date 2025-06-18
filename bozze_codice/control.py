@@ -1,4 +1,3 @@
-# gestione collegamento view-model --> callbacks etc.from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from dash import html, dcc, Input, Output, State
 from flask_login import login_user, logout_user, current_user
@@ -6,6 +5,9 @@ from werkzeug.security import check_password_hash
 import dash
 import model
 import view
+
+import plotly.express as px
+import plotly.graph_objects as go
 
 
 def registra_callbacks(app):
@@ -33,18 +35,41 @@ def registra_callbacks(app):
             # se la password va bene, chiamo login_user()
             valid = check_password_hash(user.pw, password_dal_form)  # ho eliminato la fx check_password mia, nel model.py
 
+            # 
+            #   **modificata questa roba, dovrebbe andare**
+            #
             if valid:
-                # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
-                # nella pratica all'oggetto Persona andrà messa la password_hash invece della password in chiaro + tutto il resto degli attributi.
-                login_user(user)    # loggo l'utente con flask
-                return "/home", dbc.Alert("Login effettuato!", color= "success")
-            else:
-                return dash.no_update, dbc.Alert("Password sbagliata!", color= "danger")
+                login_user(user)
 
-        else:
-            return dash.no_update, dbc.Alert("Username inesistente", color= "danger")
+                if current_user.is_authenticated and isinstance(user, model.Paziente):
+                    return "/patient-dashboard", dbc.Alert("Login effettuato!", color="success")
+                elif current_user.is_authenticated and isinstance(user, model.Diabetologo):
+                    return "/doctor-dashboard", dbc.Alert("Login effettuato!", color="success")
+                elif current_user.is_authenticated and isinstance(user, model.Admin):
+                    return "/admin-dashboard", dbc.Alert("Login effettuato!", color="success")
+                else:
+                    return dash.no_update, dbc.Alert("Credenziali sbagliate!", color="danger")
+            else:
+                    return dash.no_update, dbc.Alert("Credenziali sbagliate!", color="danger")      # nel caso in cui password non sia valid
+            
+        else: 
+            return dash.no_update, dbc.Alert("Credenziali sbagliate!", color="danger")              # nel caso in cui la query di get_by_username() non abbia trovato un User.
+
+
+        #     if valid:
+        #         # Questa roba è orribile perchè metto nell'oggetto la password in chiaro...
+        #         # nella pratica all'oggetto Persona andrà messa la password_hash invece della password in chiaro + tutto il resto degli attributi.
+        #         login_user(user)    # loggo l'utente con flask
+        #         return "/redirect", dbc.Alert("Login effettuato!", color= "success")
+        #     else:
+        #         return dash.no_update, dbc.Alert("Password sbagliata!", color= "danger")
+
+        # else:
+        #     return dash.no_update, dbc.Alert("Username inesistente", color= "danger")
     
     
+    # ******************************************************************************************************************
+
     @app.callback(
         Output("registration-feedback", "children"),
         Output("registration-feedback", "color"),
@@ -64,7 +89,7 @@ def registra_callbacks(app):
         State("CAP-input", "value"),
         State("scelta-password", "value"),
         State("conferma-password", "value"),
-        prevent_initial_call='initial_duplicate'
+        prevent_initial_call=True
     )
     def richiesta_account(n_clicks,user,nome,cognome,cf,datanascita,sesso,tel,email,indirizzo,citta,cap,pw,conf_pw):
         if n_clicks > 0:
@@ -88,6 +113,7 @@ def registra_callbacks(app):
         else:
             return None,None,None,None
         
+    # ******************************************************************************************************************
 
     @app.callback(
         Output("form1", "style"),
@@ -123,50 +149,208 @@ def registra_callbacks(app):
 
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
-
-    # callback per il routing, cambia il contenuto della pagina a seconda dell'url
-    # Problema nella gestione della logica del routing:
-    #   Se da barra dell'indirizzo si digita "/home" o qualsiasi altro indirizzo, lo mostra senza controllare
-    #   se l'utente è autenticato o meno.
+    # ******************************************************************************************************************
+    # CALLBACK ROUTING CON NAVBAR
+    # !!!!! DA CONTROLLARE !!!!!
+    # Deve: 
+    # 1. cambiare i navlinks nella sidebar se ospite, paziente, medico, admin
+    # 2. cambiare "page-content" in base all'url
+    # 3. cambiare url
+    # NB: quando un utente accede, la callback entra nell' "else" corrrispondente
     @app.callback(
-        [Output("contenuto-pagina", "children"),
-        Output("url", "pathname", allow_duplicate=True)],
+        [
+            # 1: Modifico i navlinks
+            Output("navlinks", "children"),
+            # 2: Modifico il contenuto della pagina
+            Output("page-content", "children"),
+            # 3: Modifico l'url
+            Output("url", "pathname", allow_duplicate=True),
+        ],
+        # Prendo in input il pathname
         Input("url", "pathname"), prevent_initial_call=True
     )
-    def mostra_pagina(pathname):
-        # Se l'utente non è autenticato e prova ad accedere a una pagina protetta,
-        # viene reindirizzato sul login. (magari in futuro avremo una navbar per i guests, che verrà personalizzata
-        # per i diabetologi e i pazienti)
-        if not current_user.is_authenticated and pathname not in ["/login", "/register"]:
-            return view.login_layout(), "/login"
+    def routing(pathname):
+
+        # Caso GUEST - NON AUTENTICATI
+        if not current_user.is_authenticated:
+
+            # Accesso alla home
+            if pathname == "/":
+                return view.guest_navlinks, view.home, "/"
+            # Accesso al login
+            elif pathname == "/login":
+                return view.guest_navlinks, view.login_layout(), "/login"
+            # Accesso alla registrazione
+            elif pathname == "/registration":
+                return view.guest_navlinks, view.registration_layout(), "/registration"
+            # Se il guest cerca di accedere ad una pagina protetta, reindirizza alla home
+            return view.guest_navlinks, html.H2("Accesso non autorizzato"), "/"
         
-        # se (da utenti autenticati) si prova a scrivere "/login" o "/register" nella barra degli indirizzi,
-        # si torna diretti alla home (in futuro sarà una home caruccia con navbar etc)
-        if current_user.is_authenticated and pathname in ["/login", "/register"]:
-            return view.home_layout(), "/home"
+        # Caso UTENTI - AUTENTICATI
         
-        # per fare logout
-        if pathname == "/logout" and current_user.is_authenticated:
-            logout_user()
-            return view.login_layout(), "/login"
-        
-        # pagina di login, accessibile solo se l'utente non è autenticato
-        if pathname == "/login" and not current_user.is_authenticated:
-            return view.login_layout(), dash.no_update
-        
-        # pagina di registrazione, solo se l'utente non è autenticato
-        if pathname == "/register" and not current_user.is_authenticated:
-            return view.registration_layout(), dash.no_update
-        
-        # home, solo se l'utente è autenticato
-        if pathname == "/home" and current_user.is_authenticated:
-            return view.home_layout(), dash.no_update
-        
-        # in tutti gli altri casi, just in case...
-        # se l'utente è autenticato --> home
-        # se non è autenticato --> login
-        if current_user.is_authenticated:
-            return view.home_layout(), "/home"
-        else:
-            return view.login_layout(), "/login"
+        # PAZIENTE
+        elif isinstance(current_user, model.Paziente):
+            # Se paziente nella dashboard
+            if pathname == "/patient-dashboard":
+                return view.patient_navlinks, view.patient_dashboard, "/patient-dashboard"
+            # Se paziente nella pagina grafici
+            elif pathname == "/grafici":
+                return view.patient_navlinks, view.patient_graphs, "/grafici"
+            # Se paziente nella chat
+            elif pathname == "/chat":
+                return view.patient_navlinks, view.chat_content, "/chat"
+            # Effettua il logout
+            elif pathname == "/logout":
+                logout_user()
+                return view.guest_navlinks, dash.no_update, "/login"
+            # Tenta di accedere a pagina protetta:
+            else:
+                return view.patient_navlinks, view.patient_dashboard, "/patient-dashboard"
     
+        # DIABETOLOGO
+        elif isinstance(current_user, model.Diabetologo):
+            # Se diabetologo nella dashboard
+            if pathname == "/doctor-dashboard":
+                return view.doctor_navlinks,view.pazienti_diabetologo_layout(), "/doctor-dashboard"
+            # Se diabetologo nella pagina grafici
+            elif pathname == "/doctor-patient":
+                return view.doctor_navlinks,  view.home_diabetologo_layout(), "/doctor-patient"
+            # Se diabetologo nella chat
+            elif pathname == "/chat":
+                return view.doctor_navlinks, view.chat_content, "/chat"
+            # Effettua il logout
+            elif pathname == "/logout":
+                logout_user()
+                return view.guest_navlinks, dash.no_update, "/login"
+            # Tenta di accedere a pagina protetta:
+            else:
+                return view.doctor_navlinks, view.pazienti_diabetologo_layout(), "/doctor-dashboard"
+    
+        # ADMIN
+        elif isinstance(current_user, model.Admin):
+            # Se admin nella dashboard
+            if pathname == "/admin-dashboard":
+                return view.admin_navlinks, view.admin_dashboard, "/admin-dashboard"
+            # Se admin nella lista delle richieste
+            elif pathname == "/request":
+                return view.admin_navlinks, view.admin_request, "/request"
+            # Se admin nella lista dei pazienti
+            elif pathname == "/admin-patient":
+                return view.admin_navlinks, view.admin_patient, "/admin-patient"
+            # Se admin nella lista dei diabetologi
+            elif pathname == "/admin-doctor":
+                return view.admin_navlinks, view.admin_doctor, "/admin-doctor"
+            # Logout dell'admin
+            elif pathname == "/logout":
+                logout_user()
+                return view.guest_navlinks, dash.no_update, "/login"
+            # Tenta di accedere a pagina protetta:
+            else:
+                return view.admin_navlinks, view.admin_dashboard, "/admin-dashboard"
+
+        # Caso pagina inesistente
+        else:
+            return dash.no_update, html.H2("404 - Page not found"), "/404"
+
+# ******************************************************************************************************************
+    
+    #permette di vedere i grafici paziente per paziente al diabetologo
+    @app.callback(
+        Output("dropdown-output","children"),
+        Input("dropdown-pazienti","value"),
+    )
+    def visualizza_grafico_paziente(paziente):
+        if not paziente:
+            return "Seleziona un paziente per visualizzare il grafico."
+    
+        fig = model.Diabetologo.visualizza_glicemia_paziente(paziente)
+        return dcc.Graph(figure=fig)
+    
+
+    # ************************
+    # callback del dropdown della richiesta admin
+    @app.callback(
+        Output("contenitore-informazioni-richiesta", "children"),
+        Input("dropdown-selezione-richiesta-account", "value"),
+    )
+    def mostra_dettagli_richiesta(id_richiesta):
+        if not id_richiesta:
+            return dbc.Alert("Seleziona una richiesta per vedere i dettagli.", color="secondary")
+
+        dati = model.get_dati_richiesta_account_by_id(id_richiesta)
+        if not dati:
+            return dbc.Alert("Non ci sono dati", color="danger")
+
+        # crea lista di paragrafi con i dati
+        return view.render_dati_richiesta(dati)
+    
+    # **********************
+    # callback dei bottoni nella pagina delle richieste, dell'admin.
+    @app.callback(
+        [Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),  # aggiorna magari con un messaggio di conferma
+        Output("dropdown-selezione-richiesta-account", "options")],
+        [Input("btn-accetta-richiesta", "n_clicks"),
+        Input("btn-rifiuta-richiesta", "n_clicks")],
+        State("dropdown-selezione-richiesta-account", "value"),
+        prevent_initial_call=True,
+        allow_duplicate=True
+    )
+    def gestisci_richiesta_accetta_o_rifiuta(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
+        ctx = dash.callback_context
+
+        # controlla se è stato effettivamente premuto un bottone
+        if not ctx.triggered:
+            return dash.no_update, dash.no_update
+
+        bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        # nessuna richiesta selezionata
+        if not id_richiesta:
+            # ritorna un Alert in caso di azione a vuoto
+            return dbc.Alert("Seleziona una richiesta prima di accettare o rifiutare.", color="warning", dismissable=True), dash.no_update
+
+        # azioni da compiere in base al bottone premuto
+        if bottone_premuto == "btn-accetta-richiesta":
+            # funzione per accettare la richiesta
+            model.Admin.approva_richiesta(id_richiesta)     # gia definita
+            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
+
+        elif bottone_premuto == "btn-rifiuta-richiesta":
+            # chiamo la funzione che gestisce il rifiuto
+            rifiuta_richiesta(id_richiesta)                 # da fare
+            alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
+            
+        else:
+            return dash.no_update, dash.no_update
+
+        # aggiorna il dropdown con le richieste rimanenti
+        richieste = model.get_all_richieste_account()                             # deve restituire lista di tuple/dict
+        options = [{"label": f"{r[1]}", "value": r[0]} for r in richieste]
+
+        return alert, options
+        
+# ******************************************************************************************************************
+    
+    #permette di vedere i grafici paziente per paziente al diabetologo
+    @app.callback(
+        Output("dropdown-output-tutti","children"),
+        Output("dropdown-tutti-pazienti","options"),
+        Input("dropdown-tutti-pazienti","value"),
+        Input("filtro-pazienti","value")
+    )
+    def visualizza_lista_pazienti(paziente,scelta):
+        
+        id = current_user.get_id_diabetologo()
+
+        if scelta=='PA':
+            lista=model.Diabetologo.visualizza_pazienti_associati(id)
+        else:
+            lista=model.Diabetologo.visualizza_tutti_pazienti()
+
+        opzioni = [{"label": nome, "value": nome} for nome in lista]
+
+        if not paziente:
+            return "Seleziona un paziente per visualizzare il grafico.",opzioni
+        #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
+        return view.patient_dashboard,opzioni
+       
