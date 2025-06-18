@@ -161,17 +161,16 @@ class Paziente(Persona):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
     def inserisci_glicemia(id_paz, valore, farmaco, dose, sintomi="" ):
-        cur.execute("""INSERT INTO Glicemia 
+        cursore_8=connection.cursor()
+        cursore_8.execute("""INSERT INTO Glicemia 
                     (paziente, farmaco, dosaggio, sintomo, valore) 
                     VALUES (%s, %s, %s, %s, %s)""", 
                     (id_paz, farmaco, dose, sintomi, valore))
         connection.commit()
+        cursore_8.close()
 
-    # Fx che associ il paziente al diabetologo. (modifica quindi diabetologo.paziente_associato)
-    # potremmo permettere al paziente di selezionare quale sarà il suo
-    # medico di riferimento.
-    def associa_a_diabetologo():
-        pass
+
+    
 
 
 
@@ -335,6 +334,22 @@ class Admin(Persona):
         connection.commit()
         cursore_16.close()
 
+    # Fx che associ il paziente al diabetologo. (modifica quindi diabetologo.paziente_associato)
+    # potremmo permettere al paziente di selezionare quale sarà il suo
+    # medico di riferimento.
+    def associa_a_diabetologo(paziente):
+        cursore_17 = connection.cursor()
+        cursore_17.execute(""" SELECT d.id_diabetologo
+                            FROM diabetologo d
+                            LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
+                            GROUP BY d.id_diabetologo
+                            ORDER BY COUNT(p.id_paziente) ASC
+                            LIMIT 1;
+                        """)
+        id_diabetologo=cursore_17.fetchone()[0]
+        cursore_17.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,paziente.cf))
+        connection.commit()
+        cursore_17.close()
     
     def approva_richiesta(id_richiesta):
         
@@ -349,25 +364,12 @@ class Admin(Persona):
         username=Admin.genera_username(id_richiesta)
         persona = PersonaFactory.crea_persona(tipo, nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, password)
 
-        # aggiunta modifica dello stato della richiesta nel database.
-        cursore_4.execute(
-            "UPDATE RichiesteAccount SET stato_richiesta = 'approvata' WHERE id_richiesta = %s", (id_richiesta,))
-        connection.commit()
-
         if flag_paziente:
             Admin.inserisci_paziente(persona)
+            Admin.associa_a_diabetologo(persona)
         else:
             Admin.inserisci_diabetologo(persona)
 
-        cursore_4.execute(""" SELECT d.id_diabetologo
-                        FROM diabetologo d
-                        LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
-                        GROUP BY d.id_diabetologo
-                        ORDER BY COUNT(p.id_paziente) ASC
-                        LIMIT 1;
-                    """)
-        id_diabetologo=cursore_4.fetchone()[0]
-        cursore_4.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,persona.cf))
         cursore_4.execute("UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s ",('approvata',id_richiesta))
         connection.commit()
         

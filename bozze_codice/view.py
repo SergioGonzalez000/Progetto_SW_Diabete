@@ -15,7 +15,7 @@ def getLayout():
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
-            html.Div(id="page-content", style={"display" : "flex", "width" : "100vw", "height" : "100vh"})
+            html.Div(id="page-content", style={"display" : "flex", "width" : "100vw", "height" : "auto"})
         ],
         style={
             "display": "flex",
@@ -23,6 +23,8 @@ def getLayout():
             "minHeight": "100vh",
             # Colore sfondo standard fisso
             "background-color": "#e6f2ff",
+            #fil-altezza della parte azzurra che si adatta automaticamente
+            #"height": "auto",
             # Nessun margine al contenuto affinché occupi tutta la pagina disponibile
             "margin": 0
         }
@@ -587,7 +589,7 @@ patient_dashboard = html.Div(
         # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
         "flex": 1,
         # Spazio dai margini esterni
-        "padding": "40px",
+        "padding": "10px",#modifica fil per far entrare tutto nella parte azzurra -> se volete cambiate
         # divide lo spazio
         "display": "flex",
         # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
@@ -1099,11 +1101,15 @@ def pazienti_diabetologo_layout():
     return html.Div(
         className="patient_diab_container",
         style={
-            "width": "100%",
-            "maxWidth": "1200px",
-            "margin": "0 auto",
-            "padding": "20px",
-            "boxSizing": "border-box"
+            # la doctor_dashboard si adatta automaticamente allo spazio disponibile
+            'flex' : 1,
+            'display': 'flex',
+            # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+            'flex-direction': 'column',
+            # Spazio dai margini esterni
+            'padding': '40px',
+            # Spazio interno tra le colonne
+            'gap': '40px'
         },
         children=[
             dbc.RadioItems(
@@ -1128,7 +1134,6 @@ def pazienti_diabetologo_layout():
                 style={
                     "width": "100%",
                     "maxHeight": "95vh",      # limita l'altezza al 95% della finestra
-                    "overflowY": "auto",      # scroll verticale se serve
                     "boxSizing": "border-box",
                     "padding": "20px"
                 }
