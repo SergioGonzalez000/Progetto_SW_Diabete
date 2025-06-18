@@ -354,3 +354,33 @@ def registra_callbacks(app):
         #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
         return view.patient_dashboard,opzioni
        
+# ******************************************************************************************************************
+
+# Callback aggiornamento cerchio colorato glicemia:
+    @app.callback(
+            # Numero centrale visualizzato
+            Output("number", "children"),
+            # Colore dello sfondo
+            Output("cerchio-colorato", "style"),
+            Input("input-glicemia", "n_submit"),
+            State("input-glicemia", "value"),
+            State("number", "children"),
+            State("cerchio-colorato", "style"),
+            prevent_initial_call=True
+    )
+    def aggiorna_cerchio(n_submit, valore, number, stile_corrente):
+        if not n_submit:
+            return number, stile_corrente
+        
+        # Ipoglicemia
+        if valore < 70:
+            return valore, {"background-color": "#FF4C4C"}
+        # Normoglicemia
+        elif 70 <= valore <= 130:
+            return valore, {"background-color": '#08ff46'}
+        # Glicemia alta (merita attenzione)
+        elif 131 <= valore <= 180:
+            return valore, {"background-color": '#FFD93B'}
+        # Iperglicemia
+        else:
+            return valore, {"background-color": '#FF4C4C'}
