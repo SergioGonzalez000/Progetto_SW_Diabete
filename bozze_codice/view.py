@@ -1138,7 +1138,15 @@ doctor_patient = html.Div(
 
         # Seconda colonna che occupa 2/3
         html.Div(
-            [
+            style= {
+                # Occupa 2/3
+                "flex": 2,
+                "display": "flex",
+                "flex-direction" : "column",
+                # spazio tra 4 e 5/6 di 40 px
+                'gap': '40px'
+            },
+            children=[
                 # Numero 4
                 html.Div(
                     [
@@ -1158,7 +1166,7 @@ doctor_patient = html.Div(
                             [
                                 html.H5("Dati del paziente:", style={"color" : "grey"}),
                                 html.Hr(),
-                                # QUa vanno inserite le generalità del paziente
+                                # Qua vanno inserite le generalità del paziente
                                 html.Div( id="patient-data", style={"height": "100%","width": "100%"})
                             ],
                             className="card"
@@ -1200,14 +1208,7 @@ doctor_patient = html.Div(
                         "gap": "40px"
                     }
                 )
-            ],
-            style= {
-                "flex": 2,
-                "display": "flex",
-                "flex-direction" : "column",
-                # spazio tra 4 e 5/6 di 40 px
-                'gap': '40px'
-            }
+            ]
         )
     ]
 )
