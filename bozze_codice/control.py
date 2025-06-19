@@ -441,7 +441,7 @@ def registra_callbacks(app):
             torta = go.Figure(data=[go.Pie(labels=labels, values=values,marker=dict(colors=colors))])
             num_paz=len(model.Diabetologo.visualizza_pazienti_associati(id))
             dati_paziente='dati tabella info paziente'
-            return num_paz,dcc.Graph(figure=torta),dati_paziente
+            return num_paz,dati_paziente,dcc.Graph(figure=torta)
         else:
             return dash.no_update
 # ******************************************************************************************************************
