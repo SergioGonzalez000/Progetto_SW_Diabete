@@ -1,0 +1,45 @@
+/* Stili per le card */
+.card {
+    flex: 1;
+    padding: 30px;
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0 4px 8px rgba(0, 0, 255, 0.2);
+    border: 2px solid #dee2e6;
+    border-radius: 15px;
+    width: 100%;
+    height: 100%;
+}
+
+/* Cerchio della glicemia */
+.circle-slot {
+    height: 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.outer {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 6px 6px 10px -1px rgba(0, 0, 0, 0.15);
+}
+.inner {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    box-shadow: inset 4px 4px 6px -1px rgba(0, 0, 0, 0.2),
+                0px 12px 10px -10px rgba(0, 0, 0, 0.05);
+
+}
+#number {
+    font-size: 50px;
+    color: #555;
+}
