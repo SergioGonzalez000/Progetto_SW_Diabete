@@ -205,19 +205,20 @@ class Diabetologo(Persona):
         cursore_10.close()
 
     def visualizza_pazienti_associati(id):
-        
+        #li ordina in base al valore medio di glicemia
         cursore_11 = connection.cursor()
         
-        cursore_11.execute("""SELECT p.username 
-                    FROM Paziente p, Diabetologo d 
-                    WHERE p.diabetologo_associato=d.id_diabetologo 
-                    AND d.id_diabetologo = %s""",
+        cursore_11.execute("""SELECT p.username, AVG(g.valore) as media
+                    FROM Paziente p
+                    JOIN Diabetologo d ON p.diabetologo_associato=d.id_diabetologo 
+                    JOIN Glicemia g ON p.id_paziente=g.paziente
+                    WHERE d.id_diabetologo = %s
+                    GROUP BY p.id_paziente
+                    ORDER BY media DESC""",
                     (id,))
         result=cursore_11.fetchall()
         cursore_11.close()
-
-        pazienti=[r[0] for r in result]
-        return pazienti
+        return result
     
     def visualizza_tutti_pazienti():
         
@@ -232,18 +233,15 @@ class Diabetologo(Persona):
         pazienti=[r[0] for r in result]
         return pazienti
     
-    def visualizza_glicemia_paziente(username):
+    def visualizza_glicemia_paziente(id_paziente):
         
         cursore_13 = connection.cursor()
-
-        cursore_13.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
-        id_paziente=cursore_13.fetchone()
         cursore_13.execute("""
             SELECT g.valore, g.data_inserimento 
             FROM Glicemia g  
             WHERE g.paziente = %s
             ORDER BY g.data_inserimento"""
-            , (id_paziente[0],))
+            , (id_paziente,))
         dati = cursore_13.fetchall()
 
         cursore_13.close()
@@ -262,7 +260,7 @@ class Diabetologo(Persona):
             )
         )
 
-        fig.update_layout(title="Andamento completo",
+        fig.update_layout(
                         xaxis_title="Momento rilevazione",
                         yaxis_title="Valori")
         return fig
@@ -277,7 +275,9 @@ class Diabetologo(Persona):
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
-    def visualizza_dati_paziente():
+    def visualizza_dati_paziente(id):
+        cursore_14=connection.cursor()
+        
         pass
 
 
@@ -740,9 +740,19 @@ def visualizza_glicemia_tutti_pazienti():
 
     return fig
 
+def get_id_paziente_by_username(username):
+    cursore = connection.cursor()
+    query = "SELECT id_paziente FROM paziente WHERE username = %s"
+    cursore.execute(query, (username,))
+    result = cursore.fetchone()
+    cursore.close()
+    if result:
+        return result[0]  # l'ID del paziente
+    return None
+    
 
 if __name__ == '__main__':
     
     # Esempio: 31 dicembre 2025, ore 10:30
-    data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
-    Admin.approva_richiesta(49)
+    Paziente.inserisci_glicemia(39,90,'insulina',10,'fame')
+    

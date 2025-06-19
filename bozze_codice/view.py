@@ -1195,7 +1195,7 @@ doctor_patient = html.Div(
                                         "border": "none",
                                         "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
                                         "background-color": "#f0f0f0",
-                                        "fontSize": "20px"
+                                        "fontSize": "20px",
                                     }
                                 )
                             ],
