@@ -253,6 +253,7 @@ def registra_callbacks(app):
         else:
             return dash.no_update, html.H2("404 - Page not found"), "/404"
 
+
 # ******************************************************************************************************************
     
     #permette di vedere i grafici paziente per paziente al diabetologo
@@ -269,7 +270,7 @@ def registra_callbacks(app):
     
 
     # ************************
-    # callback del dropdown della richiesta admin
+    # callback che gestisce i click dentro il dropdown della richiesta admin
     @app.callback(
         Output("contenitore-informazioni-richiesta", "children"),
         Input("dropdown-selezione-richiesta-account", "value"),
@@ -285,11 +286,23 @@ def registra_callbacks(app):
         # crea lista di paragrafi con i dati
         return view.render_dati_richiesta(dati)
     
+
+    # ******************************************
+    # callback che triggera il refresh delle opzioni disponibili all'interno del dropdown delle richieste di account
+    @app.callback(
+        Output("dropdown-selezione-richiesta-account", "options"),
+        Input("dropdown-selezione-richiesta-account", "search_value")
+    )
+    def aggiorna_opzioni_dropdown(search_value):
+        options = model.get_all_richieste_account()
+        return options
+
+
     # **********************
-    # callback dei bottoni nella pagina delle richieste, dell'admin.
+    # callback che popola il dropdown e gestisce i bottoni nella pagina delle richieste, dell'admin.
     @app.callback(
         [Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),  # aggiorna magari con un messaggio di conferma
-        Output("dropdown-selezione-richiesta-account", "options")],
+        Output("dropdown-selezione-richiesta-account", "options", allow_duplicate=True)],
         [Input("btn-accetta-richiesta", "n_clicks"),
         Input("btn-rifiuta-richiesta", "n_clicks")],
         State("dropdown-selezione-richiesta-account", "value"),
@@ -329,6 +342,32 @@ def registra_callbacks(app):
         options = [{"label": f"{r[1]}", "value": r[0]} for r in richieste]
 
         return alert, options
+    
+# ******************************************************************************************************************
+
+    #permette di vedere i grafici paziente per paziente al diabetologo
+    @app.callback(
+        Output("dropdown-output-tutti","children"),
+        Output("dropdown-tutti-pazienti","options"),
+        Input("dropdown-tutti-pazienti","value"),
+        Input("filtro-pazienti","value")
+    )
+    def visualizza_lista_pazienti(paziente,scelta):
+        
+        id = current_user.get_id_diabetologo()
+
+        if scelta=='PA':
+            lista=model.Diabetologo.visualizza_pazienti_associati(id)
+        else:
+            lista=model.Diabetologo.visualizza_tutti_pazienti()
+
+        opzioni = [{"label": nome, "value": nome} for nome in lista]
+
+        if not paziente:
+            return "Seleziona un paziente per visualizzare il grafico.",opzioni
+        #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
+        return view.patient_dashboard,opzioni
+       
         
        
 # ******************************************************************************************************************
