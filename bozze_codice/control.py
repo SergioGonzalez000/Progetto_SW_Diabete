@@ -407,7 +407,6 @@ def registra_callbacks(app):
     @app.callback(
         Output("patient-number", "children"),
         Output("patient-pie", "children"),
-        Output("graph-???", "children"),
         Input("url", "pathname"),
         prevent_initial_call=True
     )
@@ -441,13 +440,12 @@ def registra_callbacks(app):
             torta = go.Figure(data=[go.Pie(labels=labels, values=values,marker=dict(colors=colors))])
             num_paz=len(model.Diabetologo.visualizza_pazienti_associati(id))
             dati_paziente='dati tabella info paziente'
-            return num_paz,dati_paziente,dcc.Graph(figure=torta)
+            return num_paz,dcc.Graph(figure=torta)
         else:
             return dash.no_update
 # ******************************************************************************************************************
     @app.callback(
         Output("patient-graph", "children"),
-        Output("patient-data", "children"),
         Input("url","pathname"),
         Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
@@ -456,7 +454,7 @@ def registra_callbacks(app):
         triggered = ctx.triggered
 
         if not triggered or not any(n_clicks):
-            raise dash.exceptions.PreventUpdate
+            return "Nessun paziente selezionato"
 
         # Ottieni ID del paziente cliccato
         prop_id = triggered[0]['prop_id']  
@@ -470,11 +468,10 @@ def registra_callbacks(app):
         if path=="/doctor-patient":
             id=current_user.get_id_diabetologo()
             grafico=model.Diabetologo.visualizza_glicemia_paziente(id_paz)
-            info_paziente="vedi e aggiorna fattori di rischio"
 
-            return dcc.Graph(figure=grafico),info_paziente
+            return dcc.Graph(figure=grafico)
         else:
-            return dash.no_update,dash.no_update,dash.no_update
+            return dash.no_update
 # ******************************************************************************************************************
     @app.callback(
         Output({'type': 'patient-row', 'index': ALL}, 'style'),
@@ -512,6 +509,74 @@ def registra_callbacks(app):
             style_list.append(style_selected if cid == id_paz else style_default)
 
         return style_list
+# ******************************************************************************************************************
+    #callback che nella dashboard mostra tutte le info del paziente selezionato
+    @app.callback(
+        Output("doctor-patient-info", "children"),
+        Input("url","pathname"),
+        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
+        prevent_initial_call=True
+    )
+    def visualizza_info(path,n_clicks):
+        id=current_user.get_id_diabetologo()
+        trigger_id = ctx.triggered_id
+
+        if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
+            return "Nessun paziente selezionato"            
+
+        id_paz = trigger_id.get('index')
+
+        if path=="/doctor-dashboard":
+            dati = model.Diabetologo.visualizza_dati_paziente(id,id_paz)
+            div = view.crea_div_paziente(dati[0], dati[1])
+            return div
+        else:
+            return dash.no_update
+# ******************************************************************************************************************
+    #fil-callback che si ricorda dell'id del paziente che è stato triggerato
+    @app.callback(
+        Output("selected-patient-id", "data"),
+        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
+        prevent_initial_call=True
+    )
+    def salva_id_paziente(n_clicks):
+        triggered_id = ctx.triggered_id
+        if isinstance(triggered_id, dict):  # solo se è un patient-row
+            return triggered_id.get('index')
+        raise dash.exceptions.PreventUpdate
+
+#******************************************************************************************************************   
+    @app.callback(
+        Output("patient-info-output", "children"),
+        Output("patient-info-output", "color"),
+        Output("patient-info-output", "is_open"),
+        Input("url", "pathname"),
+        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
+        Input("insert-info-btn", "n_clicks"),
+        Input("risk-factors", "value"),
+        Input("patologie", "value"),
+        Input("comorbidita", "value"),
+        State("selected-patient-id", "data"),
+        prevent_initial_call=True
+    )
+    def inserisci_info(path, n_clicks, submitted, fattori, patologia, comorbidita, id_paz):
+        id = current_user.get_id_diabetologo()
+        trigger_id = ctx.triggered_id
+
+        fattori = fattori or None
+        patologia = patologia or None
+        comorbidita = comorbidita or None
+
+        if trigger_id != "insert-info-btn":
+            raise dash.exceptions.PreventUpdate
+
+        if path == "/doctor-patient" and submitted > 0:
+            if not any(n_clicks):
+                return "Seleziona un paziente", "danger","True"
+            model.Diabetologo.inserisci_dati_paziente(id, id_paz, fattori, patologia, comorbidita)
+            return "inserimento corretto", "success", "True"
+        else:
+            return dash.no_update
 
 # ******************************************************************************************************************
 # Callback aggiornamento cerchio colorato glicemia:

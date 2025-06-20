@@ -1036,10 +1036,10 @@ doctor_dashboard = html.Div(
                 # Numero 4
                 html.Div(
                     [
-                        html.H5("Torta dei pazienti:", style={"color" : "grey"}),
+                        html.H5("informazioni paziente:", style={"color" : "grey"}),
                         html.Hr(),
                         # Grafico a torta + legenda che mostra i pazienti con bollino rosso/giallo/verde
-                        html.Div( id="patient-pie", style={"height": "100%","width": "100%"})
+                        html.Div( id="doctor-patient-info", style={"height": "100%","width": "100%"})
                     ],
                     style={"flex": 1},
                     className="card",
@@ -1076,10 +1076,10 @@ doctor_dashboard = html.Div(
                         # Numero 6
                         html.Div(
                             [
-                                html.H5("Grafico vario:", style={"color" : "grey"}),
+                                html.H5("Andamento pazienti:", style={"color" : "grey"}),
                                 html.Hr(),
                                 # Qua va inserito un grafico ???
-                                html.Div( id="graph-???", style={"height": "100%","width": "100%"})
+                                html.Div( id="patient-pie", style={"height": "100%","width": "100%"})
                             ],
                             className="card"
                         )
@@ -1166,10 +1166,72 @@ doctor_patient = html.Div(
                         # Numero 5
                         html.Div(
                             [
-                                html.H5("Dati del paziente:", style={"color" : "grey"}),
+                                html.H5("inserisci info paziente:", style={"color" : "grey"}),
                                 html.Hr(),
                                 # Qua vanno inserite le generalità del paziente
-                                html.Div( id="patient-data", style={"height": "100%","width": "100%"})
+                                html.Div( id="patient-info", style={"height": "100%","width": "100%"}),
+                                dbc.Input(
+                                    placeholder="Fattori di rischio",
+                                    type="text",
+                                    id="risk-factors",
+                                    # Attiva la callback solo quando l'utente digita qualcosa
+                                    debounce=False,
+                                    # Contatore per quando l'utente preme invio
+                                    n_submit=0,
+                                    style={
+                                        "width": "100%", # Occupa l'intera larghezza del box padre
+                                        "padding": "15px 20px",
+                                        "border-radius": "15px",
+                                        "border": "none",
+                                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                        "background-color": "#f0f0f0",
+                                        "fontSize": "20px",
+                                    }
+                                ),
+                                html.Br(),
+                                dbc.Input(
+                                    placeholder="Patologie pregresse",
+                                    type="text",
+                                    id="patologie",
+                                    # Attiva la callback solo quando l'utente digita qualcosa
+                                    debounce=False,
+                                    # Contatore per quando l'utente preme invio
+                                    n_submit=0,
+                                    style={
+                                        "width": "100%", # Occupa l'intera larghezza del box padre
+                                        "padding": "15px 20px",
+                                        "border-radius": "15px",
+                                        "border": "none",
+                                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                        "background-color": "#f0f0f0",
+                                        "fontSize": "20px",
+                                    }
+                                ),
+                                html.Br(),
+                                dbc.Input(
+                                    placeholder="Comorbidità",
+                                    type="text",
+                                    id="comorbidita",
+                                    # Attiva la callback solo quando l'utente digita qualcosa
+                                    debounce=False,
+                                    # Contatore per quando l'utente preme invio
+                                    n_submit=0,
+                                    style={
+                                        "width": "100%", # Occupa l'intera larghezza del box padre
+                                        "padding": "15px 20px",
+                                        "border-radius": "15px",
+                                        "border": "none",
+                                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                        "background-color": "#f0f0f0",
+                                        "fontSize": "20px",
+                                    }
+                                ),
+                                html.Br(),
+                                dbc.Button("inserisci", id="insert-info-btn", size="lg", n_clicks=0),
+                                html.Br(),
+                                dbc.Alert(id="patient-info-output", is_open=False),
+                                dcc.Store(id="selected-patient-id", storage_type="session")#per salvare l'id del paziente
+
                             ],
                             className="card"
                         ),
@@ -1214,6 +1276,77 @@ doctor_patient = html.Div(
         )
     ]
 )
+
+
+#*******************************************************************************************************************
+#fil-funzione che permette di creare una lista ordinata dalle info dei paziente 
+def crea_div_paziente(cfanno, info):
+    if not info:
+        return "Non ci sono informazioni per il paziente"
+    codice_fiscale, eta = cfanno[0]
+
+    # Sezione generalità
+    generalita = html.Div([
+        html.H6("Generalità"),
+        html.Ul([
+            html.Li(f"Codice fiscale: {codice_fiscale}"),
+            html.Li(f"Età: {int(eta)} anni")
+        ])
+    ])
+
+    # Raccogli tutte le info cliniche da tutte le righe
+    patologie_pregresse = set()
+    fattori_rischio = set()
+    comorbidita = set()
+
+    for riga in info:
+        if riga[0]:  # Patologie pregresse
+            patologie_pregresse.add(riga[0])
+        if riga[1]:  # Fattori di rischio
+            fattori_rischio.add(riga[1])
+        if riga[2]:  # Comorbidità
+            comorbidita.add(riga[2])
+
+    # Crea le liste HTML solo se ci sono dati
+    info_cliniche_children = []
+    if patologie_pregresse:
+        info_cliniche_children.append(html.Li("Patologie pregresse: " + ", ".join(patologie_pregresse)))
+    if fattori_rischio:
+        info_cliniche_children.append(html.Li("Fattori di rischio: " + ", ".join(fattori_rischio)))
+    if comorbidita:
+        info_cliniche_children.append(html.Li("Comorbidità: " + ", ".join(comorbidita)))
+
+    info_cliniche = html.Div([
+        html.H6("Informazioni cliniche"),
+        html.Ul(info_cliniche_children)
+    ]) if info_cliniche_children else html.Div()
+
+    # Sezione terapie
+    terapie = []
+    for riga in info:
+        terapia, inizio, fine = riga[3], riga[4], riga[5]
+        if terapia:
+            riga_testo = f"{terapia} (dal {inizio.strftime('%d/%m/%Y')}"
+            if fine:
+                riga_testo += f" al {fine.strftime('%d/%m/%Y')})"
+            else:
+                riga_testo += ")"
+            terapie.append(html.Li(riga_testo))
+
+    sezione_terapie = html.Div([
+        html.H6("Terapie"),
+        html.Ul(terapie)
+    ]) if terapie else html.Div()
+
+    # Output finale
+    return html.Div([
+        generalita,
+        html.Hr(),
+        info_cliniche,
+        html.Hr(),
+        sezione_terapie
+    ])
+
 
 # CHAT (= chat_content) -> Già fatta
 

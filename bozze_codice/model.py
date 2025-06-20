@@ -269,16 +269,51 @@ class Diabetologo(Persona):
 # ***********
 # da fare?
 
-    def aggiorna_terapia_paziente():
+    def inserisci_terapia_paziente():
         pass
+
+    # Funzione che permetta al medico di inserire i dati rilevanti del paziente,
+    # insieme alle informazioni cliniche. 
+    # Saranno da interrogare quindi sia "paziente" che "info_paziente"
+    def inserisci_dati_paziente(id_diab,id_paz, patologie=None, fattori=None, comorbidita=None):
+        cursore_14=connection.cursor()
+        associati=Diabetologo.visualizza_pazienti_associati(id_diab)
+        paz=[]
+        for a in associati:
+            paz.append(a[0])
+        cursore_14.execute("SELECT username FROM Paziente WHERE id_paziente=%s",(id_paz,))
+        username_paz=cursore_14.fetchone()[0]
+        if username_paz in paz:
+            cursore_14.execute("""INSERT INTO infopaziente 
+                    (paziente, diabetologo, patologie_pregresse, fattori_rischio, comorbidita) 
+                    VALUES (%s, %s, %s, %s, %s)""", 
+                    (id_paz, id_diab, patologie, fattori, comorbidita))
+            connection.commit()
 
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
-    def visualizza_dati_paziente(id):
-        cursore_14=connection.cursor()
-        
-        pass
+    def visualizza_dati_paziente(id_diab,id_paz):
+        cursore_15=connection.cursor()
+        associati=Diabetologo.visualizza_pazienti_associati(id_diab)
+        paz=[]
+        for a in associati:
+            paz.append(a[0])
+        cursore_15.execute("SELECT username FROM Paziente WHERE id_paziente=%s",(id_paz,))
+        username_paz=cursore_15.fetchone()[0]
+        if username_paz in paz:
+            cursore_15.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita)
+                        FROM Paziente
+                        WHERE id_paziente=%s
+                        """,(id_paz,))
+            cfanno=cursore_15.fetchall()
+            cursore_15.execute("""SELECT i.patologie_pregresse, i.fattori_rischio, i.comorbidita, i.terapia_conc, i.data_inizio_terapia, i.data_fine_terapia
+                                FROM infopaziente i
+                                WHERE i.paziente=%s
+                               """,(id_paz, ))
+            info=cursore_15.fetchall()
+            print(info)
+        return cfanno,info                               
 
 
 
@@ -751,8 +786,7 @@ def get_id_paziente_by_username(username):
     return None
     
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     
     # Esempio: 31 dicembre 2025, ore 10:30
-    Paziente.inserisci_glicemia(39,90,'insulina',10,'fame')
-    
+    #Diabetologo.visualizza_dati_paziente(17,'Andrea.Agostini0_P')    
