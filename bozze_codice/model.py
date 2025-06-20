@@ -161,17 +161,16 @@ class Paziente(Persona):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
     def inserisci_glicemia(id_paz, valore, farmaco, dose, sintomi="" ):
-        cur.execute("""INSERT INTO Glicemia 
+        cursore_8=connection.cursor()
+        cursore_8.execute("""INSERT INTO Glicemia 
                     (paziente, farmaco, dosaggio, sintomo, valore) 
                     VALUES (%s, %s, %s, %s, %s)""", 
                     (id_paz, farmaco, dose, sintomi, valore))
         connection.commit()
+        cursore_8.close()
 
-    # Fx che associ il paziente al diabetologo. (modifica quindi diabetologo.paziente_associato)
-    # potremmo permettere al paziente di selezionare quale sarà il suo
-    # medico di riferimento.
-    def associa_a_diabetologo():
-        pass
+
+    
 
 
 
@@ -206,19 +205,20 @@ class Diabetologo(Persona):
         cursore_10.close()
 
     def visualizza_pazienti_associati(id):
-        
+        #li ordina in base al valore medio di glicemia
         cursore_11 = connection.cursor()
         
-        cursore_11.execute("""SELECT p.username 
-                    FROM Paziente p, Diabetologo d 
-                    WHERE p.diabetologo_associato=d.id_diabetologo 
-                    AND d.id_diabetologo = %s""",
+        cursore_11.execute("""SELECT p.username, AVG(g.valore) as media
+                    FROM Paziente p
+                    JOIN Diabetologo d ON p.diabetologo_associato=d.id_diabetologo 
+                    JOIN Glicemia g ON p.id_paziente=g.paziente
+                    WHERE d.id_diabetologo = %s
+                    GROUP BY p.id_paziente
+                    ORDER BY media DESC""",
                     (id,))
         result=cursore_11.fetchall()
         cursore_11.close()
-
-        pazienti=[r[0] for r in result]
-        return pazienti
+        return result
     
     def visualizza_tutti_pazienti():
         
@@ -233,18 +233,15 @@ class Diabetologo(Persona):
         pazienti=[r[0] for r in result]
         return pazienti
     
-    def visualizza_glicemia_paziente(username):
+    def visualizza_glicemia_paziente(id_paziente):
         
         cursore_13 = connection.cursor()
-
-        cursore_13.execute("SELECT id_paziente FROM Paziente WHERE username=%s",(username,))
-        id_paziente=cursore_13.fetchone()
         cursore_13.execute("""
             SELECT g.valore, g.data_inserimento 
             FROM Glicemia g  
             WHERE g.paziente = %s
             ORDER BY g.data_inserimento"""
-            , (id_paziente[0],))
+            , (id_paziente,))
         dati = cursore_13.fetchall()
 
         cursore_13.close()
@@ -263,7 +260,7 @@ class Diabetologo(Persona):
             )
         )
 
-        fig.update_layout(title="Andamento completo",
+        fig.update_layout(
                         xaxis_title="Momento rilevazione",
                         yaxis_title="Valori")
         return fig
@@ -278,7 +275,9 @@ class Diabetologo(Persona):
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
-    def visualizza_dati_paziente():
+    def visualizza_dati_paziente(id):
+        cursore_14=connection.cursor()
+        
         pass
 
 
@@ -335,6 +334,22 @@ class Admin(Persona):
         connection.commit()
         cursore_16.close()
 
+    # Fx che associ il paziente al diabetologo. (modifica quindi diabetologo.paziente_associato)
+    # potremmo permettere al paziente di selezionare quale sarà il suo
+    # medico di riferimento.
+    def associa_a_diabetologo(paziente):
+        cursore_17 = connection.cursor()
+        cursore_17.execute(""" SELECT d.id_diabetologo
+                            FROM diabetologo d
+                            LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
+                            GROUP BY d.id_diabetologo
+                            ORDER BY COUNT(p.id_paziente) ASC
+                            LIMIT 1;
+                        """)
+        id_diabetologo=cursore_17.fetchone()[0]
+        cursore_17.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,paziente.cf))
+        connection.commit()
+        cursore_17.close()
     
     def approva_richiesta(id_richiesta):
         
@@ -349,25 +364,12 @@ class Admin(Persona):
         username=Admin.genera_username(id_richiesta)
         persona = PersonaFactory.crea_persona(tipo, nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, password)
 
-        # aggiunta modifica dello stato della richiesta nel database.
-        cursore_4.execute(
-            "UPDATE RichiesteAccount SET stato_richiesta = 'approvata' WHERE id_richiesta = %s", (id_richiesta,))
-        connection.commit()
-
         if flag_paziente:
             Admin.inserisci_paziente(persona)
+            Admin.associa_a_diabetologo(persona)
         else:
             Admin.inserisci_diabetologo(persona)
 
-        cursore_4.execute(""" SELECT d.id_diabetologo
-                        FROM diabetologo d
-                        LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
-                        GROUP BY d.id_diabetologo
-                        ORDER BY COUNT(p.id_paziente) ASC
-                        LIMIT 1;
-                    """)
-        id_diabetologo=cursore_4.fetchone()[0]
-        cursore_4.execute("UPDATE Paziente SET diabetologo_associato=%s WHERE codice_fiscale = %s ",(id_diabetologo,persona.cf))
         cursore_4.execute("UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s ",('approvata',id_richiesta))
         connection.commit()
         
@@ -738,9 +740,66 @@ def visualizza_glicemia_tutti_pazienti():
 
     return fig
 
+    # *********************** test
+def visualizza_media_glicemia_per_diabetologi():
+    diabetologi = get_all_diabetologi()
+    nomi = []
+    medie = []
+
+    for d in diabetologi:
+        id_d = d["id"]
+        dati_pazienti = Diabetologo.visualizza_pazienti_associati(id_d)
+
+        nome_completo = f"{d['nome']} {d['cognome']}"
+        nomi.append(nome_completo)
+
+        if not dati_pazienti:
+            medie.append(0)  # oppure None, se vuoi lasciare vuota la colonna
+            continue
+
+        media_diabetologo = sum([r[1] for r in dati_pazienti]) / len(dati_pazienti)
+        medie.append(round(media_diabetologo, 2))
+
+    if not nomi:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Nessun dato disponibile",
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=18, color="red")
+        )
+        return fig
+
+    fig = go.Figure(data=[go.Bar(x=nomi, y=medie, marker_color="royalblue")])
+    fig.update_layout(
+        xaxis_title="Diabetologo",
+        yaxis_title="glicemia (mg/dL)",
+        legend=dict(
+            orientation="h",  # orizzontale
+            yanchor="bottom",
+            y=1.02,  # poco sopra il grafico (usa y=0 per sotto)
+            xanchor="left",
+            x=0),
+        margin=dict(l=10, r=10, t=5, b=10)
+    )
+    return fig
+
+    # ***********************
+
+
+def get_id_paziente_by_username(username):
+    cursore = connection.cursor()
+    query = "SELECT id_paziente FROM paziente WHERE username = %s"
+    cursore.execute(query, (username,))
+    result = cursore.fetchone()
+    cursore.close()
+    if result:
+        return result[0]  # l'ID del paziente
+    return None
+    
 
 if __name__ == '__main__':
     
     # Esempio: 31 dicembre 2025, ore 10:30
-    data_f = datetime.datetime(2026, 12, 31, 10, 30, 0)
-    Admin.approva_richiesta(49)
+    Paziente.inserisci_glicemia(39,90,'insulina',10,'fame')
+    
