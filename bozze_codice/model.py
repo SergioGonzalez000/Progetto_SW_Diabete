@@ -193,14 +193,14 @@ class Diabetologo(Persona):
         
         return id
     
-    def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine):
+    def inserisci_terapia(id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
         
         cursore_10 = connection.cursor()
         
         cursore_10.execute("""INSERT INTO Terapia 
-                    (paziente, diabetologo, farmaco, dosaggio, assunzioni_gg, data_inizio, data_fine) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
-                    (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine))
+                    (paziente, diabetologo, farmaco, dosaggio, assunzioni_gg, data_inizio, data_fine,indicazioni) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s,%s)""", 
+                    (id_paz, id_diab, farmaco, dose, assunzioni_gg, data_inizio, data_fine,indicazioni))
         connection.commit()
         cursore_10.close()
 
@@ -267,9 +267,9 @@ class Diabetologo(Persona):
 
 
 # ***********
-# da fare?
+# da fare!
 
-    def inserisci_terapia_paziente():
+    def modifica_terapia_paziente():
         pass
 
     # Funzione che permetta al medico di inserire i dati rilevanti del paziente,
