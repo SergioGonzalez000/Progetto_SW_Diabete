@@ -740,6 +740,53 @@ def visualizza_glicemia_tutti_pazienti():
 
     return fig
 
+    # *********************** test
+def visualizza_media_glicemia_per_diabetologi():
+    diabetologi = get_all_diabetologi()
+    nomi = []
+    medie = []
+
+    for d in diabetologi:
+        id_d = d["id"]
+        dati_pazienti = Diabetologo.visualizza_pazienti_associati(id_d)
+
+        nome_completo = f"{d['nome']} {d['cognome']}"
+        nomi.append(nome_completo)
+
+        if not dati_pazienti:
+            medie.append(0)  # oppure None, se vuoi lasciare vuota la colonna
+            continue
+
+        media_diabetologo = sum([r[1] for r in dati_pazienti]) / len(dati_pazienti)
+        medie.append(round(media_diabetologo, 2))
+
+    if not nomi:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Nessun dato disponibile",
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=18, color="red")
+        )
+        return fig
+
+    fig = go.Figure(data=[go.Bar(x=nomi, y=medie, marker_color="royalblue")])
+    fig.update_layout(
+        xaxis_title="Diabetologo",
+        yaxis_title="glicemia (mg/dL)",
+        legend=dict(
+            orientation="h",  # orizzontale
+            yanchor="bottom",
+            y=1.02,  # poco sopra il grafico (usa y=0 per sotto)
+            xanchor="left",
+            x=0),
+        margin=dict(l=10, r=10, t=5, b=10)
+    )
+    return fig
+
+    # ***********************
+
+
 def get_id_paziente_by_username(username):
     cursore = connection.cursor()
     query = "SELECT id_paziente FROM paziente WHERE username = %s"
