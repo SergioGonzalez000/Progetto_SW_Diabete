@@ -339,65 +339,7 @@ def registra_callbacks(app):
     def aggiorna_lista_pazienti(path):
         if path=="/doctor-dashboard" or path=='/doctor-patient':
             id=current_user.get_id_diabetologo()
-            pazienti_con_media=model.Diabetologo.visualizza_pazienti_associati(id)
-            elementi = []
-            for username, media in pazienti_con_media:
-                paz_id = model.get_id_paziente_by_username(username)
-            
-                if media is None:
-                    colore = "#aaa"  # Grigio se non ci sono dati
-                elif media < 70 or media > 180:
-                    colore = "#FF4C4C"  # Rosso
-                elif 130 <= media <= 180:
-                    colore = "#FFD93B"  # Giallo
-                else:
-                    colore = "#08ff46"  # Verde
-
-                bollino = html.Span(
-                    style={
-                        "display": "inline-block",
-                        "width": "10px",
-                        "height": "10px",
-                        "borderRadius": "50%",
-                        "backgroundColor": colore,
-                        "marginRight": "10px"
-                    }
-                )
-
-                elementi.append(
-                    html.Div(
-                        html.Div(
-                            style={
-                                "display": "flex",
-                                "justifyContent": "space-between",
-                                "alignItems": "center"
-                            },
-                            children=[
-                                html.Span(username),
-                                html.Span(
-                                    style={
-                                        "display": "inline-block",
-                                        "width": "10px",
-                                        "height": "10px",
-                                        "borderRadius": "50%",
-                                        "backgroundColor": colore
-                                    }
-                                )
-                            ]
-                        ),
-                        id={'type': 'patient-row', 'index': paz_id},
-                        n_clicks=0,
-                        className="patient-row",
-                        style={
-                            "cursor": "pointer",
-                            "padding": "10px",
-                            "borderBottom": "1px solid #ccc"
-                        }
-                    )
-
-                )
-
-            return elementi
+            return view.layout_lista_pazienti_associati(id)
         else:
             return dash.no_update
         
@@ -418,9 +360,8 @@ def registra_callbacks(app):
             cur.execute("""
                 SELECT AVG(g.valore)
                 FROM Paziente p
-                JOIN Diabetologo d on p.diabetologo_associato=d.id_diabetologo
                 JOIN Glicemia g on p.id_paziente=g.paziente
-                WHERE id_diabetologo=%s
+                WHERE p.diabetologo_associato=%s
                 GROUP BY id_paziente
             """, (id,))
             media_glicemie = cur.fetchall()
@@ -438,26 +379,27 @@ def registra_callbacks(app):
             values = [a,n,o]
             colors = ["#FF4C4C", '#FFD93B', '#08ff46'] 
             torta = go.Figure(data=[go.Pie(labels=labels, values=values,marker=dict(colors=colors))])
-            num_paz=len(model.Diabetologo.visualizza_pazienti_associati(id))
-            dati_paziente='dati tabella info paziente'
+            num_paz=model.Diabetologo.get_numero_pazienti_associati(id)
             return num_paz,dcc.Graph(figure=torta)
         else:
             return dash.no_update
 # ******************************************************************************************************************
+
+
     @app.callback(
         Output("patient-graph", "children"),
-        Input("url","pathname"),
-        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
+        Input("url", "pathname"),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
         prevent_initial_call=True
     )
-    def visualizza_andamento_glicemia(path,n_clicks):
+    def visualizza_andamento_glicemia(pathname, n_clicks):
         triggered = ctx.triggered
 
         if not triggered or not any(n_clicks):
             return "Nessun paziente selezionato"
 
         # Ottieni ID del paziente cliccato
-        prop_id = triggered[0]['prop_id']  
+        prop_id = triggered[0]['prop_id']
         id_dict_str = prop_id.split('.')[0]
         try:
             id_dict = json.loads(id_dict_str)
@@ -465,60 +407,22 @@ def registra_callbacks(app):
             raise dash.exceptions.PreventUpdate
 
         id_paz = id_dict['index']
-        if path=="/doctor-patient":
-            id=current_user.get_id_diabetologo()
-            grafico=model.Diabetologo.visualizza_glicemia_paziente(id_paz)
 
+        if pathname == "/doctor-patient":
+            grafico = model.Diabetologo.visualizza_glicemia_paziente(id_paz)
             return dcc.Graph(figure=grafico)
         else:
             return dash.no_update
+
 # ******************************************************************************************************************
-    @app.callback(
-        Output({'type': 'patient-row', 'index': ALL}, 'style'),
-        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
-        prevent_initial_call=True
-    )
-    def evidenzia_paziente_selezionato(n_clicks):
-        triggered = ctx.triggered
-
-        if not triggered:
-            raise dash.exceptions.PreventUpdate
-
-        id_str = triggered[0]['prop_id'].split('.')[0]
-        id_dict = json.loads(id_str)
-        id_paz = id_dict['index']
-
-        component_ids = [c['id']['index'] for c in ctx.inputs_list[0]]
-
-        style_default = {
-            "padding": "10px",
-            "borderBottom": "1px solid #ccc",
-            "cursor": "pointer",
-            "backgroundColor": "white",
-            "fontWeight": "normal"
-        }
-
-        style_selected = {
-            **style_default,
-            "backgroundColor": "#dedbdb",
-            "fontWeight": "bold"
-        }
-
-        style_list = []
-        for cid in component_ids:
-            style_list.append(style_selected if cid == id_paz else style_default)
-
-        return style_list
-# ******************************************************************************************************************
-    #callback che nella dashboard mostra tutte le info del paziente selezionato
     @app.callback(
         Output("doctor-patient-info", "children"),
-        Input("url","pathname"),
-        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
+        Input("url", "pathname"),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
         prevent_initial_call=True
     )
-    def visualizza_info(path,n_clicks):
-        id=current_user.get_id_diabetologo()
+    def visualizza_infopaziente_base(path, n_clicks):
+        id_diabetologo = current_user.get_id_diabetologo()
         trigger_id = ctx.triggered_id
 
         if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
@@ -526,40 +430,65 @@ def registra_callbacks(app):
 
         id_paz = trigger_id.get('index')
 
-        if path=="/doctor-dashboard":
-            dati = model.Diabetologo.visualizza_dati_paziente(id,id_paz)
+        if path == "/doctor-dashboard":
+            info = model.Diabetologo.get_info_base_paziente_associato(id_diabetologo, id_paz)
+            div = view.crea_div_info_base_paziente(info)
+            return div
+        else:
+            return dash.no_update
+
+# ******************************************************************************************************************
+    
+    @app.callback(
+        Output("patient-info", "children"),
+        Input("url", "pathname"),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        prevent_initial_call=True
+    )
+    def visualizza_infopaziente_dettagliate(path, n_clicks):
+        id_diabetologo = current_user.get_id_diabetologo()
+        trigger_id = ctx.triggered_id
+
+        if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
+            return "Nessun paziente selezionato"            
+
+        id_paz = trigger_id.get('index')
+
+        if path == "/doctor-patient":
+            dati = model.Diabetologo.visualizza_dati_paziente(id_diabetologo, id_paz)
             div = view.crea_div_paziente(dati[0], dati[1])
             return div
         else:
             return dash.no_update
+
 # ******************************************************************************************************************
     #fil-callback che si ricorda dell'id del paziente che è stato triggerato
     @app.callback(
         Output("selected-patient-id", "data"),
-        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
         prevent_initial_call=True
     )
     def salva_id_paziente(n_clicks):
         triggered_id = ctx.triggered_id
-        if isinstance(triggered_id, dict):  # solo se è un patient-row
+        if any(n_clicks):
             return triggered_id.get('index')
         raise dash.exceptions.PreventUpdate
 
 #******************************************************************************************************************   
-    @app.callback(
+    @app.callback(#DA MODIFICAREEEEEE!!!!!! in base al popup
         Output("patient-info-output", "children"),
         Output("patient-info-output", "color"),
         Output("patient-info-output", "is_open"),
         Input("url", "pathname"),
-        Input({'type': 'patient-row', 'index': ALL}, 'n_clicks'),
-        Input("insert-info-btn", "n_clicks"),
-        Input("risk-factors", "value"),
-        Input("patologie", "value"),
-        Input("comorbidita", "value"),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        Input("salva-modifiche-btn", "n_clicks"),
+        Input("input-rischio", "value"),
+        Input("input-patologie", "value"),
+        Input("input-comorb", "value"),
         State("selected-patient-id", "data"),
         prevent_initial_call=True
     )
-    def inserisci_info(path, n_clicks, submitted, fattori, patologia, comorbidita, id_paz):
+    def modifica_inserisci_info_paziente(path, n_clicks, submitted, fattori, patologia, comorbidita, id_paz):
         id = current_user.get_id_diabetologo()
         trigger_id = ctx.triggered_id
 
@@ -567,17 +496,30 @@ def registra_callbacks(app):
         patologia = patologia or None
         comorbidita = comorbidita or None
 
-        if trigger_id != "insert-info-btn":
+        if fattori==None and patologia==None and comorbidita==None and submitted>0:
+            return "Informazioni mancanti", "danger", "True"
+
+        if trigger_id != "salva-modifiche-btn":
             raise dash.exceptions.PreventUpdate
 
         if path == "/doctor-patient" and submitted > 0:
             if not any(n_clicks):
-                return "Seleziona un paziente", "danger","True"
+                return "Seleziona un paziente!", "danger","True"
             model.Diabetologo.inserisci_dati_paziente(id, id_paz, fattori, patologia, comorbidita)
-            return "inserimento corretto", "success", "True"
+            return "Modifica avvenuta con successo", "success", "True"
         else:
             return dash.no_update
 
+# ******************************************************************************************************************
+    @app.callback(
+        Output("popup-modifica-info", "is_open"),
+        [Input("modal-modifiche-btn", "n_clicks"), Input("close-modifica-infopaz", "n_clicks")],
+        [dash.dependencies.State("popup-modifica-info", "is_open")]
+    )
+    def apri_chiudi_popup_modificainfopaz(open_clicks, close_clicks, is_open):
+        if open_clicks or close_clicks:
+            return not is_open
+        return is_open
 # ******************************************************************************************************************
 # Callback aggiornamento cerchio colorato glicemia:
     @app.callback(

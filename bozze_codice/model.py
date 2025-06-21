@@ -9,6 +9,7 @@ from flask_login import UserMixin, login_user, logout_user, current_user
 import dash
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 connection = psycopg2.connect(
@@ -220,50 +221,114 @@ class Diabetologo(Persona):
         cursore_11.close()
         return result
     
-    def visualizza_tutti_pazienti():
-        
+    def visualizza_n_c_pazienti_associati(id):
         cursore_12 = connection.cursor()
+        cursore_12.execute("""SELECT id_paziente, nome, cognome, AVG(valore) AS media
+                            FROM paziente p
+                            JOIN Glicemia g on p.id_paziente=g.paziente
+                            WHERE p.diabetologo_associato = %s
+                            GROUP BY p.id_paziente
+                            ORDER BY media DESC""",(id,))
+        result = cursore_12.fetchall()
 
-        cursore_12.execute("""SELECT p.username 
-                    FROM Paziente p""",
-                    (id,))
-        result=cursore_12.fetchall()
+        # Conversione in lista di dizionari
+        pazienti = [
+            {
+                "id": r[0],
+                "nome": r[1],
+                "cognome": r[2],
+                "media": r[3],
+            }
+            for r in result
+        ]
         cursore_12.close()
-
-        pazienti=[r[0] for r in result]
         return pazienti
     
-    def visualizza_glicemia_paziente(id_paziente):
-        
-        cursore_13 = connection.cursor()
-        cursore_13.execute("""
-            SELECT g.valore, g.data_inserimento 
-            FROM Glicemia g  
-            WHERE g.paziente = %s
-            ORDER BY g.data_inserimento"""
-            , (id_paziente,))
-        dati = cursore_13.fetchall()
+    def get_numero_pazienti_associati(id_diab):
+        cursore=connection.cursor()
+        cursore.execute("""
+            SELECT COUNT(*) 
+            FROM Paziente p 
+            WHERE p.diabetologo_associato = %s
+        """, (id_diab,))
+        numero = cursore.fetchone()[0]
+        cursore.close()
+        return numero
 
-        cursore_13.close()
+    def get_info_base_paziente_associato(id_diab,id_paz):
+        cursore = connection.cursor()
+        cursore.execute("""SELECT username, nome, cognome,data_nascita,sesso, AVG(valore) AS media
+                            FROM paziente p
+                            JOIN Glicemia g on p.id_paziente=g.paziente
+                            WHERE p.diabetologo_associato = %s and p.id_paziente=%s
+                            GROUP BY p.id_paziente
+                            """,(id_diab,id_paz))
+        result = cursore.fetchall()
+        cursore.close()
+        return result
+    
+    def visualizza_glicemia_paziente( id_paziente):
+        cursore = connection.cursor()
+        cursore.execute("""
+            SELECT valore, data_inserimento 
+            FROM Glicemia 
+            WHERE paziente = %s
+            ORDER BY data_inserimento
+        """, (id_paziente,))
+        dati = cursore.fetchall()
+        cursore.close()
 
-        # Separare i dati della tupla 
+        if not dati:
+            return go.Figure().update_layout(title="Nessun dato glicemico disponibile")
+
         valori = [r[0] for r in dati]
         date = [r[1] for r in dati]
 
-        fig = go.Figure(
-            data=go.Scatter(
+        fig = go.Figure()
+
+        # Area azzurra sotto
+        fig.add_trace(go.Scatter(
+            x=date,
+            y=valori,
+            mode='lines',
+            line=dict(width=0),
+            showlegend=False
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=date,
+            y=valori,
+            mode='lines+markers',
+            fill='tonexty',
+            fillcolor='rgba(0, 123, 255, 0.2)',
+            line=dict(color='blue', width=3),
+            name='Glicemia'
+        ))
+
+        # Linee soglia glicemica
+        for soglia in [70, 130]:
+            fig.add_trace(go.Scatter(
                 x=date,
-                y=valori,
-                mode='lines+markers',  # Mostra punti e linee
-                line=dict(color='blue'),
-                marker=dict(size=8)
-            )
-        )
+                y=[soglia]*len(date),
+                mode='lines',
+                line=dict(color="#71BAFF", dash='dash'),
+                name=f'Soglia {soglia} mg/dL',
+            ))
 
         fig.update_layout(
-                        xaxis_title="Momento rilevazione",
-                        yaxis_title="Valori")
+            xaxis_title='Data rilevazione',
+            yaxis_title='Glicemia (mg/dL)',
+            yaxis=dict(range=[0, max(valori) + 50]),
+            plot_bgcolor="#e6f2ff",
+            hovermode='x unified',
+            font=dict(family='Arial', size=14),
+            height=500
+        )
+
         return fig
+
+
+
 
 
 # ***********
@@ -312,7 +377,7 @@ class Diabetologo(Persona):
                                 WHERE i.paziente=%s
                                """,(id_paz, ))
             info=cursore_15.fetchall()
-            print(info)
+        cursore_15.close()
         return cfanno,info                               
 
 
