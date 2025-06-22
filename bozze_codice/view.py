@@ -1487,7 +1487,7 @@ def render_lista_pazienti(pazienti):
             *[
                 dbc.Button(
                     f"{d['nome']} {d['cognome']}",
-                    id={"type": "btn-paziente", "index": d["id"]},
+                    id={"type": "btn-paziente", "index": d["id_paziente"]},
                     color="light",
                     style={
                         "textAlign": "left",
@@ -1586,7 +1586,7 @@ def render_lista_diabetologi(diabetologi):
             *[
                 dbc.Button(
                     f"{d['nome']} {d['cognome']}",
-                    id={"type": "btn-diabetologo", "index": d["id"]},
+                    id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
                     color="light",
                     style={
                         "textAlign": "left",
