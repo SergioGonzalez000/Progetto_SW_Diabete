@@ -855,7 +855,7 @@ chat_content = html.Div(
             children=[
                 html.H2("Chat", style={"color": "grey"}),
                 html.Hr(),
-
+                
                 # DA FARE
 
                 # Funzione che carica la lista delle chat disponibili per l'utente
@@ -1213,8 +1213,8 @@ doctor_patient = html.Div(
 )
 #********************************************************************************************************************
 # appena aggiunta
-def layout_lista_pazienti_associati(id_diabetologo):
-    pazienti = model.Diabetologo.visualizza_n_c_pazienti_associati(id_diabetologo)
+def layout_lista_pazienti_associati():
+    pazienti = current_user.visualizza_n_c_pazienti_associati()
     
     if not pazienti:
         return dbc.Alert("Nessun paziente registrato.", color="warning")
@@ -1293,11 +1293,48 @@ def render_lista_pazienti_glicemia(pazienti):
 #********************************************************************************************************************
 #fil-funzione che permette di creare una lista ordinata dalle info dei paziente 
 
-def crea_div_paziente(cfanno, info):
-    if not info:
-        return html.Div("Non ci sono informazioni per il paziente")
-
+def crea_div_paziente(cfanno, info, segnalazioni):
     codice_fiscale, eta = cfanno[0]
+    str_cf = f"Codice fiscale: {codice_fiscale}"
+    str_eta = f"Età: {eta}"
+
+    if not info:
+        return html.Div([
+            html.H6("Generalità"),
+            html.P(str_cf),
+            html.P(str_eta),
+            html.Hr(),
+            html.H6("Non ci sono informazioni riguardanti il paziente selezionato"),
+            html.Br(),
+            dbc.Button("Inserisci informazioni", id="modal-insert-btn", n_clicks=0),
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
+                    dbc.ModalBody(html.Div([
+                        html.H6("Generalità"),
+                        html.Label(str_cf),
+                        html.Br(), html.Label(str_eta),
+                        html.Hr(),
+                        html.H6("Informazioni cliniche"),
+                        html.Label("Patologie pregresse:"),
+                        dbc.Textarea(id="insert-patologie", value="", style={"width": "100%", "height": "60px"}),
+                        html.Br(),
+                        html.Label("Fattori di rischio:"),
+                        dbc.Input(id="insert-rischio", type="text", value=""),
+                        html.Br(),
+                        html.Label("Comorbidità:"),
+                        dbc.Input(id="insert-comorb", type="text", value=""),
+                        html.Br(), html.Br(),
+                        dbc.Button("Salva modifiche", id="inserisci-modifiche-btn", n_clicks=0),
+                        html.Br(),
+                        dbc.Alert(id="inserisci-info-output", is_open=False),
+                    ])),
+                    dbc.ModalFooter(dbc.Button("Chiudi", id="close-insert-infopaz", className="ml-auto")),
+                ],
+                id="popup-inserisci-info",
+                is_open=False,
+            )
+        ])
 
     # Preparo set per info cliniche
     patologie_pregresse = set()
@@ -1307,59 +1344,73 @@ def crea_div_paziente(cfanno, info):
         if riga[0]: patologie_pregresse.add(riga[0])
         if riga[1]: fattori_rischio.add(riga[1])
         if riga[2]: comorbidita.add(riga[2])
-    str_cf=f"Codice fiscale: {codice_fiscale}"
-    str_eta=f"Età: {eta}"
-    # Contenuto dettagliato non modificabile
+
+    patologie = f"Patologie pregresse: {', '.join(sorted(patologie_pregresse))}" if patologie_pregresse else ""
+    fattori = f"Fattori di rischio: {', '.join(sorted(fattori_rischio))}" if fattori_rischio else ""
+    comorb = f"Comorbidità: {', '.join(sorted(comorbidita))}" if comorbidita else ""
+
+    # Visualizzazione segnalazioni
+    segnalazioni_div = []
+    if segnalazioni:
+        segnalazioni_div.append(html.H6("Segnalazioni del paziente"))
+        for tipo, descrizione, data_inizio, data_fine in segnalazioni:
+            periodo = f"Dal {data_inizio.strftime('%d/%m/%Y')}"
+            if data_fine:
+                periodo += f" al {data_fine.strftime('%d/%m/%Y')}"
+            segnalazioni_div.append(
+                html.Div([
+                    html.Strong(tipo.capitalize() + ": "), html.Span(descrizione),
+                    html.Br(), html.Small(periodo),
+                    html.Hr()
+                ])
+            )
+    else:
+        segnalazioni_div = [html.H6("Nessuna segnalazione presente.")]
+
     return html.Div([
         html.H6("Generalità"),
         html.P(str_cf),
         html.P(str_eta),
         html.Hr(),
         html.H6("Informazioni cliniche"),
-        html.P(f"Patologie pregresse: {', '.join(patologie_pregresse)}"),
-        html.P(f"Fattori di rischio: {', '.join(fattori_rischio)}"),
-        html.P(f"Comorbidità: {', '.join(comorbidita)}"),
+        html.P(patologie),
+        html.P(fattori),
+        html.P(comorb),
+        html.Hr(),
+        *segnalazioni_div,
         html.Br(),
         dbc.Button("Modifica informazioni", id="modal-modifiche-btn", n_clicks=0),
 
         dbc.Modal(
-        [
-            dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
-            dbc.ModalBody(
-                html.Div([
-
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
+                dbc.ModalBody(html.Div([
                     html.H6("Generalità"),
                     html.Label(str_cf),
-
                     html.Br(), html.Label(str_eta),
-
                     html.Hr(),
                     html.H6("Informazioni cliniche"),
                     html.Label("Patologie pregresse:"),
                     dbc.Textarea(
                         id="input-patologie", 
-                        value=", ".join(patologie_pregresse),
+                        value=", ".join(sorted(patologie_pregresse)),
                         style={"width": "100%", "height": "60px"}
                     ),
                     html.Br(),
                     html.Label("Fattori di rischio:"),
-                    dbc.Input(id="input-rischio", type="text", value=", ".join(fattori_rischio)),
+                    dbc.Input(id="input-rischio", type="text", value=", ".join(sorted(fattori_rischio))),
                     html.Br(),
                     html.Label("Comorbidità:"),
-                    dbc.Input(id="input-comorb", type="text", value=", ".join(comorbidita)),
-
+                    dbc.Input(id="input-comorb", type="text", value=", ".join(sorted(comorbidita))),
                     html.Br(), html.Br(),
                     dbc.Button("Salva modifiche", id="salva-modifiche-btn", n_clicks=0),
                     html.Br(),
-                    dbc.Alert(id="patient-info-output", is_open=False),
-                ]),
-            ),
-            dbc.ModalFooter(
-                dbc.Button("Chiudi", id="close-modifica-infopaz", className="ml-auto")
-            ),
-        ],
-        id="popup-modifica-info",
-        is_open=False,  # Inizialmente chiusa
+                    dbc.Alert(id="modifica-info-output", is_open=False),
+                ])),
+                dbc.ModalFooter(dbc.Button("Chiudi", id="close-modifica-infopaz", className="ml-auto")),
+            ],
+            id="popup-modifica-info",
+            is_open=False,
         )
     ])
 

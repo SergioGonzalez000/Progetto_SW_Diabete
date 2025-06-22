@@ -54,18 +54,19 @@ CREATE TABLE Glicemia (
 alter table Glicemia ADD column valore INT;
 
 CREATE TABLE InfoPaziente (
-    id_info SERIAL PRIMARY KEY ,
-	paziente INT NOT NULL,
-	diabetologo INT NOT NULL,
-    patologie_pregresse VARCHAR(50) ,
-	fattori_rischio VARCHAR(50) ,
-    comorbidita VARCHAR(50) ,
-	
-	terapia_conc INT,
-    data_inizio DATE,
-	data_fine DATE 
+    paziente INT NOT NULL,
+    diabetologo INT NOT NULL,
     
+    fattori_rischio TEXT default NULL,     
+    patologie_pregresse TEXT default NULL,
+    comorbidita TEXT default NULL,
+    note TEXT default NULL,         -- per eventuali commenti generici
+    
+    PRIMARY KEY (paziente, diabetologo),
+    FOREIGN KEY (paziente) REFERENCES Paziente(id_paziente),
+    FOREIGN KEY (diabetologo) REFERENCES Diabetologo(id_diabetologo)
 );
+
 
 CREATE TABLE Operazione (
     id_operazione SERIAL PRIMARY KEY ,
