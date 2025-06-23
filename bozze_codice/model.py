@@ -1,5 +1,6 @@
 # gestione Database remoto, gestione altra roba logica
 import datetime
+from collections import namedtuple
 import dash_bootstrap_components as dbc
 from abc import ABC,abstractmethod
 from werkzeug.security import generate_password_hash #password criptate
@@ -180,7 +181,6 @@ class Paziente(Persona):
                     (id_paz, farmaco, dose, sintomi, valore))
         connection.commit()
         cursore_8.close()
-
     def inserisci_segnalazione(self, tipo_segnalazione, descrizione, data_inizio, data_fine=None):
         if tipo_segnalazione not in ('sintomo', 'patologia', 'terapia'):
             raise ValueError("Tipo segnalazione non valido. Deve essere 'sintomo', 'patologia' o 'terapia'.")
@@ -193,15 +193,39 @@ class Paziente(Persona):
         cursore.execute(query, (self.get_id_paziente(), tipo_segnalazione, descrizione, data_inizio, data_fine))
         connection.commit()
         cursore.close()
-
-
+    def get_diabetologo(self):
+        cursore = connection.cursor()
+        cursore.execute("""
+            Select id_diabetologo, d.nome, d.cognome
+            from paziente p
+            join diabetologo d on d.id_diabetologo = p.diabetologo_associato
+            where p.id_paziente = %s
+        """, (self.get_id_paziente(),))
+        result = cursore.fetchone()
+        cursore.close()
+        result = [
+                {
+                    "id": result[0],
+                    "nome": result[1],
+                    "cognome": result[2],
+                }
+            ]
+        return result
+    def get_id_paziente(self):
+        
+        cursore_9 = connection.cursor()
+        
+        cursore_9.execute("""SELECT id_paziente
+                    FROM Paziente 
+                    WHERE codice_fiscale = %s""", (self.cf,))
+        id=cursore_9.fetchone()[0]
+        cursore_9.close()
+        
+        return id
     
 
 
-
-
-
-
+    
 class Diabetologo(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
@@ -282,6 +306,7 @@ class Diabetologo(Persona):
             for r in result
         ]
         cursore_12.close()
+
         return pazienti
 
     
@@ -406,6 +431,34 @@ class Diabetologo(Persona):
 
                     (fattori, patologie, comorbidita, id_paz, self.get_id_diabetologo()))
             connection.commit()
+
+    # funzione che prende tutti i pazienti nella db
+    def get_all_pazienti_associati(self):
+        cursore_6 = connection.cursor()
+        cursore_6.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s", (self.get_id_diabetologo(),))
+        result = cursore_6.fetchall()
+
+        # Conversione in lista di dizionari
+        pazienti = [
+            {
+                "id": r[0],
+                "nome": r[1],
+                "cognome": r[2],
+            }
+            for r in result
+        ]
+
+        cursore_6.close()
+        return pazienti
+
+
+
+
+# ***********
+# da fare?
+
+    def aggiorna_terapia_paziente():
+        pass
 
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
@@ -697,6 +750,24 @@ class Glicemia():
 
 #da qua in poi metodi generali non appartenenti a classi specifiche
 
+#miglio - funzione che a seconda della classe di appartenenza dell'utente chiama i metodi per restituire la sua lista di contatti 
+def get_contatti():
+    contacts = []  
+
+    if isinstance(current_user, Diabetologo):
+        contacts = current_user.get_all_pazienti_associati()  # Ottieni i pazienti
+        
+    elif isinstance(current_user, Paziente):
+        contacts = current_user.get_diabetologo()  # Ottieni il diabetologo
+    return contacts
+#miglio- funzione che resituisce l'id di current_user
+
+def get_user_id():
+    if isinstance(current_user, Diabetologo):
+        id = current_user.get_id_diabetologo()  
+    elif isinstance(current_user, Paziente):
+        id = current_user.get_id_paziente() # Ottieni il diabetologo
+    return id
 
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
 #      procede ad inserirle effettivamente nella base di dati 
@@ -809,6 +880,24 @@ def get_dati_richiesta_account_by_id(id_richiesta):
     return None
 
 
+# funzione che prende i dettagli di un singolo paziente dato il suo id.
+def get_dettagli_paziente(id_paziente):
+    cursore_20 = connection.cursor()
+    cursore_20.execute("""
+        SELECT nome, cognome, data_nascita, sesso, codice_fiscale,
+               indirizzo, citta, cap, telefono, email, username, diabetologo_associato
+        FROM paziente
+        WHERE id_paziente = %s
+    """, (id_paziente,))
+    result = cursore_20.fetchone()
+    cursore_20.close()
+
+    if result:
+        chiavi = ["id_paziente", "nome", "cognome", "data_nascita", "sesso", "codice_fiscale", "indirizzo", "citta", "cap", "telefono", "email", "username", "diabetologo_associato"]
+        return dict(zip(chiavi, result))
+    return None
+
+
 # funzione che prende tutti i pazienti nella db
 def get_all_pazienti():
     cursore_6 = connection.cursor()
@@ -818,7 +907,7 @@ def get_all_pazienti():
     # Conversione in lista di dizionari
     pazienti = [
         {
-            "id": r[0],
+            "id_paziente": r[0],
             "nome": r[1],
             "cognome": r[2],
             "codice_fiscale": r[3],
@@ -832,6 +921,38 @@ def get_all_pazienti():
     cursore_6.close()
     return pazienti
 
+
+# funzione che dato l'id di un diabetologo, ritorna tutti i dati
+def get_dettagli_diabetologo(id_diabetologo):
+    cursore_21 = connection.cursor()
+    cursore_21.execute("""
+        SELECT id_diabetologo, nome, cognome, data_nascita, sesso, codice_fiscale,
+               indirizzo, citta, cap, telefono, email, username
+        FROM diabetologo
+        WHERE id_diabetologo = %s
+    """, (id_diabetologo,))
+    result = cursore_21.fetchone()
+    cursore_21.close()
+
+    if result:
+        chiavi = [
+            "id_diabetologo",
+            "nome",
+            "cognome",
+            "data_nascita",
+            "sesso",
+            "codice_fiscale",
+            "indirizzo",
+            "citta",
+            "cap",
+            "telefono",
+            "email",
+            "username"
+        ]
+        return dict(zip(chiavi, result))
+    return None
+
+
 # funzione che prende tutti i diabetologi nella db
 def get_all_diabetologi():
     cursore_7 = connection.cursor()
@@ -840,7 +961,7 @@ def get_all_diabetologi():
 
     diabetologi = [
         {
-            "id": r[0],
+            "id_diabetologo": r[0],
             "nome": r[1],
             "cognome": r[2],
             "codice_fiscale": r[3],
@@ -966,9 +1087,81 @@ def get_id_paziente_by_username(username):
     if result:
         return result[0]  # l'ID del paziente
     return None
-    
 
-#if __name__ == '__main__':
+def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
+
+    Messaggio = namedtuple('Messaggio', ['contenuto', 'orario', 'giorno','d_is_mittente', 'user_is_diabetologo'])
+    cursore = connection.cursor()
+    #query che restituisce i dati del messaggio capendo chi è il diabetologo e chi il paziente
+    cursore.execute("""
+        Select contenuto, orario, d_is_mittente, id_diabetologo
+        from messaggio
+        where (id_diabetologo = %s and id_paziente = %s)
+        or (id_paziente = %s and id_diabetologo = %s)
+        order by orario
+    """,(id_user,id_interlocutore,id_user,id_interlocutore))
+
+    result = cursore.fetchall()
+    cursore.close()
+    return  [
+        Messaggio(
+            contenuto = r[0],
+            orario = r[1].time(),
+            giorno = r[1].date(),
+            d_is_mittente = r[2], #flag che mi dice se l'ha scritto il diabetologo o no
+            user_is_diabetologo = (id_user == r[3])) #se l'user è diabetologo restituisce true, altrimenti false. serve per capire se caricare le colonne a sx o dx
+        for r in result
+    ]
+#funzione che inserisci i messaggi nella base di dati. 
+def insert_messaggio(id_user, id_interlocutore, contenuto):
+
+    cursore = connection.cursor()
+
+    #check per capire i ruoli di user e interlocutore:
+    cursore.execute("""
+        Select id_diabetologo
+        from diabetologo
+        where id_diabetologo = %s
+    """,(id_user,))
+    if not cursore.fetchone():
+        id_diabetologo = id_interlocutore
+    else : id_diabetologo = id_user 
+    #messaggio(id_diabetologo,id_paziente,contenuto,orario,d_is_mittente)
+    #se è il diabetologo lo metto per primo
+    if id_user == id_diabetologo:
+        cursore.execute("""
+            Insert into messaggio values (%s,%s,%s,current_timestamp,%s)
+        """,(id_user,id_interlocutore,contenuto,True))
+    elif id_interlocutore == id_diabetologo:
+          cursore.execute("""
+            Insert into messaggio values (%s,%s,%s,current_timestamp,%s)
+        """,(id_interlocutore,id_user,contenuto,False))
+    else: 
+        connection.rollback()
+    connection.commit()
+    cursore.close()
+    return
+
+def get_nomecognome(id):
+    nomecognome = namedtuple('nomecognome',['nome','cognome'])
+    cursore = connection.cursor()
+    cursore.execute("""
+        SELECT nome, cognome
+        FROM diabetologo 
+        WHERE id_diabetologo = %s
+
+        UNION ALL
+
+        SELECT nome, cognome
+        FROM paziente 
+        WHERE id_paziente = %s
+    """,(id,id))
+    result = cursore.fetchone()
+    cursore.close()
+    return nomecognome(nome = result[0], cognome = result[1])
+
+if __name__ == '__main__':
     
     # Esempio: 31 dicembre 2025, ore 10:30
-    #Diabetologo.visualizza_dati_paziente(17,'Andrea.Agostini0_P')    
+    Paziente.inserisci_glicemia(39,90,'insulina',10,'fame')
+    
