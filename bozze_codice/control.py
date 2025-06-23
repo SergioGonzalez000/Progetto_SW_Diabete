@@ -345,17 +345,15 @@ def registra_callbacks(app):
     
 # ******************************************************************************************************************
 
-    # callback che gestisce la visualizzazione dei dettagli di un paziente a seguito del click nell'elenco (nell'admin)
     @app.callback(
-        Output("dettagli-paziente", "children"),
-        Input({"type": "btn-paziente", "index": ALL}, "n_clicks"),
-        prevent_initial_call=True
+    Output("dettagli-paziente", "children"),
+    Input({"type": "btn-paziente", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True
     )
     def mostra_dettagli_paziente(n_clicks):
-        if not n_clicks:
+        if not any(n_clicks):
             return dash.no_update
 
-        # Qui accedi al trigger e ricavi l'index
         ctx = dash.callback_context
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
         matched_id = eval(triggered_id)  # trasforma la str in dict
@@ -366,15 +364,29 @@ def registra_callbacks(app):
         if not dati_paziente:
             return dbc.Alert("Dettagli non disponibili per questo paziente", color="danger")
 
-        dettagli = [html.P(f"{k}: {v}") for k, v in dati_paziente.items()]
-        return html.Div([
-            html.H4(f"Dettagli paziente {dati_paziente.get('nome','')}"),
-            html.Hr(),
-            *dettagli
-        ])
-    
+        dettagli = [
+            dbc.ListGroupItem([
+                html.Strong(f"{k.capitalize().replace('_', ' ')}: "),
+                html.Span(str(v))
+            ])
+            for k, v in dati_paziente.items()
+        ]
 
-# ******************************************************************************************************************
+        return dbc.Card(
+            [
+                dbc.CardHeader(html.H5(f"Dettagli paziente: {dati_paziente.get('nome', '')}")),
+                dbc.CardBody(
+                    dbc.ListGroup(dettagli, flush=True),
+                    style={
+                        "maxHeight": "380px",
+                        "overflowY": "auto",
+                        "paddingRight": "8px"  # per evitare scrollbar sopra il contenuto
+                    }
+                )
+            ],
+            className="shadow-sm"
+        )
+
 
     @app.callback(
         Output("dettagli-diabetologo", "children"),
@@ -387,7 +399,7 @@ def registra_callbacks(app):
 
         ctx = dash.callback_context
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        matched_id = eval(triggered_id)  # trasforma la stringa in dict
+        matched_id = eval(triggered_id)
         diabetologo_id = matched_id["index"]
 
         dati_diabetologo = model.get_dettagli_diabetologo(diabetologo_id)
@@ -395,12 +407,28 @@ def registra_callbacks(app):
         if not dati_diabetologo:
             return dbc.Alert("Dettagli non disponibili per questo diabetologo", color="danger")
 
-        dettagli = [html.P(f"{k}: {v}") for k, v in dati_diabetologo.items()]
-        return html.Div([
-            html.H4(f"Dettagli diabetologo {dati_diabetologo.get('nome','')}"),
-            html.Hr(),
-            *dettagli
-        ])
+        dettagli = [
+            dbc.ListGroupItem([
+                html.Strong(f"{k.capitalize().replace('_', ' ')}: "),
+                html.Span(str(v))
+            ])
+            for k, v in dati_diabetologo.items()
+        ]
+
+        return dbc.Card(
+            [
+                dbc.CardHeader(html.H5(f"Dettagli diabetologo: {dati_diabetologo.get('nome', '')}")),
+                dbc.CardBody(
+                    dbc.ListGroup(dettagli, flush=True),
+                    style={
+                        "maxHeight": "380px",
+                        "overflowY": "auto",
+                        "paddingRight": "8px"  # per evitare scrollbar sopra il contenuto
+                    }
+                )
+            ],
+            className="shadow-sm"
+        )
 
     
 # ******************************************************************************************************************

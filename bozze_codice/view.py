@@ -1530,16 +1530,9 @@ def layout_lista_pazienti():
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
-                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                    "border": "2px solid #dee2e6",
-                    "borderRadius": "15px",
-                    "padding": "30px",
-                    "overflow": "auto"
                 },
                 children=[
-                    html.H4("Seleziona un paziente", style={"color": "grey"}),
-                    html.Hr(),
-                    html.Div("Qui appariranno i dettagli")
+                    html.H5("Seleziona un paziente per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
                 ]
             )
         ]
@@ -1625,16 +1618,9 @@ def layout_lista_diabetologi():
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
-                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                    "border": "2px solid #dee2e6",
-                    "borderRadius": "15px",
-                    "padding": "30px",
-                    "overflow": "auto"
                 },
                 children=[
-                    html.H4("Seleziona un diabetologo", style={"color": "grey"}),
-                    html.Hr(),
-                    html.Div("Qui appariranno i dettagli")
+                    html.H5("Seleziona un diabetologo per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
                 ]
             )
         ]
