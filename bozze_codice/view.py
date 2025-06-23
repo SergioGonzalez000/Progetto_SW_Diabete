@@ -2,7 +2,7 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 import model
 from flask_login import UserMixin, login_user, logout_user, current_user 
-
+import model
 
 # Layout dell'app, intero. Si aggiorna quando viene cambiato l'url.
 def getLayout():
@@ -23,8 +23,6 @@ def getLayout():
             "minHeight": "100vh",
             # Colore sfondo standard fisso
             "background-color": "#e6f2ff",
-            #fil-altezza della parte azzurra che si adatta automaticamente
-            #"height": "auto",
             # Nessun margine al contenuto affinché occupi tutta la pagina disponibile
             "margin": 0
         }
@@ -860,7 +858,7 @@ chat_content = html.Div(
             children=[
                 html.H2("Chat", style={"color": "grey"}),
                 html.Hr(),
-
+                
                 # DA FARE
 
                 # Funzione che carica la lista delle chat disponibili per l'utente
@@ -1039,10 +1037,10 @@ doctor_dashboard = html.Div(
                 # Numero 4
                 html.Div(
                     [
-                        html.H5("Torta dei pazienti:", style={"color" : "grey"}),
+                        html.H5("informazioni paziente:", style={"color" : "grey"}),
                         html.Hr(),
                         # Grafico a torta + legenda che mostra i pazienti con bollino rosso/giallo/verde
-                        html.Div( id="patient-pie", style={"height": "100%","width": "100%"})
+                        html.Div( id="doctor-patient-info", style={"height": "100%","width": "100%"})
                     ],
                     style={"flex": 1},
                     className="card",
@@ -1079,10 +1077,10 @@ doctor_dashboard = html.Div(
                         # Numero 6
                         html.Div(
                             [
-                                html.H5("Grafico vario:", style={"color" : "grey"}),
+                                html.H5("Andamento pazienti:", style={"color" : "grey"}),
                                 html.Hr(),
                                 # Qua va inserito un grafico ???
-                                html.Div( id="graph-???", style={"height": "100%","width": "100%"})
+                                html.Div( id="patient-pie", style={"height": "100%","width": "100%"})
                             ],
                             className="card"
                         )
@@ -1155,7 +1153,7 @@ doctor_patient = html.Div(
                 # Numero 4
                 html.Div(
                     [
-                        html.H5("Andamento:", style={"color" : "grey"}),
+                        html.H5("Andamento glicemia:", style={"color" : "grey"}),
                         html.Hr(),
                         # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
                         html.Div( id="patient-graph", style={"height": "100%","width": "100%"})
@@ -1168,11 +1166,10 @@ doctor_patient = html.Div(
                     [
                         # Numero 5
                         html.Div(
-                            [
-                                html.H5("Dati del paziente:", style={"color" : "grey"}),
-                                html.Hr(),
-                                # Qua vanno inserite le generalità del paziente
-                                html.Div( id="patient-data", style={"height": "100%","width": "100%"})
+                            [   
+                                html.Div( id="patient-info", style={"height": "100%","width": "100%"}),
+                                dcc.Store(id="selected-patient-id", storage_type="session")#per salvare l'id del paziente
+
                             ],
                             className="card"
                         ),
@@ -1217,6 +1214,225 @@ doctor_patient = html.Div(
         )
     ]
 )
+#********************************************************************************************************************
+# appena aggiunta
+def layout_lista_pazienti_associati():
+    pazienti = current_user.visualizza_n_c_pazienti_associati()
+    
+    if not pazienti:
+        return dbc.Alert("Nessun paziente registrato.", color="warning")
+
+    return html.Div(
+        style={
+            "flex": 1,
+            "display": "flex",
+            "flexDirection": "row",
+            "padding": "20px",
+            "gap": "20px"
+        },
+        children=[
+            # Colonna sinistra: elenco pazienti
+            render_lista_pazienti_glicemia(pazienti),
+        ]
+    )
+#*******************************************************************************************************************
+def render_lista_pazienti_glicemia(pazienti):
+    def colore_glicemia(media):
+        if media is None:
+            return "gray"
+        elif media >= 180:
+            return "#FF4C4C"
+        elif media >= 120:
+            return '#FFD93B'
+        else:
+            return '#08ff46'
+
+    return html.Div(
+        className="card",
+        style={
+            "flex": 1,
+            "display": "flex",
+            "flexDirection": "column",
+            "padding": "18px",
+            "overflowY": "auto",
+            "maxHeight": "87.5vh",
+            "border": "2px solid #dee2e6",
+            "borderRadius": "15px",
+            "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+        },
+        children=[
+            *[
+                dbc.Button(
+                    html.Div([
+                        html.Span(
+                            style={
+                                "display": "inline-block",
+                                "width": "12px",
+                                "height": "12px",
+                                "borderRadius": "50%",
+                                "backgroundColor": colore_glicemia(d["media"]),
+                                "marginRight": "10px",
+                                "marginTop": "3px",
+                            }
+                        ),
+                        f"{d['nome']} {d['cognome']}"
+                    ],
+                    style={"display": "flex", "alignItems": "center"}),
+                    id={"type": "btn-paziente", "index": d["id"]},
+                    color="light",
+                    style={
+                        "textAlign": "left",
+                        "marginBottom": "10px",
+                        "border": "1px solid #ccc",
+                        "borderRadius": "10px",
+                        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+                    },
+                    className="text-start"
+                )
+                for d in pazienti
+            ]
+        ]
+    )
+#********************************************************************************************************************
+#fil-funzione che permette di creare una lista ordinata dalle info dei paziente 
+
+def crea_div_paziente(cfanno, info, segnalazioni):
+    codice_fiscale, eta = cfanno[0]
+    str_cf = f"Codice fiscale: {codice_fiscale}"
+    str_eta = f"Età: {eta}"
+
+    if not info:
+        return html.Div([
+            html.H6("Generalità"),
+            html.P(str_cf),
+            html.P(str_eta),
+            html.Hr(),
+            html.H6("Non ci sono informazioni riguardanti il paziente selezionato"),
+            html.Br(),
+            dbc.Button("Inserisci informazioni", id="modal-insert-btn", n_clicks=0),
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
+                    dbc.ModalBody(html.Div([
+                        html.H6("Generalità"),
+                        html.Label(str_cf),
+                        html.Br(), html.Label(str_eta),
+                        html.Hr(),
+                        html.H6("Informazioni cliniche"),
+                        html.Label("Patologie pregresse:"),
+                        dbc.Textarea(id="insert-patologie", value="", style={"width": "100%", "height": "60px"}),
+                        html.Br(),
+                        html.Label("Fattori di rischio:"),
+                        dbc.Input(id="insert-rischio", type="text", value=""),
+                        html.Br(),
+                        html.Label("Comorbidità:"),
+                        dbc.Input(id="insert-comorb", type="text", value=""),
+                        html.Br(), html.Br(),
+                        dbc.Button("Salva modifiche", id="inserisci-modifiche-btn", n_clicks=0),
+                        html.Br(),
+                        dbc.Alert(id="inserisci-info-output", is_open=False),
+                    ])),
+                    dbc.ModalFooter(dbc.Button("Chiudi", id="close-insert-infopaz", className="ml-auto")),
+                ],
+                id="popup-inserisci-info",
+                is_open=False,
+            )
+        ])
+
+    # Preparo set per info cliniche
+    patologie_pregresse = set()
+    fattori_rischio = set()
+    comorbidita = set()
+    for riga in info:
+        if riga[0]: patologie_pregresse.add(riga[0])
+        if riga[1]: fattori_rischio.add(riga[1])
+        if riga[2]: comorbidita.add(riga[2])
+
+    patologie = f"Patologie pregresse: {', '.join(sorted(patologie_pregresse))}" if patologie_pregresse else ""
+    fattori = f"Fattori di rischio: {', '.join(sorted(fattori_rischio))}" if fattori_rischio else ""
+    comorb = f"Comorbidità: {', '.join(sorted(comorbidita))}" if comorbidita else ""
+
+    # Visualizzazione segnalazioni
+    segnalazioni_div = []
+    if segnalazioni:
+        segnalazioni_div.append(html.H6("Segnalazioni del paziente"))
+        for tipo, descrizione, data_inizio, data_fine in segnalazioni:
+            periodo = f"Dal {data_inizio.strftime('%d/%m/%Y')}"
+            if data_fine:
+                periodo += f" al {data_fine.strftime('%d/%m/%Y')}"
+            segnalazioni_div.append(
+                html.Div([
+                    html.Strong(tipo.capitalize() + ": "), html.Span(descrizione),
+                    html.Br(), html.Small(periodo),
+                    html.Hr()
+                ])
+            )
+    else:
+        segnalazioni_div = [html.H6("Nessuna segnalazione presente.")]
+
+    return html.Div([
+        html.H6("Generalità"),
+        html.P(str_cf),
+        html.P(str_eta),
+        html.Hr(),
+        html.H6("Informazioni cliniche"),
+        html.P(patologie),
+        html.P(fattori),
+        html.P(comorb),
+        html.Hr(),
+        *segnalazioni_div,
+        html.Br(),
+        dbc.Button("Modifica informazioni", id="modal-modifiche-btn", n_clicks=0),
+
+        dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
+                dbc.ModalBody(html.Div([
+                    html.H6("Generalità"),
+                    html.Label(str_cf),
+                    html.Br(), html.Label(str_eta),
+                    html.Hr(),
+                    html.H6("Informazioni cliniche"),
+                    html.Label("Patologie pregresse:"),
+                    dbc.Textarea(
+                        id="input-patologie", 
+                        value=", ".join(sorted(patologie_pregresse)),
+                        style={"width": "100%", "height": "60px"}
+                    ),
+                    html.Br(),
+                    html.Label("Fattori di rischio:"),
+                    dbc.Input(id="input-rischio", type="text", value=", ".join(sorted(fattori_rischio))),
+                    html.Br(),
+                    html.Label("Comorbidità:"),
+                    dbc.Input(id="input-comorb", type="text", value=", ".join(sorted(comorbidita))),
+                    html.Br(), html.Br(),
+                    dbc.Button("Salva modifiche", id="salva-modifiche-btn", n_clicks=0),
+                    html.Br(),
+                    dbc.Alert(id="modifica-info-output", is_open=False),
+                ])),
+                dbc.ModalFooter(dbc.Button("Chiudi", id="close-modifica-infopaz", className="ml-auto")),
+            ],
+            id="popup-modifica-info",
+            is_open=False,
+        )
+    ])
+
+# ******************************************************************************************************************
+def crea_div_info_base_paziente(info_paziente):
+    if not info_paziente:
+        return html.Div("Nessuna informazione disponibile per questo paziente.")
+
+    username, nome, cognome, data_nascita, sesso, media_glicemia = info_paziente[0]
+
+    return dbc.Card([
+        dbc.CardHeader(html.H5(f"{nome} {cognome}", className="mb-0")),
+        dbc.CardBody([
+            html.P(f"Username: {username}"),
+            html.P(f"Data di nascita: {data_nascita.strftime('%d/%m/%Y')}"),
+            html.P(f"Sesso: {'Maschio' if sesso == 'M' else 'Femmina'}"),
+            html.P(f"Media glicemia: {round(media_glicemia, 1)} mg/dL" if media_glicemia else "Nessun valore glicemico registrato"),
+        ])
+    ], className="card")
 
 # CHAT (= chat_content) -> Già fatta
 
