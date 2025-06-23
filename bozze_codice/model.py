@@ -809,6 +809,24 @@ def get_dati_richiesta_account_by_id(id_richiesta):
     return None
 
 
+# funzione che prende i dettagli di un singolo paziente dato il suo id.
+def get_dettagli_paziente(id_paziente):
+    cursore_20 = connection.cursor()
+    cursore_20.execute("""
+        SELECT nome, cognome, data_nascita, sesso, codice_fiscale,
+               indirizzo, citta, cap, telefono, email, username, diabetologo_associato
+        FROM paziente
+        WHERE id_paziente = %s
+    """, (id_paziente,))
+    result = cursore_20.fetchone()
+    cursore_20.close()
+
+    if result:
+        chiavi = ["id_paziente", "nome", "cognome", "data_nascita", "sesso", "codice_fiscale", "indirizzo", "citta", "cap", "telefono", "email", "username", "diabetologo_associato"]
+        return dict(zip(chiavi, result))
+    return None
+
+
 # funzione che prende tutti i pazienti nella db
 def get_all_pazienti():
     cursore_6 = connection.cursor()
@@ -818,7 +836,7 @@ def get_all_pazienti():
     # Conversione in lista di dizionari
     pazienti = [
         {
-            "id": r[0],
+            "id_paziente": r[0],
             "nome": r[1],
             "cognome": r[2],
             "codice_fiscale": r[3],
@@ -832,6 +850,38 @@ def get_all_pazienti():
     cursore_6.close()
     return pazienti
 
+
+# funzione che dato l'id di un diabetologo, ritorna tutti i dati
+def get_dettagli_diabetologo(id_diabetologo):
+    cursore_21 = connection.cursor()
+    cursore_21.execute("""
+        SELECT id_diabetologo, nome, cognome, data_nascita, sesso, codice_fiscale,
+               indirizzo, citta, cap, telefono, email, username
+        FROM diabetologo
+        WHERE id_diabetologo = %s
+    """, (id_diabetologo,))
+    result = cursore_21.fetchone()
+    cursore_21.close()
+
+    if result:
+        chiavi = [
+            "id_diabetologo",
+            "nome",
+            "cognome",
+            "data_nascita",
+            "sesso",
+            "codice_fiscale",
+            "indirizzo",
+            "citta",
+            "cap",
+            "telefono",
+            "email",
+            "username"
+        ]
+        return dict(zip(chiavi, result))
+    return None
+
+
 # funzione che prende tutti i diabetologi nella db
 def get_all_diabetologi():
     cursore_7 = connection.cursor()
@@ -840,7 +890,7 @@ def get_all_diabetologi():
 
     diabetologi = [
         {
-            "id": r[0],
+            "id_diabetologo": r[0],
             "nome": r[1],
             "cognome": r[2],
             "codice_fiscale": r[3],
