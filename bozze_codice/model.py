@@ -219,15 +219,29 @@ class Diabetologo(Persona):
         return id
     
     def inserisci_terapia(self,id_paz, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
-        
         cursore_10 = connection.cursor()
-        
         cursore_10.execute("""INSERT INTO Terapia 
                     (paziente, diabetologo, farmaco, dosaggio, assunzioni_gg, data_inizio, data_fine,indicazioni) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s,%s)""", 
                     (id_paz, self.get_id_diabetologo(), farmaco, dose, assunzioni_gg, data_inizio, data_fine,indicazioni))
         connection.commit()
         cursore_10.close()
+    
+    def get_terapie_paziente(self, id_paz):
+        cursore=connection.cursor()
+        cursore.execute("SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s",(id_paz,current_user.get_id_diabetologo()))
+        result=cursore.fetchall()
+        return result
+    
+    def modifica_terapia_paziente(self, id_paz, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
+        cursore=connection.cursor()
+        cursore.execute("""UPDATE Terapia 
+                            SET farmaco=%s, dosaggio=%s, assunzioni_gg=%s, data_inizio=%s, data_fine=%s, indicazioni=%s,data_ultima_modifica = CURRENT_DATE
+                            WHERE paziente=%s and diabetologo=%s""", 
+                            (farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni, id_paz, self.get_id_diabetologo()))
+        connection.commit()
+        cursore.close()
+
 
     def visualizza_pazienti_associati(self):
         #li ordina in base al valore medio di glicemia
@@ -355,14 +369,6 @@ class Diabetologo(Persona):
         return fig
 
 
-
-
-
-# ***********
-# da fare!
-
-    def modifica_terapia_paziente():
-        pass
 
     # Funzione che permetta al medico di inserire i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
@@ -902,13 +908,17 @@ def visualizza_glicemia_tutti_pazienti():
 
     # *********************** test
 def visualizza_media_glicemia_per_diabetologi():
+    cursore=connection.cursor()
     diabetologi = get_all_diabetologi()
     nomi = []
     medie = []
 
     for d in diabetologi:
         id_d = d["id"]
-        dati_pazienti = Diabetologo.visualizza_pazienti_associati(id_d)
+        cursore.execute("SELECT * FROM Diabetologo WHERE id_diabetologo=%s",(id_d,))
+        r=cursore.fetchone()
+        Diab=Diabetologo(r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12])
+        dati_pazienti = Diab.visualizza_pazienti_associati()
 
         nome_completo = f"{d['nome']} {d['cognome']}"
         nomi.append(nome_completo)

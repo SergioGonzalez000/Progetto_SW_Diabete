@@ -1167,6 +1167,8 @@ doctor_patient = html.Div(
                         # Numero 5
                         html.Div(
                             [   
+                                html.H5("Informazioni paziente:", style={"color" : "grey"}),
+                                html.Hr(),
                                 html.Div( id="patient-info", style={"height": "100%","width": "100%"}),
                                 dcc.Store(id="selected-patient-id", storage_type="session")#per salvare l'id del paziente
 
@@ -1180,24 +1182,36 @@ doctor_patient = html.Div(
                                 html.Hr(),
                                 # Qua va inserita la tabella delle terapie
                                 html.Div( id="patient-therapy", style={"height": "100%","width": "100%"}),
-                                dbc.Input(
-                                    placeholder="Nuova terapia",
-                                    type="text",
-                                    id="new-therapy",
-                                    # Attiva la callback solo quando l'utente digita qualcosa
-                                    debounce=False,
-                                    # Contatore per quando l'utente preme invio
-                                    n_submit=0,
-                                    style={
-                                        "width": "100%", # Occupa l'intera larghezza del box padre
-                                        "padding": "15px 20px",
-                                        "border-radius": "15px",
-                                        "border": "none",
-                                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                        "background-color": "#f0f0f0",
-                                        "fontSize": "20px",
-                                    }
-                                )
+                                html.Hr(),
+                                dbc.Button("Aggiungi terapia",id="aggiungi-terapia-btn",n_clicks=0),
+                                dbc.Modal(
+                                [
+                                    dbc.ModalHeader(dbc.ModalTitle("Nuova Terapia")),
+                                    dbc.ModalBody([
+                                        dbc.Label("Farmaco"),
+                                        dbc.Input(id="input-nuovo-farmaco", type="text"),
+                                        dbc.Label("Dosaggio (mg)"),
+                                        dbc.Input(id="input-nuovo-dosaggio", type="number"),
+                                        dbc.Label("Assunzioni al giorno"),
+                                        dbc.Input(id="input-nuovo-assunzioni", type="number"),
+                                        dbc.Label("Data inizio"),
+                                        dcc.DatePickerSingle(id="input-nuovo-data-inizio"),
+                                        dbc.Label("Data fine"),
+                                        dcc.DatePickerSingle(id="input-nuovo-data-fine",min_date_allowed=None),
+                                        dbc.Label("Indicazioni"),
+                                        dbc.Textarea(id="input-nuovo-indicazioni"),
+                                        html.Br(),
+                                        dbc.Button("Salva", id="salva-nuova-terapia-btn", color="primary",n_clicks=0),
+                                        dbc.Alert(id="aggiungi-terapia-output", is_open=False)
+                                    ]),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Chiudi", id="chiudi-nuova-terapia", className="ms-auto")
+                                    ),
+                                ],
+                                id="popup-nuova-terapia",
+                                is_open=False,
+                            ),
+    
                             ],
                             className="card"
                         )
@@ -1416,6 +1430,71 @@ def crea_div_paziente(cfanno, info, segnalazioni):
             is_open=False,
         )
     ])
+# ******************************************************************************************************************
+
+
+def crea_div_terapia_selezionata(terapia):
+    return html.Div([
+        html.H6(f"Terapia selezionata: {terapia[3]}"),
+        html.P(f"Dosaggio: {terapia[4]} mg"),
+        html.P(f"Assunzioni al giorno: {terapia[5]}"),
+        html.P(f"Periodo: {terapia[6]} - {terapia[7]}"),
+        html.P(f"Indicazioni: {terapia[9]}"),
+        html.Small(f"Ultima modifica: {terapia[8]}"),
+        html.Br(), html.Br(),
+        dbc.Button("Modifica terapia", id="apri-modal-terapia", n_clicks=0),
+
+        dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Modifica Terapia")),
+                dbc.ModalBody([
+                    dbc.Label("Farmaco"),
+                    dbc.Input(id="input-farmaco", type="text", value=terapia[3]),
+                    dbc.Label("Dosaggio (mg)"),
+                    dbc.Input(id="input-dosaggio", type="number", value=terapia[4]),
+                    dbc.Label("Assunzioni al giorno"),
+                    dbc.Input(id="input-assunzioni", type="number", value=terapia[5]),
+                    dbc.Label("Indicazioni"),
+                    dbc.Input(id="input-data-inizio", type="date", value=str(terapia[6])),
+                    dbc.Label("Data fine"),
+                    dbc.Input(id="input-data-fine",type="date",value=str(terapia[7])),
+                    dbc.Textarea(id="input-indicazioni", value=terapia[9]),
+                    html.Br(),
+                    dbc.Button("Salva modifiche", id="btn-salva-modifiche-terapia", color="primary",n_clicks=0),
+                    dbc.Alert(id="modifica-terapia-output", is_open=False),
+                ]),
+                dbc.ModalFooter(
+                    dbc.Button("Chiudi", id="chiudi-modal-terapia", className="ms-auto")
+                )
+            ],
+            id="popup-modifica-terapia",
+            is_open=False
+        )
+    ])
+
+
+
+
+def crea_div_terapia_dropdown(terapie):
+    return html.Div([
+        html.H5("Seleziona una terapia da visualizzare o modificare:"),
+        dcc.Dropdown(
+            id="dropdown-terapia-selezionata",
+            options=[
+                {
+                    "label": f"{t[3]} ({t[6]} - {t[7]})",
+                    "value": t[0]
+                }
+                for t in terapie
+            ],
+            placeholder="Scegli una terapia...",
+            style={"width": "100%"}
+        ),
+        html.Br(),
+        html.Div(id="div-terapia-selezionata")  # sarà popolato dalla callback
+    ])
+
+
 
 # ******************************************************************************************************************
 def crea_div_info_base_paziente(info_paziente):

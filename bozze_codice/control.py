@@ -602,11 +602,162 @@ def registra_callbacks(app):
         [Input("modal-insert-btn", "n_clicks"), Input("close-insert-infopaz", "n_clicks")],
         [dash.dependencies.State("popup-inserisci-info", "is_open")]
     )
+    def apri_chiudi_popup_inserisciinfopaz(open_clicks, close_clicks, is_open):
+        if open_clicks or close_clicks:
+            return not is_open
+        return is_open
+# ******************************************************************************************************************
+    @app.callback(
+         Output("patient-therapy","children"),
+         Input("url","pathname"),
+         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+    )
+    def visualizza_dropdown_terapie(path,n_clicks):
+        trigger_id = ctx.triggered_id
+
+        if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
+            return "Nessun paziente selezionato"            
+        id_paz = trigger_id.get('index')
+        if path=="/doctor-patient":
+            terapie=current_user.get_terapie_paziente(id_paz)
+            return view.crea_div_terapia_dropdown(terapie)
+        else:
+            return dash.no_update()
+        
+    @app.callback(
+        Output("div-terapia-selezionata", "children"),
+        Input("dropdown-terapia-selezionata", "value"),
+        State("selected-patient-id", "data"),
+        prevent_initial_call=True
+    )
+    def mostra_terapia_selezionata(id_terapia, id_paz):
+        if id_terapia is None:
+            return html.Div("Seleziona una terapia.")
+
+        lista_terapie = current_user.get_terapie_paziente(id_paz)
+        terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
+        if terapia is None:
+            return html.Div("Terapia non trovata.")
+
+        return view.crea_div_terapia_selezionata(terapia)
+
+# ******************************************************************************************************************
+    #callback per aprire il popup di modifica terapia
+    @app.callback(
+        Output("popup-modifica-terapia", "is_open"),
+        [Input("apri-modal-terapia", "n_clicks"), Input("chiudi-modal-terapia", "n_clicks")],
+        [dash.dependencies.State("popup-modifica-terapia", "is_open")]
+    )
     def apri_chiudi_popup_modificainfopaz(open_clicks, close_clicks, is_open):
         if open_clicks or close_clicks:
             return not is_open
         return is_open
 # ******************************************************************************************************************
+#callback per modificare dati terapia
+    @app.callback(
+        Output("modifica-terapia-output", "children"),
+        Output("modifica-terapia-output", "color"),
+        Output("modifica-terapia-output", "is_open"),
+        Input("url", "pathname"),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        Input("btn-salva-modifiche-terapia", "n_clicks"),
+        Input("input-farmaco", "value"),
+        Input("input-dosaggio", "value"),
+        Input("input-assunzioni", "value"),
+        Input("input-data-inizio", "value"),
+        Input("input-data-fine", "value"),
+        Input("input-indicazioni", "value"),
+        State("selected-patient-id", "data"),
+        prevent_initial_call=True
+    )
+    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni, id_paz):
+        trigger_id = ctx.triggered_id
+
+        farmaco = farmaco or None
+        dosaggio = dosaggio or None
+        assunzioni = assunzioni or None
+        indicazioni = indicazioni or None
+        data_i = data_i or None
+        data_f = data_f or None
+        if farmaco==None and dosaggio==None and assunzioni==None and indicazioni==None and data_i==None and data_f==None and modifybtn>0:
+            return "Informazioni mancanti", "danger", True
+        if data_i and data_f and data_f<data_i:
+            return "Data fine non valida","danger", True
+        
+        if trigger_id != "btn-salva-modifiche-terapia":
+            raise dash.exceptions.PreventUpdate
+
+        if path == "/doctor-patient" and modifybtn > 0:
+            if not any(n_clicks):
+                return "Seleziona un paziente!", "danger",True
+            current_user.modifica_terapia_paziente(id_paz,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
+            return "Modifica avvenuta con successo", "success", True
+        else:
+            return dash.no_update
+
+#******************************************************************************************************************
+    #callback per aprire il pop up aggiungi terapia
+    @app.callback(
+        Output("popup-nuova-terapia", "is_open"),
+        [Input("aggiungi-terapia-btn", "n_clicks"), Input("chiudi-nuova-terapia", "n_clicks")],
+        [State("popup-nuova-terapia", "is_open")]
+    )
+    def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
+        if n_apri or n_chiudi:
+            return not is_open
+        return is_open
+
+
+#******************************************************************************************************************
+#callback per aggiungere nuovi dati terapia
+    @app.callback(
+        Output("aggiungi-terapia-output", "children"),
+        Output("aggiungi-terapia-output", "color"),
+        Output("aggiungi-terapia-output", "is_open"),
+        Input("url", "pathname"),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        Input("salva-nuova-terapia-btn", "n_clicks"),
+        Input("input-nuovo-farmaco", "value"),
+        Input("input-nuovo-dosaggio", "value"),
+        Input("input-nuovo-assunzioni", "value"),
+        Input("input-nuovo-data-inizio", "date"),
+        Input("input-nuovo-data-fine", "date"),
+        Input("input-nuovo-indicazioni", "value"),
+        State("selected-patient-id", "data"),
+        prevent_initial_call=True
+    )
+    def aggiungi_terapia_paziente(path, n_clicks, savebtn, farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni, id_paz):
+        trigger_id = ctx.triggered_id
+
+        farmaco = farmaco or None
+        indicazioni = indicazioni or None
+        dosaggio = dosaggio or None
+        assunzioni = assunzioni or None
+        if (farmaco==None or dosaggio==None or assunzioni==None or data_i==None or data_f==None) and trigger_id=="salva-nuova-terapia-btn":
+            return "Informazioni mancanti", "danger", True
+
+        if trigger_id != "salva-nuova-terapia-btn":
+            raise dash.exceptions.PreventUpdate
+
+        if path == "/doctor-patient" and savebtn > 0:
+            if not any(n_clicks):
+                return "Seleziona un paziente!", "danger",True
+            current_user.inserisci_terapia(id_paz,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
+            return "Modifica avvenuta con successo", "success", True
+        else:
+            return dash.no_update
+
+#******************************************************************************************************************
+    #callback per far partire correttamente la scelta della data fine terapia
+    @app.callback(
+        Output("input-nuovo-data-fine", "min_date_allowed"),
+        Input("input-nuovo-data-inizio", "date")
+    )
+    def aggiorna_min_data_fine(data_inizio):
+        if data_inizio:
+            return data_inizio  # Imposta la data inizio come minimo selezionabile
+        return None
+#*******************************************************************************************************************
 # Callback aggiornamento cerchio colorato glicemia:
     @app.callback(
         # Numero centrale visualizzato
