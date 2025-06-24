@@ -1153,10 +1153,38 @@ doctor_patient = html.Div(
                 # Numero 4
                 html.Div(
                     [
-                        html.H5("Andamento glicemia:", style={"color" : "grey"}),
+                        html.H5("Grafico:", style={"color" : "grey"}),
+                        dcc.Dropdown(id="dropdown-scelta-grafico",
+                            options=[
+                                {
+                                    "label": "andamento",
+                                    "value": "andamento",
+                                },
+                                {
+                                    "label": "media durante il giorno",
+                                    "value": "medie"
+                                },
+                            ],
+                            placeholder="Scegli una tipologia di grafico",
+                            style={"width": "100%"}),
                         html.Hr(),
                         # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
-                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"})
+                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"}),
+                        html.Br(),
+                        dcc.RadioItems(
+                            id='filtro-temporale',
+                            options=[
+                                {'label': 'Tutto', 'value': 'tutto'},
+                                {'label': 'Annuale', 'value': 'annuale'},
+                                {'label': 'Mensile', 'value': 'mensile'},
+                                {'label': 'Settimanale', 'value': 'settimanale'},
+                                {'label': 'Giornaliero', 'value': 'giornaliero'}
+                            ],
+                            value='tutto',  # default
+                            labelStyle={'display': 'inline-block', 'margin-right': '15px'},
+                            inputStyle={"margin-right": "5px"},
+                            style={"textAlign":"center"}
+                        ),
                     ],
                     style={"flex": 1},
                     className="card",
@@ -1435,12 +1463,14 @@ def crea_div_paziente(cfanno, info, segnalazioni):
 
 def crea_div_terapia_selezionata(terapia):
     return html.Div([
-        html.H6(f"Terapia selezionata: {terapia[3]}"),
+        html.H6(f"ID terapia selezionata: {terapia[0]}"),
+        html.P(f"Farmaco: {terapia[3]}"),
         html.P(f"Dosaggio: {terapia[4]} mg"),
         html.P(f"Assunzioni al giorno: {terapia[5]}"),
         html.P(f"Periodo: {terapia[6]} - {terapia[7]}"),
         html.P(f"Indicazioni: {terapia[9]}"),
         html.Small(f"Ultima modifica: {terapia[8]}"),
+        dcc.Store(id="terapia-selezionata",data=terapia[0]),
         html.Br(), html.Br(),
         dbc.Button("Modifica terapia", id="apri-modal-terapia", n_clicks=0),
 
@@ -1477,7 +1507,6 @@ def crea_div_terapia_selezionata(terapia):
 
 def crea_div_terapia_dropdown(terapie):
     return html.Div([
-        html.H5("Seleziona una terapia da visualizzare o modificare:"),
         dcc.Dropdown(
             id="dropdown-terapia-selezionata",
             options=[
@@ -1487,7 +1516,7 @@ def crea_div_terapia_dropdown(terapie):
                 }
                 for t in terapie
             ],
-            placeholder="Scegli una terapia...",
+            placeholder="Seleziona una terapia da visualizzare o modificare:",
             style={"width": "100%"}
         ),
         html.Br(),

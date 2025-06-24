@@ -256,17 +256,17 @@ def registra_callbacks(app):
 
 # ******************************************************************************************************************
     
-    #permette di vedere i grafici paziente per paziente al diabetologo
-    @app.callback(
-        Output("dropdown-output","children"),
-        Input("dropdown-pazienti","value"),
-    )
-    def visualizza_grafico_paziente(paziente):
-        if not paziente:
-            return "Seleziona un paziente per visualizzare il grafico."
+    # #permette di vedere i grafici paziente per paziente al diabetologo
+    # @app.callback(
+    #     Output("dropdown-output","children"),
+    #     Input("dropdown-pazienti","value"),
+    # )
+    # def visualizza_grafico_paziente(paziente):
+    #     if not paziente:
+    #         return "Seleziona un paziente per visualizzare il grafico."
     
-        fig = model.Diabetologo.visualizza_glicemia_paziente(paziente)
-        return dcc.Graph(figure=fig)
+    #     fig = model.Diabetologo.visualizza_glicemia_paziente(paziente)
+    #     return dcc.Graph(figure=fig)
     
 
     # ************************
@@ -433,28 +433,28 @@ def registra_callbacks(app):
     
 # ******************************************************************************************************************
 
-    #permette di vedere i grafici paziente per paziente al diabetologo
-    @app.callback(
-        Output("dropdown-output-tutti","children"),
-        Output("dropdown-tutti-pazienti","options"),
-        Input("dropdown-tutti-pazienti","value"),
-        Input("filtro-pazienti","value")
-    )
-    def visualizza_lista_pazienti(paziente,scelta):
+    # #permette di vedere i grafici paziente per paziente al diabetologo
+    # @app.callback(
+    #     Output("dropdown-output-tutti","children"),
+    #     Output("dropdown-tutti-pazienti","options"),
+    #     Input("dropdown-tutti-pazienti","value"),
+    #     Input("filtro-pazienti","value")
+    # )
+    # def visualizza_lista_pazienti(paziente,scelta):
         
-        id = current_user.get_id_diabetologo()
+    #     id = current_user.get_id_diabetologo()
 
-        if scelta=='PA':
-            lista=model.Diabetologo.visualizza_pazienti_associati(id)
-        else:
-            lista=model.Diabetologo.visualizza_tutti_pazienti()
+    #     if scelta=='PA':
+    #         lista=model.Diabetologo.visualizza_pazienti_associati(id)
+    #     else:
+    #         lista=model.Diabetologo.visualizza_tutti_pazienti()
 
-        opzioni = [{"label": nome, "value": nome} for nome in lista]
+    #     opzioni = [{"label": nome, "value": nome} for nome in lista]
 
-        if not paziente:
-            return "Seleziona un paziente per visualizzare il grafico.",opzioni
-        #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
-        return view.patient_dashboard,opzioni
+    #     if not paziente:
+    #         return "Seleziona un paziente per visualizzare il grafico.",opzioni
+    #     #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
+    #     return view.patient_dashboard,opzioni
        
         
        
@@ -494,7 +494,7 @@ def registra_callbacks(app):
             a = n = o = 0
             for media in media_glicemie:
                 valore = media[0]
-                if valore < 70 or valore > 180:
+                if valore < 80 or valore > 180:
                     a += 1
                 elif 130 < valore < 180:
                     n += 1
@@ -516,30 +516,33 @@ def registra_callbacks(app):
     @app.callback(
         Output("patient-graph", "children"),
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        Input("filtro-temporale", "value"),
+        Input("dropdown-scelta-grafico","value"),
+        State("selected-patient-id", "data"),
         prevent_initial_call=True
     )
-    def visualizza_andamento_glicemia(pathname, n_clicks):
-        triggered = ctx.triggered
+    def visualizza_andamento_glicemia(pathname, n_clicks, filtro, scelta, stored_id_paz):
+        triggered_id = ctx.triggered_id
 
-        if not triggered or not any(n_clicks):
+        # Se è stato cliccato un nuovo paziente
+        if isinstance(triggered_id, dict) and triggered_id.get("type") == "btn-paziente":
+            id_paz = triggered_id["index"]
+        else:
+            # Nessun nuovo paziente cliccato → usa quello memorizzato
+            id_paz = stored_id_paz
+
+        if not id_paz or not any(n_clicks):
             return "Nessun paziente selezionato"
 
-        # Ottieni ID del paziente cliccato
-        prop_id = triggered[0]['prop_id']
-        id_dict_str = prop_id.split('.')[0]
-        try:
-            id_dict = json.loads(id_dict_str)
-        except json.JSONDecodeError:
-            raise dash.exceptions.PreventUpdate
+        dati = model.get_dati_glicemia_filtrati(id_paz, filtro, scelta)
 
-        id_paz = id_dict['index']
-
-        if pathname == "/doctor-patient":
-            grafico = model.Diabetologo.visualizza_glicemia_paziente(id_paz)
+        if pathname == "/doctor-patient" and scelta:
+            grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati)
             return dcc.Graph(figure=grafico)
         else:
             return dash.no_update
+
 
 # ******************************************************************************************************************
     @app.callback(
@@ -756,9 +759,10 @@ def registra_callbacks(app):
         Input("input-data-fine", "value"),
         Input("input-indicazioni", "value"),
         State("selected-patient-id", "data"),
+        State("terapia-selezionata", "data"),
         prevent_initial_call=True
     )
-    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni, id_paz):
+    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni, id_paz,id_terapia):
         trigger_id = ctx.triggered_id
 
         farmaco = farmaco or None
@@ -769,7 +773,7 @@ def registra_callbacks(app):
         data_f = data_f or None
         if farmaco==None and dosaggio==None and assunzioni==None and indicazioni==None and data_i==None and data_f==None and modifybtn>0:
             return "Informazioni mancanti", "danger", True
-        if data_i and data_f and data_f<data_i:
+        if data_i and data_f and data_f<data_i and modifybtn>0:
             return "Data fine non valida","danger", True
         
         if trigger_id != "btn-salva-modifiche-terapia":
@@ -778,7 +782,8 @@ def registra_callbacks(app):
         if path == "/doctor-patient" and modifybtn > 0:
             if not any(n_clicks):
                 return "Seleziona un paziente!", "danger",True
-            current_user.modifica_terapia_paziente(id_paz,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
+            print(id_terapia)
+            current_user.modifica_terapia_paziente(id_paz,id_terapia,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
             return "Modifica avvenuta con successo", "success", True
         else:
             return dash.no_update
@@ -866,7 +871,7 @@ def registra_callbacks(app):
         if valore < 70:
             return valore, {"background-color": "#FF4C4C"}
         # Normoglicemia
-        elif 70 <= valore <= 130:
+        elif 80 <= valore <= 130:
             return valore, {"background-color": '#08ff46'}
         # Glicemia alta (merita attenzione)
         elif 131 <= valore <= 180:

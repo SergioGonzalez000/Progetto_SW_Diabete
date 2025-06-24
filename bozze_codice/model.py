@@ -233,12 +233,12 @@ class Diabetologo(Persona):
         result=cursore.fetchall()
         return result
     
-    def modifica_terapia_paziente(self, id_paz, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
+    def modifica_terapia_paziente(self, id_paz,id_t, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
         cursore=connection.cursor()
         cursore.execute("""UPDATE Terapia 
                             SET farmaco=%s, dosaggio=%s, assunzioni_gg=%s, data_inizio=%s, data_fine=%s, indicazioni=%s,data_ultima_modifica = CURRENT_DATE
-                            WHERE paziente=%s and diabetologo=%s""", 
-                            (farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni, id_paz, self.get_id_diabetologo()))
+                            WHERE paziente=%s and diabetologo=%s AND id_terapia=%s""", 
+                            (farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni, id_paz, self.get_id_diabetologo(),id_t))
         connection.commit()
         cursore.close()
 
@@ -307,66 +307,6 @@ class Diabetologo(Persona):
         result = cursore.fetchall()
         cursore.close()
         return result
-    
-    def visualizza_glicemia_paziente(id_paziente):
-        cursore = connection.cursor()
-        cursore.execute("""
-            SELECT valore, data_inserimento 
-            FROM Glicemia 
-            WHERE paziente = %s
-            ORDER BY data_inserimento
-        """, (id_paziente,))
-        dati = cursore.fetchall()
-        cursore.close()
-
-        if not dati:
-            return go.Figure().update_layout(title="Nessun dato glicemico disponibile")
-
-        valori = [r[0] for r in dati]
-        date = [r[1] for r in dati]
-
-        fig = go.Figure()
-
-        # Area azzurra sotto
-        fig.add_trace(go.Scatter(
-            x=date,
-            y=valori,
-            mode='lines',
-            line=dict(width=0),
-            showlegend=False
-        ))
-
-        fig.add_trace(go.Scatter(
-            x=date,
-            y=valori,
-            mode='lines+markers',
-            fill='tonexty',
-            fillcolor='rgba(0, 123, 255, 0.2)',
-            line=dict(color='blue', width=3),
-            name='Glicemia'
-        ))
-
-        # Linee soglia glicemica
-        for soglia in [70, 130]:
-            fig.add_trace(go.Scatter(
-                x=date,
-                y=[soglia]*len(date),
-                mode='lines',
-                line=dict(color="#71BAFF", dash='dash'),
-                name=f'Soglia {soglia} mg/dL',
-            ))
-
-        fig.update_layout(
-            xaxis_title='Data rilevazione',
-            yaxis_title='Glicemia (mg/dL)',
-            yaxis=dict(range=[0, max(valori) + 50]),
-            plot_bgcolor="#e6f2ff",
-            hovermode='x unified',
-            font=dict(family='Arial', size=14),
-            height=500
-        )
-
-        return fig
 
 
 
@@ -609,52 +549,52 @@ class Terapia():
 
 
 
-class Farmaco():
-    def __init__(self, nome, tipologia, unita_misura, codice_univoco):
-        self.nome = nome
-        self.tipologia = tipologia
-        self.unita_misura = unita_misura
-        self.codice_univoco = codice_univoco
+# class Farmaco():
+#     def __init__(self, nome, tipologia, unita_misura, codice_univoco):
+#         self.nome = nome
+#         self.tipologia = tipologia
+#         self.unita_misura = unita_misura
+#         self.codice_univoco = codice_univoco
 
-    # Getter e Setter per nome
-    @property
-    def nome(self):
-        return self._nome
+#     # Getter e Setter per nome
+#     @property
+#     def nome(self):
+#         return self._nome
     
-    @nome.setter
-    def nome(self, value):
-        self._nome = value
+#     @nome.setter
+#     def nome(self, value):
+#         self._nome = value
 
-    # Getter e Setter per tipologia
-    @property
-    def tipologia(self):
-        return self._tipologia
+#     # Getter e Setter per tipologia
+#     @property
+#     def tipologia(self):
+#         return self._tipologia
     
-    @tipologia.setter
-    def tipologia(self, value):
-        self._tipologia = value
+#     @tipologia.setter
+#     def tipologia(self, value):
+#         self._tipologia = value
 
-    # Getter e Setter per unita_misura
-    @property
-    def unita_misura(self):
-        return self._unita_misura
+#     # Getter e Setter per unita_misura
+#     @property
+#     def unita_misura(self):
+#         return self._unita_misura
     
-    @unita_misura.setter
-    def unita_misura(self, value):
-        self._unita_misura = value
+#     @unita_misura.setter
+#     def unita_misura(self, value):
+#         self._unita_misura = value
 
-    # Getter e Setter per codice_univoco
-    @property
-    def codice_univoco(self):
-        return self._codice_univoco
+#     # Getter e Setter per codice_univoco
+#     @property
+#     def codice_univoco(self):
+#         return self._codice_univoco
     
-    @codice_univoco.setter
-    def codice_univoco(self, value):
-        self._codice_univoco = value
+#     @codice_univoco.setter
+#     def codice_univoco(self, value):
+#         self._codice_univoco = value
 
-    # fx che aggiunga un farmaco alla tabella farmaco nel db
-    def aggiungi_farmaco():
-        pass
+#     # fx che aggiunga un farmaco alla tabella farmaco nel db
+#     def aggiungi_farmaco():
+#         pass
 
 
 
@@ -1016,7 +956,149 @@ def get_id_paziente_by_username(username):
     if result:
         return result[0]  # l'ID del paziente
     return None
-    
+
+#funzione per filtrare il periodo del grafico, 
+#filtro_temporale è fatto in modo da combaciare con i value del radio items
+def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
+    cursore = connection.cursor()
+    if filtro_grafico == "andamento":
+        query_base = """
+            SELECT valore, data_inserimento
+            FROM Glicemia
+            WHERE paziente = %s
+        """
+    else:
+        query_base = """
+            SELECT 
+                FLOOR(EXTRACT(HOUR FROM data_inserimento) / 3) * 3 AS ora_inizio_fascia,
+                AVG(valore) AS media_glicemia
+            FROM Glicemia
+            WHERE paziente = %s
+        """
+    parametri = [id_paziente]
+
+    if filtro_temporale == "giornaliero":
+        query_base += " AND data_inserimento >= NOW()::date"
+    elif filtro_temporale == "settimanale":
+        query_base += " AND data_inserimento >= NOW() - INTERVAL '7 days'"
+    elif filtro_temporale == "mensile":
+        query_base += " AND data_inserimento >= NOW() - INTERVAL '1 month'"
+    elif filtro_temporale == "annuale":
+        query_base += " AND data_inserimento >= NOW() - INTERVAL '1 year'"
+    # se "tutto", nessun filtro aggiunto
+
+    query_base += " ORDER BY data_inserimento" if filtro_grafico=="andamento" else " GROUP BY ora_inizio_fascia ORDER BY ora_inizio_fascia"
+
+    cursore.execute(query_base, parametri)
+    dati = cursore.fetchall()
+    cursore.close()
+
+    return dati
+#grafico linea per l'andamento
+def visualizza_andamento_glicemia(dati):
+
+        if not dati:
+            return go.Figure().update_layout(title="Nessun dato glicemico disponibile")
+
+        valori = [r[0] for r in dati]
+        date = [r[1] for r in dati]
+
+        fig = go.Figure()
+
+        # Area azzurra sotto
+        fig.add_trace(go.Scatter(
+            x=date,
+            y=valori,
+            mode='lines',
+            line=dict(width=0),
+            showlegend=False
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=date,
+            y=valori,
+            mode='lines+markers',
+            fill='tonexty',
+            fillcolor='rgba(0, 123, 255, 0.2)',
+            line=dict(color='blue', width=3),
+            name='Glicemia'
+        ))
+
+        # Linee soglia glicemica
+        for soglia in [80, 130]:
+            fig.add_trace(go.Scatter(
+                x=date,
+                y=[soglia]*len(date),
+                mode='lines',
+                line=dict(color="#71BAFF", dash='dash'),
+                name=f'Soglia {soglia} mg/dL',
+            ))
+
+        fig.update_layout(
+            xaxis_title='Data rilevazione',
+            yaxis_title='Glicemia (mg/dL)',
+            yaxis=dict(range=[0, max(valori) + 50]),
+            plot_bgcolor="#e6f2ff",
+            hovermode='x unified',
+            font=dict(family='Arial', size=14),
+            height=500
+        )
+
+        return fig
+
+#grafico a barre che rappresenta le medie
+def visualizza_media_glicemica_fasce_orarie(dati):
+    if not dati:
+        return go.Figure().update_layout(title="Nessun dato disponibile")
+
+    fasce_orarie = list(range(0, 24, 3))  # 8 fasce
+    media_dict = {ora: valore for ora, valore in dati}
+
+    ore = fasce_orarie
+    valori = [media_dict.get(ora) for ora in ore]
+
+    # Etichette tipo "00:00–03:00", "03:00–06:00", ecc.
+    labels = [f"{str(h).zfill(2)}:00–{str((h + 3) % 24).zfill(2)}:00" for h in ore]
+
+    # Colori condizionati dai valori
+    colori = []
+    for v in valori:
+        if v is None:
+            colori.append("#f8f9fa")
+        elif v < 70:
+            colori.append("#FF4C4C")
+        # Normoglicemia
+        elif 80 <= v <= 130:
+            colori.append('#08ff46')
+        # Glicemia alta (merita attenzione)
+        elif 131 <= v <= 180:
+            colori.append('#FFD93B')
+        # Iperglicemia
+        else:
+            colori.append("#FF4C4C")
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=labels,
+        y=valori,
+        marker_color=colori,
+        text=valori,
+        textposition='outside'
+    ))
+    y_max = max([v for v in valori if v is not None], default=0)
+    fig.update_layout(
+        title="Media glicemica per fascia oraria",
+        xaxis_title="Fascia oraria",
+        yaxis_title="Glicemia media (mg/dL)",
+        yaxis=dict(range=[0, y_max + 30]),
+        plot_bgcolor="#f8f9fa",
+        height=500,
+        font=dict(family="Arial", size=14)
+    )
+
+    return fig
+
 
 #if __name__ == '__main__':
     
