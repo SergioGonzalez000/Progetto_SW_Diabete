@@ -813,7 +813,7 @@ def get_dati_richiesta_account_by_id(id_richiesta):
 def get_dettagli_paziente(id_paziente):
     cursore_20 = connection.cursor()
     cursore_20.execute("""
-        SELECT nome, cognome, data_nascita, sesso, codice_fiscale,
+        SELECT id_paziente, nome, cognome, data_nascita, sesso, codice_fiscale,
                indirizzo, citta, cap, telefono, email, username, diabetologo_associato
         FROM paziente
         WHERE id_paziente = %s
@@ -964,7 +964,7 @@ def visualizza_media_glicemia_per_diabetologi():
     medie = []
 
     for d in diabetologi:
-        id_d = d["id"]
+        id_d = d["id_diabetologo"]
         cursore.execute("SELECT * FROM Diabetologo WHERE id_diabetologo=%s",(id_d,))
         r=cursore.fetchone()
         Diab=Diabetologo(r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12])

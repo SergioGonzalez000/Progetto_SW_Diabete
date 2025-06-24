@@ -338,8 +338,7 @@ def registra_callbacks(app):
             return dash.no_update, dash.no_update
 
         # aggiorna il dropdown con le richieste rimanenti
-        richieste = model.get_all_richieste_account()                             # deve restituire lista di tuple/dict
-        options = [{"label": f"{r[1]}", "value": r[0]} for r in richieste]
+        options = model.get_all_richieste_account()     # deve restituire lista di tuple/dict
 
         return alert, options
     
@@ -356,13 +355,42 @@ def registra_callbacks(app):
 
         ctx = dash.callback_context
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        matched_id = eval(triggered_id)  # trasforma la str in dict
+        matched_id = eval(triggered_id)         # trasforma la str in dict
         paziente_id = matched_id["index"]
 
         dati_paziente = model.get_dettagli_paziente(paziente_id)
-
         if not dati_paziente:
             return dbc.Alert("Dettagli non disponibili per questo paziente", color="danger")
+
+        # Recupera nome e cognome del diabetologo associato
+        diab_id = dati_paziente.get("diabetologo_associato")
+        dati_diab = model.get_dettagli_diabetologo(diab_id) if diab_id else None
+        
+        # Creazione del testo con stili diversi
+        header_content = html.Div([
+            html.Span(
+                f"Paziente: {dati_paziente.get('nome', '')} {dati_paziente.get('cognome', '')}",
+                style={
+                    'font-weight': 'bold',
+                    'font-size': '1.05rem',
+                    'margin-right': '10px'  # Aggiunge spazio a destra
+                }
+            ),
+            html.Span(
+                children=[
+                    "(Diabetologo: ",
+                    html.Span(
+                        f"{dati_diab.get('nome', '')} {dati_diab.get('cognome', '')}" if dati_diab else "Nessun diabetologo associato",
+                        style={
+                            'font-style': 'italic',
+                            'color': '#555555'
+                        }
+                    ),
+                    ")"
+                ],
+                style={'font-size': '0.95rem'}
+            ) if diab_id else None
+        ])
 
         dettagli = [
             dbc.ListGroupItem([
@@ -374,13 +402,13 @@ def registra_callbacks(app):
 
         return dbc.Card(
             [
-                dbc.CardHeader(html.H5(f"Dettagli paziente: {dati_paziente.get('nome', '')}")),
+                dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),  # Riduci la dimensione di H5
                 dbc.CardBody(
                     dbc.ListGroup(dettagli, flush=True),
                     style={
                         "maxHeight": "380px",
                         "overflowY": "auto",
-                        "paddingRight": "8px"  # per evitare scrollbar sopra il contenuto
+                        "paddingRight": "8px"
                     }
                 )
             ],
@@ -389,9 +417,9 @@ def registra_callbacks(app):
 
 
     @app.callback(
-        Output("dettagli-diabetologo", "children"),
-        Input({"type": "btn-diabetologo", "index": ALL}, "n_clicks"),
-        prevent_initial_call=True
+    Output("dettagli-diabetologo", "children"),
+    Input({"type": "btn-diabetologo", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True
     )
     def mostra_dettagli_diabetologo(n_clicks):
         if not any(n_clicks):
@@ -407,6 +435,15 @@ def registra_callbacks(app):
         if not dati_diabetologo:
             return dbc.Alert("Dettagli non disponibili per questo diabetologo", color="danger")
 
+        # Header con stile uniformato alla funzione paziente
+        header_content = html.Span(
+            f"Diabetologo: {dati_diabetologo.get('nome', '')} {dati_diabetologo.get('cognome', '')}",
+            style={
+                'font-weight': 'bold',
+                'font-size': '1.05rem'  # Stesso stile del nome paziente
+            }
+        )
+
         dettagli = [
             dbc.ListGroupItem([
                 html.Strong(f"{k.capitalize().replace('_', ' ')}: "),
@@ -417,13 +454,13 @@ def registra_callbacks(app):
 
         return dbc.Card(
             [
-                dbc.CardHeader(html.H5(f"Dettagli diabetologo: {dati_diabetologo.get('nome', '')}")),
+                dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),
                 dbc.CardBody(
                     dbc.ListGroup(dettagli, flush=True),
                     style={
                         "maxHeight": "380px",
                         "overflowY": "auto",
-                        "paddingRight": "8px"  # per evitare scrollbar sopra il contenuto
+                        "paddingRight": "8px"
                     }
                 )
             ],
