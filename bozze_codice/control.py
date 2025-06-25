@@ -552,7 +552,8 @@ def registra_callbacks(app):
 
         id_paz = trigger_id.get('index')
         if path == "/doctor-dashboard":
-            info = current_user.get_info_base_paziente_associato(id_paz)
+            id_diab=current_user.get_id_diabetologo()
+            info = model.get_info_base_paziente(id_diab,id_paz)
             div = view.crea_div_info_base_paziente(info)
             return div
         else:

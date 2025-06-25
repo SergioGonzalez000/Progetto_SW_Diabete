@@ -1527,9 +1527,9 @@ def crea_div_info_base_paziente(info_paziente):
             ),
 
             html.Div([
-                html.P("Glicemia media:", style={'font-size': '20px'}),
+                html.P("Glicata:", style={'font-size': '20px'}),
                 html.Div([
-                    html.P(round(media_glicemia, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                    html.P(round((float(media_glicemia)+46.7)/28.7, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
                     html.P(" mg/dL", style={'display': 'inline-block', 'color': 'gray'})
                 ]),
             ],
