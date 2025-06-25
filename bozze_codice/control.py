@@ -225,7 +225,11 @@ def registra_callbacks(app):
                 return view.guest_navlinks, dash.no_update, "/login"
             # Tenta di accedere a pagina protetta:
             else:
+<<<<<<< Updated upstream
                 return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
+=======
+                return view.doctor_navlinks, view.doctor_patient, "/doctor-dashboard"
+>>>>>>> Stashed changes
     
         # ADMIN
         elif isinstance(current_user, model.Admin):
@@ -328,10 +332,7 @@ def registra_callbacks(app):
             # funzione per accettare la richiesta
             model.Admin.approva_richiesta(id_richiesta)     # gia definita
             alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
-
-        elif bottone_premuto == "btn-rifiuta-richiesta":
-            # chiamo la funzione che gestisce il rifiuto
-            model.rifiuta_richiesta(id_richiesta)                 # da fare
+app.run(debug=True)            # da fare
             alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
             
         else:
