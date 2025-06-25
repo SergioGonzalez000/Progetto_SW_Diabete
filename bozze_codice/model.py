@@ -309,7 +309,8 @@ class Diabetologo(Persona):
 
         return pazienti
 
-    
+# ******************************************************************************************************************
+   
     def get_numero_pazienti_associati(self):
         cursore=connection.cursor()
         cursore.execute("""
@@ -320,6 +321,8 @@ class Diabetologo(Persona):
         numero = cursore.fetchone()[0]
         cursore.close()
         return numero
+    
+# ******************************************************************************************************************
 
     def get_info_base_paziente_associato(self,id_paz):
         cursore = connection.cursor()
@@ -333,6 +336,8 @@ class Diabetologo(Persona):
         cursore.close()
         return result
     
+# ******************************************************************************************************************
+
     def visualizza_glicemia_paziente(id_paziente):
         cursore = connection.cursor()
         cursore.execute("""
@@ -352,48 +357,54 @@ class Diabetologo(Persona):
 
         fig = go.Figure()
 
-        # Area azzurra sotto
-        fig.add_trace(go.Scatter(
-            x=date,
-            y=valori,
-            mode='lines',
-            line=dict(width=0),
-            showlegend=False
-        ))
-
+        # Linea di glicemia con area sottostante
         fig.add_trace(go.Scatter(
             x=date,
             y=valori,
             mode='lines+markers',
-            fill='tonexty',
+            fill='tozeroy',
             fillcolor='rgba(0, 123, 255, 0.2)',
             line=dict(color='blue', width=3),
-            name='Glicemia'
+            marker=dict(size=6),
+            name='Glicemia',
+            hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<extra></extra>'
         ))
 
         # Linee soglia glicemica
         for soglia in [70, 130]:
-            fig.add_trace(go.Scatter(
+            fig.add_trace(go.Scatter(   
                 x=date,
                 y=[soglia]*len(date),
                 mode='lines',
                 line=dict(color="#71BAFF", dash='dash'),
                 name=f'Soglia {soglia} mg/dL',
+                hoverinfo='skip'
             ))
 
         fig.update_layout(
             xaxis_title='Data rilevazione',
             yaxis_title='Glicemia (mg/dL)',
-            yaxis=dict(range=[0, max(valori) + 50]),
+            yaxis=dict(range=[min(50, min(valori)-10), max(valori) + 50]),
             plot_bgcolor="#e6f2ff",
             hovermode='x unified',
             font=dict(family='Arial', size=14),
-            height=500
+            # altezza forzata a 40px
+            height=400,
+            # margini forzati a top/bottom/left/right = 10px
+            margin=dict(t=10, b=10, l=10, r=10),
+            legend=dict(
+                x=0.01, # posizione orizzontale
+                y=0.99, # posizione verticale
+                xanchor='left', # a sinistra
+                yanchor='top', # in alto
+                bgcolor='rgba(255,255,255,0.3)', # sfondo semi trasparente di colore bianco
+                borderwidth=0 # senza bordo
+            )
         )
 
         return fig
 
-
+# ******************************************************************************************************************
 
     # Funzione che permetta al medico di inserire i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 

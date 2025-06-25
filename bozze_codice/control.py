@@ -225,11 +225,7 @@ def registra_callbacks(app):
                 return view.guest_navlinks, dash.no_update, "/login"
             # Tenta di accedere a pagina protetta:
             else:
-<<<<<<< Updated upstream
                 return view.doctor_navlinks, view.doctor_dashboard, "/doctor-dashboard"
-=======
-                return view.doctor_navlinks, view.doctor_patient, "/doctor-dashboard"
->>>>>>> Stashed changes
     
         # ADMIN
         elif isinstance(current_user, model.Admin):
@@ -331,8 +327,7 @@ def registra_callbacks(app):
         if bottone_premuto == "btn-accetta-richiesta":
             # funzione per accettare la richiesta
             model.Admin.approva_richiesta(id_richiesta)     # gia definita
-            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
-app.run(debug=True)            # da fare
+            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)           # da fare
             alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
             
         else:
@@ -471,7 +466,6 @@ app.run(debug=True)            # da fare
             return dash.no_update
         
 # ******************************************************************************************************************
-    
     #permette di vedere i grafici paziente per paziente al diabetologo
     @app.callback(
         Output("patient-number", "children"),
@@ -481,8 +475,9 @@ app.run(debug=True)            # da fare
     )
     def mostra_dati_dashboard(pathname):
         cur=model.connection.cursor()
-        if pathname=="/doctor-dashboard":    
-            labels = ['Alterata','Normale','Ottima']
+        if pathname=="/doctor-dashboard":
+            # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
+            labels = ['Fuori dal limite','Alta','Normale']
             cur.execute("""
                 SELECT AVG(g.valore)
                 FROM Paziente p
@@ -511,13 +506,14 @@ app.run(debug=True)            # da fare
             return num_paz,dcc.Graph(figure=torta)
         else:
             return dash.no_update
+        
 # ******************************************************************************************************************
-
+    # Restituisce il grafico plotly dell'andamento di glicemia del paziente selezionato nella pagina "patient" del dottore
 
     @app.callback(
         Output("patient-graph", "children"),
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
     )
     def visualizza_andamento_glicemia(pathname, n_clicks):
@@ -538,20 +534,25 @@ app.run(debug=True)            # da fare
 
         if pathname == "/doctor-patient":
             grafico = model.Diabetologo.visualizza_glicemia_paziente(id_paz)
-            return dcc.Graph(figure=grafico)
+            return dcc.Graph(figure=grafico, config={'responsive': True})
         else:
             return dash.no_update
-
+# style={'width': '100%', 'height': '100%'}
 # ******************************************************************************************************************
+    # Callback che restituisce la card con le informazioni di base di un paziente nella dashboard del dottore:
     @app.callback(
+        # Div delle Informazioni del paziente
         Output("doctor-patient-info", "children"),
+        # Prende l'url della pagina
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        # Prende il pulsante del paziente
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
     )
     def visualizza_infopaziente_base(path, n_clicks):
         trigger_id = ctx.triggered_id
 
+        # All'apertura della pagina dashboard viene visualizzato di default questo messaggio:
         if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
             return "Nessun paziente selezionato"            
 
@@ -559,8 +560,7 @@ app.run(debug=True)            # da fare
 
         if path == "/doctor-dashboard":
             info = current_user.get_info_base_paziente_associato(id_paz)
-            div = view.crea_div_info_base_paziente(info)
-            return div
+            return view.crea_div_info_base_paziente(info)
         else:
             return dash.no_update
 
@@ -569,7 +569,7 @@ app.run(debug=True)            # da fare
     @app.callback(
         Output("patient-info", "children"),
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
     )
     def visualizza_infopaziente_dettagliate(path, n_clicks):
