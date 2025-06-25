@@ -12,7 +12,8 @@ def getLayout():
             dcc.Location(id="url", refresh=True),
             # sidebar fissa, laterale sinistra
             sidebar,
-
+            #fil-serve per non far fallire una callback -> forse si può risolvere in un altro modo
+            dcc.Store(id="selected-patient-id",data=None),
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
@@ -637,9 +638,7 @@ patient_dashboard = html.Div(
                             children=[
                                 html.H5("Paziente: ", style={"color" : "grey"}),
                                 html.Hr(),
-
-                                # DA FARE
-
+                                html.Div(id="info-paz",),
                             ]
                         ),
 
@@ -649,9 +648,7 @@ patient_dashboard = html.Div(
                             children=[
                                 html.H5("Terapia: ", style={"color" : "grey"}),
                                 html.Hr(),
-
-                                # Tabella della terapia
-                                #html.Div(id="tabella-terapia")
+                                html.Div(id="terapie-paz"),
                             ]
                         )
                     ]
@@ -673,10 +670,8 @@ patient_dashboard = html.Div(
                             className="card",
                             children=[
                                 html.H5("Grafico:", style={"color" : "grey"}),
-                                html.Hr()
-
-                                # DA FARE
-
+                                html.Hr(),
+                                html.Div(id="andamento-giornaliero"),
                             ]
                         )
                     ]
@@ -1330,9 +1325,10 @@ def crea_div_paziente(cfanno, info, segnalazioni):
     ])
 # ******************************************************************************************************************
 
-
-def crea_div_terapia_selezionata(terapia):
-    return html.Div([
+#modificabile è un flag che serve per includere il popup di modifica solo nel diabetologo
+#div che contiene le terapie selezionate dal dropdown
+def crea_div_terapia_selezionata(terapia, modificabile):
+    children = [
         html.H6(f"ID terapia selezionata: {terapia[0]}"),
         html.P(f"Farmaco: {terapia[3]}"),
         html.P(f"Dosaggio: {terapia[4]} mg"),
@@ -1340,48 +1336,56 @@ def crea_div_terapia_selezionata(terapia):
         html.P(f"Periodo: {terapia[6]} - {terapia[7]}"),
         html.P(f"Indicazioni: {terapia[9]}"),
         html.Small(f"Ultima modifica: {terapia[8]}"),
-        dcc.Store(id="terapia-selezionata",data=terapia[0]),
+        dcc.Store(id="terapia-selezionata", data=terapia[0]),
         html.Br(), html.Br(),
-        dbc.Button("Modifica terapia", id="apri-modal-terapia", n_clicks=0),
+    ]
 
-        dbc.Modal(
-            [
-                dbc.ModalHeader(dbc.ModalTitle("Modifica Terapia")),
-                dbc.ModalBody([
-                    dbc.Label("Farmaco"),
-                    dbc.Input(id="input-farmaco", type="text", value=terapia[3]),
-                    dbc.Label("Dosaggio (mg)"),
-                    dbc.Input(id="input-dosaggio", type="number", value=terapia[4]),
-                    dbc.Label("Assunzioni al giorno"),
-                    dbc.Input(id="input-assunzioni", type="number", value=terapia[5]),
-                    dbc.Label("Indicazioni"),
-                    dbc.Input(id="input-data-inizio", type="date", value=str(terapia[6])),
-                    dbc.Label("Data fine"),
-                    dbc.Input(id="input-data-fine",type="date",value=str(terapia[7])),
-                    dbc.Textarea(id="input-indicazioni", value=terapia[9]),
-                    html.Br(),
-                    dbc.Button("Salva modifiche", id="btn-salva-modifiche-terapia", color="primary",n_clicks=0),
-                    dbc.Button("Elimina terapia", id="btn-elimina-terapia", color="danger",n_clicks=0),
-                    dbc.Modal([
-                        dbc.ModalBody([
-                            html.H6("Sei sicuro di voler eliminare la terapia selezionata?"),
-                            dbc.Button("Si", id="conferma-elimina-terapia",color="primary", n_clicks=0),
-                            dbc.Button("No", id="declina-elimina-terapia",color="danger", n_clicks=0),
-                        ]),
-                    ],
-                        id="popup-elimina-terapia",
-                        is_open=False
-                    ),
-                    dbc.Alert(id="modifica-terapia-output", is_open=False),
-                ]),
-                dbc.ModalFooter(
-                    dbc.Button("Chiudi", id="chiudi-modal-terapia", className="ms-auto")
-                )
-            ],
-            id="popup-modifica-terapia",
-            is_open=False
-        )
-    ])
+    if modificabile:
+        children.extend([
+            dbc.Button("Modifica terapia", id="apri-modal-terapia", n_clicks=0),
+
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Modifica Terapia")),
+                    dbc.ModalBody([
+                        dbc.Label("Farmaco"),
+                        dbc.Input(id="input-farmaco", type="text", value=terapia[3]),
+                        dbc.Label("Dosaggio (mg)"),
+                        dbc.Input(id="input-dosaggio", type="number", value=terapia[4]),
+                        dbc.Label("Assunzioni al giorno"),
+                        dbc.Input(id="input-assunzioni", type="number", value=terapia[5]),
+                        dbc.Label("Data inizio"),
+                        dbc.Input(id="input-data-inizio", type="date", value=str(terapia[6])),
+                        dbc.Label("Data fine"),
+                        dbc.Input(id="input-data-fine", type="date", value=str(terapia[7])),
+                        dbc.Label("Indicazioni"),
+                        dbc.Textarea(id="input-indicazioni", value=terapia[9]),
+                        html.Br(),
+                        dbc.Button("Salva modifiche", id="btn-salva-modifiche-terapia", color="primary", n_clicks=0),
+                        dbc.Button("Elimina terapia", id="btn-elimina-terapia", color="danger", n_clicks=0),
+                        dbc.Modal([
+                            dbc.ModalBody([
+                                html.H6("Sei sicuro di voler eliminare la terapia selezionata?"),
+                                dbc.Button("Si", id="conferma-elimina-terapia", color="primary", n_clicks=0),
+                                dbc.Button("No", id="declina-elimina-terapia", color="danger", n_clicks=0),
+                            ]),
+                        ],
+                            id="popup-elimina-terapia",
+                            is_open=False
+                        ),
+                        dbc.Alert(id="modifica-terapia-output", is_open=False),
+                    ]),
+                    dbc.ModalFooter(
+                        dbc.Button("Chiudi", id="chiudi-modal-terapia", className="ms-auto")
+                    )
+                ],
+                id="popup-modifica-terapia",
+                is_open=False
+            )
+        ])
+
+    return html.Div(children)
+
 
 
 

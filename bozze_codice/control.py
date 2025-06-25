@@ -430,34 +430,7 @@ def registra_callbacks(app):
             className="shadow-sm"
         )
 
-    
-# ******************************************************************************************************************
 
-    # #permette di vedere i grafici paziente per paziente al diabetologo
-    # @app.callback(
-    #     Output("dropdown-output-tutti","children"),
-    #     Output("dropdown-tutti-pazienti","options"),
-    #     Input("dropdown-tutti-pazienti","value"),
-    #     Input("filtro-pazienti","value")
-    # )
-    # def visualizza_lista_pazienti(paziente,scelta):
-        
-    #     id = current_user.get_id_diabetologo()
-
-    #     if scelta=='PA':
-    #         lista=model.Diabetologo.visualizza_pazienti_associati(id)
-    #     else:
-    #         lista=model.Diabetologo.visualizza_tutti_pazienti()
-
-    #     opzioni = [{"label": nome, "value": nome} for nome in lista]
-
-    #     if not paziente:
-    #         return "Seleziona un paziente per visualizzare il grafico.",opzioni
-    #     #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
-    #     return view.patient_dashboard,opzioni
-       
-        
-       
 # ******************************************************************************************************************
     @app.callback(
         Output("doctor-patient-queue", "children"),
@@ -511,7 +484,7 @@ def registra_callbacks(app):
         else:
             return dash.no_update
 # ******************************************************************************************************************
-
+    #callback che mostra i grafici del paziente al diabetologo con il dropdown
 
     @app.callback(
         Output("patient-graph", "children"),
@@ -537,7 +510,7 @@ def registra_callbacks(app):
         if id_paz and not scelta:
             return "Seleziona un grafico"
 
-        dati = model.get_dati_glicemia_filtrati(id_paz, filtro, scelta)
+        dati = model.get_dati_glicemia_filtrati(id_paz,filtro,scelta)
 
         if pathname == "/doctor-patient" and scelta:
             grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati)
@@ -545,8 +518,25 @@ def registra_callbacks(app):
         else:
             return dash.no_update
 
+#*************************************************************************************************************************************
+    #
+    @app.callback(
+        Output("andamento-giornaliero", "children"),
+        Input("url", "pathname"),
+        prevent_initial_call=True
+    )
+    def visualizza_andamento_giornaliero_glicemia(pathname):
+
+        if pathname == "/patient-dashboard":
+            id_paz=current_user.get_id_paziente()
+            dati = model.get_dati_glicemia_filtrati(id_paz,"giornaliero","andamento")
+            grafico = model.visualizza_andamento_glicemia(dati) 
+            return dcc.Graph(figure=grafico)
+        else:
+            return dash.no_update
 
 # ******************************************************************************************************************
+    #callback che fa vedere al diabetologo le informazioni di base del paziente 
     @app.callback(
         Output("doctor-patient-info", "children"),
         Input("url", "pathname"),
@@ -560,9 +550,27 @@ def registra_callbacks(app):
             return "Nessun paziente selezionato"            
 
         id_paz = trigger_id.get('index')
-
         if path == "/doctor-dashboard":
-            info = current_user.get_info_base_paziente_associato(id_paz)
+            id_diab=current_user.get_id_diabetologo()
+            info = model.get_info_base_paziente(id_diab,id_paz)
+            div = view.crea_div_info_base_paziente(info)
+            return div
+        else:
+            return dash.no_update
+# ******************************************************************************************************************
+    #callback che fa vedere al paziente le sue informazioni di base 
+    @app.callback(
+        Output("info-paz", "children"),
+        Input("url", "pathname"),
+        prevent_initial_call=True
+    )
+    def visualizza_info_base_paziente(path):
+        
+        if path == "/patient-dashboard":
+            id_paz = current_user.get_id_paziente()
+            diab= current_user.get_diabetologo()[0]
+            id_diab=diab["id"]
+            info = model.get_info_base_paziente(id_diab,id_paz)
             div = view.crea_div_info_base_paziente(info)
             return div
         else:
@@ -700,6 +708,7 @@ def registra_callbacks(app):
             return not is_open
         return is_open
 # ******************************************************************************************************************
+    #mostra al diabetologo la div col dropdown che contiene tutte le terapie
     @app.callback(
          Output("patient-therapy","children"),
          Input("url","pathname"),
@@ -712,27 +721,66 @@ def registra_callbacks(app):
             return "Nessun paziente selezionato"            
         id_paz = trigger_id.get('index')
         if path=="/doctor-patient":
-            terapie=current_user.get_terapie_paziente(id_paz)
+            id_diab=current_user.get_id_diabetologo()
+            terapie=model.get_terapie_paziente(id_diab,id_paz)
             return view.crea_div_terapia_dropdown(terapie)
         else:
-            return dash.no_update()
+            return dash.no_update
         
+# ******************************************************************************************************************
+    #mostra al paziente la div col dropdown che contiene tutte le terapie
+    @app.callback(
+         Output("terapie-paz","children"),
+         Input("url","pathname"),
+    )
+    def visualizza_dropdown_terapie_paz(path):
+                    
+        if path=="/patient-dashboard":
+            id_paz=current_user.get_id_paziente()
+            diab= current_user.get_diabetologo()[0]
+            id_diab=diab["id"]
+            terapie=model.get_terapie_paziente(id_diab,id_paz)
+            return view.crea_div_terapia_dropdown(terapie)
+        else:
+            return dash.no_update
+#*****************************************************************************************************************************       
+    #mostra al diabetologo le terapie del paziente selezionato e al paziente le sue, in base al path
     @app.callback(
         Output("div-terapia-selezionata", "children"),
         Input("dropdown-terapia-selezionata", "value"),
+        Input("url","pathname"),
         State("selected-patient-id", "data"),
         prevent_initial_call=True
     )
-    def mostra_terapia_selezionata(id_terapia, id_paz):
-        if id_terapia is None:
-            return html.Div("Seleziona una terapia.")
+    def mostra_terapia_selezionata(id_terapia,path, id_paz):
+        if path == "/doctor-patient":
+            if id_terapia is None:
+                return html.Div("Seleziona una terapia.")
+            id_diab=current_user.get_id_diabetologo()
+            lista_terapie = model.get_terapie_paziente(id_diab,id_paz)
+            terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
+            if terapia is None:
+                return html.Div("Terapia non trovata.")
 
-        lista_terapie = current_user.get_terapie_paziente(id_paz)
-        terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
-        if terapia is None:
-            return html.Div("Terapia non trovata.")
+            return view.crea_div_terapia_selezionata(terapia,True)
+        
+        elif path == "/patient-dashboard":
+            if id_terapia is None:
+                return html.Div("Seleziona una terapia.")
+            id_paz=current_user.get_id_paziente()
+            diab= current_user.get_diabetologo()[0]
+            id_diab=diab["id"]
+            lista_terapie = model.get_terapie_paziente(id_diab,id_paz)
+            terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
+            if terapia is None:
+                return html.Div("Terapia non trovata.")
 
-        return view.crea_div_terapia_selezionata(terapia)
+            return view.crea_div_terapia_selezionata(terapia,False)
+        else:
+            return dash.no_update
+        
+#*****************************************************************************************************************************       
+        
 
 # ******************************************************************************************************************
     #callback per aprire il popup di modifica terapia

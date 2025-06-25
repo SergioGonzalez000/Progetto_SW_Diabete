@@ -181,6 +181,7 @@ class Paziente(Persona):
                     (id_paz, farmaco, dose, sintomi, valore))
         connection.commit()
         cursore_8.close()
+
     def inserisci_segnalazione(self, tipo_segnalazione, descrizione, data_inizio, data_fine=None):
         if tipo_segnalazione not in ('sintomo', 'patologia', 'terapia'):
             raise ValueError("Tipo segnalazione non valido. Deve essere 'sintomo', 'patologia' o 'terapia'.")
@@ -193,6 +194,7 @@ class Paziente(Persona):
         cursore.execute(query, (self.get_id_paziente(), tipo_segnalazione, descrizione, data_inizio, data_fine))
         connection.commit()
         cursore.close()
+
     def get_diabetologo(self):
         cursore = connection.cursor()
         cursore.execute("""
@@ -211,6 +213,7 @@ class Paziente(Persona):
                 }
             ]
         return result
+    
     def get_id_paziente(self):
         
         cursore_9 = connection.cursor()
@@ -222,6 +225,17 @@ class Paziente(Persona):
         cursore_9.close()
         
         return id
+    
+    def get_eventi_basso_glucosio(self):
+        cursore = connection.cursor()
+        
+        cursore.execute("""SELECT valore, data_inserimento
+                    FROM Glicemia 
+                    WHERE paziente = %s AND valore < 50""", (self.get_id_paziente(),))
+        dati=cursore.fetchall()
+
+        cursore.close()
+        return dati
     
 
 
@@ -251,11 +265,6 @@ class Diabetologo(Persona):
         connection.commit()
         cursore_10.close()
     
-    def get_terapie_paziente(self, id_paz):
-        cursore=connection.cursor()
-        cursore.execute("SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s",(id_paz,current_user.get_id_diabetologo()))
-        result=cursore.fetchall()
-        return result
     
     def modifica_terapia_paziente(self, id_paz,id_t, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
         cursore=connection.cursor()
@@ -266,21 +275,6 @@ class Diabetologo(Persona):
         connection.commit()
         cursore.close()
 
-
-    def visualizza_pazienti_associati(self):
-        #li ordina in base al valore medio di glicemia
-        cursore_11 = connection.cursor()
-        
-        cursore_11.execute("""SELECT p.username, COALESCE(AVG(g.valore), 0) as media
-                    FROM Paziente p
-                    LEFT JOIN Glicemia g ON p.id_paziente=g.paziente
-                    WHERE p.diabetologo_associato = %s
-                    GROUP BY p.id_paziente
-                    ORDER BY media DESC""",
-                    (self.get_id_diabetologo(),))
-        result=cursore_11.fetchall()
-        cursore_11.close()
-        return result
     
     def visualizza_n_c_pazienti_associati(self):
         cursore_12 = connection.cursor()
@@ -321,17 +315,6 @@ class Diabetologo(Persona):
         cursore.close()
         return numero
 
-    def get_info_base_paziente_associato(self,id_paz):
-        cursore = connection.cursor()
-        cursore.execute("""SELECT username, nome, cognome,data_nascita,sesso, COALESCE(AVG(g.valore), 0) AS media
-                            FROM paziente p
-                            LEFT JOIN Glicemia g on p.id_paziente=g.paziente
-                            WHERE p.diabetologo_associato = %s and p.id_paziente=%s
-                            GROUP BY p.id_paziente
-                            """,(self.get_id_diabetologo(),id_paz))
-        result = cursore.fetchall()
-        cursore.close()
-        return result
 
 
 
@@ -340,37 +323,21 @@ class Diabetologo(Persona):
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def inserisci_info_paziente(self,id_paz, patologie=None, fattori=None, comorbidita=None):
         cursore_14=connection.cursor()
-        associati=current_user.visualizza_pazienti_associati()
-        paz=[]
-        for a in associati:
-            paz.append(a[0])
-        cursore_14.execute("SELECT username FROM Paziente WHERE id_paziente=%s",(id_paz,))
-        username_paz=cursore_14.fetchone()[0]
-        if username_paz in paz:
-            cursore_14.execute("""INSERT INTO InfoPaziente 
+        cursore_14.execute("""INSERT INTO InfoPaziente 
                     (paziente, diabetologo, patologie_pregresse, fattori_rischio, comorbidita) 
                     VALUES (%s, %s, %s, %s, %s)""", 
                     (id_paz, self.get_id_diabetologo(), patologie, fattori, comorbidita))
-            connection.commit()
+        connection.commit()
 
     # Funzione che permetta al medico di modificare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def modifica_info_paziente(self,id_paz, patologie=None, fattori=None, comorbidita=None):
         cursore_15=connection.cursor()
-        associati=current_user.visualizza_pazienti_associati()
-        paz=[]
-        for a in associati:
-            paz.append(a[0])
-        cursore_15.execute("SELECT username FROM Paziente WHERE id_paziente=%s",(id_paz,))
-        username_paz=cursore_15.fetchone()[0]
-        if username_paz in paz:
-            cursore_15.execute("""UPDATE InfoPaziente 
-                                SET fattori_rischio=%s, patologie_pregresse=%s, comorbidita=%s, data_ultima_modifica = CURRENT_DATE
-                                WHERE paziente=%s and diabetologo=%s""", 
-
-                    (fattori, patologie, comorbidita, id_paz, self.get_id_diabetologo()))
-            connection.commit()
+        cursore_15.execute("""UPDATE InfoPaziente 
+                        SET fattori_rischio=%s, patologie_pregresse=%s, comorbidita=%s, data_ultima_modifica = CURRENT_DATE
+                        WHERE paziente=%s and diabetologo=%s""", (fattori, patologie, comorbidita, id_paz, self.get_id_diabetologo()))
+        connection.commit()
 
     # funzione che prende tutti i pazienti nella db
     def get_all_pazienti_associati(self):
@@ -405,23 +372,16 @@ class Diabetologo(Persona):
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def visualizza_dati_paziente(self,id_paz):
         cursore_15=connection.cursor()
-        associati=current_user.visualizza_pazienti_associati()
-        paz=[]
-        for a in associati:
-            paz.append(a[0])
-        cursore_15.execute("SELECT username FROM Paziente WHERE id_paziente=%s",(id_paz,))
-        username_paz=cursore_15.fetchone()[0]
-        if username_paz in paz:
-            cursore_15.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita)
+        cursore_15.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita)
                         FROM Paziente
                         WHERE id_paziente=%s
                         """,(id_paz,))
-            cfanno=cursore_15.fetchall()
-            cursore_15.execute("""SELECT i.patologie_pregresse, i.fattori_rischio, i.comorbidita
+        cfanno=cursore_15.fetchall()
+        cursore_15.execute("""SELECT i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                 FROM infopaziente i
                                 WHERE i.paziente=%s
                                """,(id_paz, ))
-            info=cursore_15.fetchall()
+        info=cursore_15.fetchall()
         cursore_15.close()
         return cfanno,info 
 
@@ -979,7 +939,7 @@ def visualizza_media_glicemia_per_diabetologi():
         cursore.execute("SELECT * FROM Diabetologo WHERE id_diabetologo=%s",(id_d,))
         r=cursore.fetchone()
         Diab=Diabetologo(r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12])
-        dati_pazienti = Diab.visualizza_pazienti_associati()
+        dati_pazienti = Diab.visualizza_n_c_pazienti_associati()
 
         nome_completo = f"{d['nome']} {d['cognome']}"
         nomi.append(nome_completo)
@@ -988,7 +948,7 @@ def visualizza_media_glicemia_per_diabetologi():
             medie.append(0)  # oppure None, se vuoi lasciare vuota la colonna
             continue
 
-        media_diabetologo = sum([r[1] for r in dati_pazienti]) / len(dati_pazienti)
+        media_diabetologo = sum([r["media"] for r in dati_pazienti]) / len(dati_pazienti)
         medie.append(round(media_diabetologo, 2))
 
     if not nomi:
@@ -1117,13 +1077,19 @@ def visualizza_andamento_glicemia(dati):
 
         return fig
 
+def get_terapie_paziente(id_diab, id_paz):
+        cursore=connection.cursor()
+        cursore.execute("SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s",(id_paz,id_diab))
+        result=cursore.fetchall()
+        return result
+
 #grafico a barre che rappresenta le medie
 def visualizza_media_glicemica_fasce_orarie(dati):
     if not dati:
         return go.Figure().update_layout(title="Nessun dato disponibile")
 
     fasce_orarie = list(range(0, 24, 3))  # 8 fasce
-    media_dict = {ora: valore for ora, valore in dati}
+    media_dict = {ora: round(valore,2) for ora, valore in dati}
 
     ore = fasce_orarie
     valori = [media_dict.get(ora) for ora in ore]
@@ -1159,7 +1125,6 @@ def visualizza_media_glicemica_fasce_orarie(dati):
     ))
     y_max = max([v for v in valori if v is not None], default=0)
     fig.update_layout(
-        title="Media glicemica per fascia oraria",
         xaxis_title="Fascia oraria",
         yaxis_title="Glicemia media (mg/dL)",
         yaxis=dict(range=[0, y_max + 30]),
@@ -1170,6 +1135,17 @@ def visualizza_media_glicemica_fasce_orarie(dati):
 
     return fig
 
+def get_info_base_paziente(id_diab,id_paz):
+    cursore = connection.cursor()
+    cursore.execute("""SELECT username, nome, cognome,data_nascita,sesso, COALESCE(AVG(g.valore), 0) AS media
+                            FROM paziente p
+                            LEFT JOIN Glicemia g on p.id_paziente=g.paziente
+                            WHERE p.diabetologo_associato = %s and p.id_paziente=%s
+                            GROUP BY p.id_paziente
+                            """,(id_diab,id_paz))
+    result = cursore.fetchall()
+    cursore.close()
+    return result
 
 #if __name__ == '__main__':
 def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
