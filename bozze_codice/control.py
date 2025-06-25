@@ -344,6 +344,8 @@ def registra_callbacks(app):
     
 # ******************************************************************************************************************
 
+    # callback che gestisce la visualizzazione dei dettagli del paziente, dopo averlo selezionato dall'elenco "Pazienti"
+    # dell'Admin  
     @app.callback(
     Output("dettagli-paziente", "children"),
     Input({"type": "btn-paziente", "index": ALL}, "n_clicks"),
@@ -362,60 +364,15 @@ def registra_callbacks(app):
         if not dati_paziente:
             return dbc.Alert("Dettagli non disponibili per questo paziente", color="danger")
 
-        # Recupera nome e cognome del diabetologo associato
+        # recupera nome e cognome del diabetologo associato
         diab_id = dati_paziente.get("diabetologo_associato")
         dati_diab = model.get_dettagli_diabetologo(diab_id) if diab_id else None
         
-        # Creazione del testo con stili diversi
-        header_content = html.Div([
-            html.Span(
-                f"Paziente: {dati_paziente.get('nome', '')} {dati_paziente.get('cognome', '')}",
-                style={
-                    'font-weight': 'bold',
-                    'font-size': '1.05rem',
-                    'margin-right': '10px'  # Aggiunge spazio a destra
-                }
-            ),
-            html.Span(
-                children=[
-                    "(Diabetologo: ",
-                    html.Span(
-                        f"{dati_diab.get('nome', '')} {dati_diab.get('cognome', '')}" if dati_diab else "Nessun diabetologo associato",
-                        style={
-                            'font-style': 'italic',
-                            'color': '#555555'
-                        }
-                    ),
-                    ")"
-                ],
-                style={'font-size': '0.95rem'}
-            ) if diab_id else None
-        ])
-
-        dettagli = [
-            dbc.ListGroupItem([
-                html.Strong(f"{k.capitalize().replace('_', ' ')}: "),
-                html.Span(str(v))
-            ])
-            for k, v in dati_paziente.items()
-        ]
-
-        return dbc.Card(
-            [
-                dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),  # Riduci la dimensione di H5
-                dbc.CardBody(
-                    dbc.ListGroup(dettagli, flush=True),
-                    style={
-                        "maxHeight": "380px",
-                        "overflowY": "auto",
-                        "paddingRight": "8px"
-                    }
-                )
-            ],
-            className="shadow-sm"
-        )
+        return view.crea_card_paziente(dati_paziente, dati_diab)
 
 
+    # callback che gestisce la visualizzazione dei dettagli del diabetologo, dopo averlo selezionato dall'elenco "Diabetologi"
+    # dell'Admin  
     @app.callback(
     Output("dettagli-diabetologo", "children"),
     Input({"type": "btn-diabetologo", "index": ALL}, "n_clicks"),
@@ -435,37 +392,7 @@ def registra_callbacks(app):
         if not dati_diabetologo:
             return dbc.Alert("Dettagli non disponibili per questo diabetologo", color="danger")
 
-        # Header con stile uniformato alla funzione paziente
-        header_content = html.Span(
-            f"Diabetologo: {dati_diabetologo.get('nome', '')} {dati_diabetologo.get('cognome', '')}",
-            style={
-                'font-weight': 'bold',
-                'font-size': '1.05rem'  # Stesso stile del nome paziente
-            }
-        )
-
-        dettagli = [
-            dbc.ListGroupItem([
-                html.Strong(f"{k.capitalize().replace('_', ' ')}: "),
-                html.Span(str(v))
-            ])
-            for k, v in dati_diabetologo.items()
-        ]
-
-        return dbc.Card(
-            [
-                dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),
-                dbc.CardBody(
-                    dbc.ListGroup(dettagli, flush=True),
-                    style={
-                        "maxHeight": "380px",
-                        "overflowY": "auto",
-                        "paddingRight": "8px"
-                    }
-                )
-            ],
-            className="shadow-sm"
-        )
+        return view.crea_card_diabetologo(dati_diabetologo)
 
     
 # ******************************************************************************************************************
