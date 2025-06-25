@@ -303,7 +303,8 @@ class Diabetologo(Persona):
 
         return pazienti
 
-    
+# ******************************************************************************************************************
+   
     def get_numero_pazienti_associati(self):
         cursore=connection.cursor()
         cursore.execute("""
@@ -314,6 +315,8 @@ class Diabetologo(Persona):
         numero = cursore.fetchone()[0]
         cursore.close()
         return numero
+    
+# ******************************************************************************************************************
 
 
 

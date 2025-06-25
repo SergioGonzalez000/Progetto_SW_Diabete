@@ -327,11 +327,7 @@ def registra_callbacks(app):
         if bottone_premuto == "btn-accetta-richiesta":
             # funzione per accettare la richiesta
             model.Admin.approva_richiesta(id_richiesta)     # gia definita
-            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
-
-        elif bottone_premuto == "btn-rifiuta-richiesta":
-            # chiamo la funzione che gestisce il rifiuto
-            model.rifiuta_richiesta(id_richiesta)                 # da fare
+            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)           # da fare
             alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
             
         else:
@@ -443,7 +439,6 @@ def registra_callbacks(app):
             return dash.no_update
         
 # ******************************************************************************************************************
-    
     #permette di vedere i grafici paziente per paziente al diabetologo
     @app.callback(
         Output("patient-number", "children"),
@@ -453,8 +448,9 @@ def registra_callbacks(app):
     )
     def mostra_dati_dashboard(pathname):
         cur=model.connection.cursor()
-        if pathname=="/doctor-dashboard":    
-            labels = ['Alterata','Normale','Ottima']
+        if pathname=="/doctor-dashboard":
+            # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
+            labels = ['Fuori dal limite','Alta','Normale']
             cur.execute("""
                 SELECT AVG(g.valore)
                 FROM Paziente p
@@ -483,6 +479,7 @@ def registra_callbacks(app):
             return num_paz,dcc.Graph(figure=torta)
         else:
             return dash.no_update
+        
 # ******************************************************************************************************************
     #callback che mostra i grafici del paziente al diabetologo con il dropdown
 
@@ -534,25 +531,28 @@ def registra_callbacks(app):
             return dcc.Graph(figure=grafico)
         else:
             return dash.no_update
-
+# style={'width': '100%', 'height': '100%'}
 # ******************************************************************************************************************
     #callback che fa vedere al diabetologo le informazioni di base del paziente 
     @app.callback(
+        # Div delle Informazioni del paziente
         Output("doctor-patient-info", "children"),
+        # Prende l'url della pagina
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        # Prende il pulsante del paziente
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
     )
     def visualizza_infopaziente_base(path, n_clicks):
         trigger_id = ctx.triggered_id
 
+        # All'apertura della pagina dashboard viene visualizzato di default questo messaggio:
         if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
             return "Nessun paziente selezionato"            
 
         id_paz = trigger_id.get('index')
         if path == "/doctor-dashboard":
-            id_diab=current_user.get_id_diabetologo()
-            info = model.get_info_base_paziente(id_diab,id_paz)
+            info = current_user.get_info_base_paziente_associato(id_paz)
             div = view.crea_div_info_base_paziente(info)
             return div
         else:
@@ -581,7 +581,7 @@ def registra_callbacks(app):
     @app.callback(
         Output("patient-info", "children"),
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
     )
     def visualizza_infopaziente_dettagliate(path, n_clicks):

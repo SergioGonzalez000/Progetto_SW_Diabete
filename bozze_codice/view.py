@@ -591,7 +591,7 @@ patient_dashboard = html.Div(
         # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
         "flex": 1,
         # Spazio dai margini esterni
-        "padding": "10px",#modifica fil per far entrare tutto nella parte azzurra -> se volete cambiate
+        "padding": "30px",
         # divide lo spazio
         "display": "flex",
         # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
@@ -803,6 +803,12 @@ patient_dashboard = html.Div(
 )
 
 # GRAFICI DEL PAZIENTE
+# _________
+# | 1 | 3 |
+# |___|___|
+# | 2 | 4 |
+# |___|___|
+
 patient_graphs = html.Div(
     style={
         # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
@@ -817,7 +823,55 @@ patient_graphs = html.Div(
         "gap": "40px" 
     },
     children=[
-        html.H2("Da fare")
+        # Prima colonna
+        html.Div(
+            style={
+                'flex': 1,
+                'display': 'flex',
+                'flexDirection': 'column',
+                "gap": "40px" 
+            },
+            children=[
+                # Riquadro 1
+                html.Div(
+                    className='card',
+                    style={'flex': 1, 'height': '100%', 'width': '100%'},
+                    id='first-graph'
+                ),
+
+                # Riquadro 2
+                html.Div(
+                    className='card',
+                    style={'flex': 1, 'height': '100%', 'width': '100%'},
+                    id='second-graph'
+                ),                
+            ]
+        ),
+
+        # Seconda colonna
+        html.Div(
+            style={
+                'flex': 1,
+                'display': 'flex',
+                'flexDirection': 'column',
+                "gap": "40px" 
+            },
+            children=[
+                # Riquadro 3
+                html.Div(
+                    className='card',
+                    style={'flex': 1, 'height': '100%', 'width': '100%'},
+                    id='third-graph'
+                ),
+
+                # Riquadro 4
+                html.Div(
+                    className='card',
+                    style={'flex': 1, 'height': '100%', 'width': '100%'},
+                    id='fourth-graph'
+                ),                
+            ]
+        )
     ]
 )
 
@@ -870,9 +924,8 @@ doctor_dashboard = html.Div(
                 # Numero 4
                 html.Div(
                     [
-                        html.H5("informazioni paziente:", style={"color" : "grey"}),
+                        html.H5("Informazioni paziente:", style={"color" : "grey"}),
                         html.Hr(),
-                        # Grafico a torta + legenda che mostra i pazienti con bollino rosso/giallo/verde
                         html.Div( id="doctor-patient-info", style={"height": "100%","width": "100%"})
                     ],
                     style={"flex": 1},
@@ -1061,12 +1114,13 @@ doctor_patient = html.Div(
                         html.Div(
                             [   
                                 html.H5("Informazioni paziente:", style={"color" : "grey"}),
-                                html.Hr(),
+                                html.Hr(), 
                                 html.Div( id="patient-info", style={"height": "100%","width": "100%"}),
                                 dcc.Store(id="selected-patient-id", storage_type="session")#per salvare l'id del paziente
 
                             ],
-                            className="card"
+                            className="card",
+                            style={'maxHeight': '100vh'}
                         ),
                         # Numero 6
                         html.Div(
@@ -1106,7 +1160,8 @@ doctor_patient = html.Div(
                             ),
     
                             ],
-                            className="card"
+                            className="card",
+                            style={'maxHeight': '100vh'}
                         )
                     ],
                     style={
@@ -1121,9 +1176,11 @@ doctor_patient = html.Div(
         )
     ]
 )
+
 #********************************************************************************************************************
-# appena aggiunta
+# Metodo che crea la lista dei pazienti come lista di Buttons
 def layout_lista_pazienti_associati():
+
     pazienti = current_user.visualizza_n_c_pazienti_associati()
     
     if not pazienti:
@@ -1133,9 +1190,7 @@ def layout_lista_pazienti_associati():
         style={
             "flex": 1,
             "display": "flex",
-            "flexDirection": "row",
-            "padding": "20px",
-            "gap": "20px"
+            "flexDirection": "row"
         },
         children=[
             # Colonna sinistra: elenco pazienti
@@ -1143,59 +1198,85 @@ def layout_lista_pazienti_associati():
         ]
     )
 #*******************************************************************************************************************
+# Restituisce la lista di pulsanti dei pazienti:
 def render_lista_pazienti_glicemia(pazienti):
+
+    # Modifica il colore dei bollini in base al valore della media di glicemia.
     def colore_glicemia(media):
-        if media is None:
-            return "gray"
-        elif media >= 180:
-            return "#FF4C4C"
-        elif media >= 120:
-            return '#FFD93B'
-        else:
+        # Se la media è nella norma: verde
+        if 70 <= media <= 130:
             return '#08ff46'
+        # Se la media è alta: giallo
+        elif 131 <= media <= 180:
+            return '#FFD93B'
+        # Se la media è troppo alta o troppo bassa: rosso
+        elif media > 180 or media < 70:
+            return '#FF4C4C'
+        # Se la media è nulla:
+        elif media is None:
+            return "gray"
 
     return html.Div(
-        className="card",
         style={
+            # Si adatta automaticamente allo spazio disponibile:
             "flex": 1,
             "display": "flex",
+            # Impila gli elementi in children:
             "flexDirection": "column",
-            "padding": "18px",
+            # Mostra la barra di scorrimento se il contenuto supera l'altezza del contenitore:
             "overflowY": "auto",
-            "maxHeight": "87.5vh",
-            "border": "2px solid #dee2e6",
-            "borderRadius": "15px",
-            "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+            # "maxHeight": "87.5vh",
+
         },
         children=[
             *[
+                # Pulsante per ogni paziente:
                 dbc.Button(
+                    # Contenitore per bollino colorato + Nome del paziente
                     html.Div([
+                        # Bollino colorato:
                         html.Span(
                             style={
+                                # Permette a un elemento di disporsi sulla stessa riga
                                 "display": "inline-block",
-                                "width": "12px",
-                                "height": "12px",
+                                "width": "20px",
+                                "height": "20px",
+                                # Lo rende tondo
                                 "borderRadius": "50%",
                                 "backgroundColor": colore_glicemia(d["media"]),
-                                "marginRight": "10px",
-                                "marginTop": "3px",
+                                "margin-right": "10px"
                             }
                         ),
+
+                        # Nome del paziente:
                         f"{d['nome']} {d['cognome']}"
-                    ],
-                    style={"display": "flex", "alignItems": "center"}),
+
+                        ],
+                        # Stile della div bollino + nome
+                        style={
+                            "display": "flex", 
+                            "alignItems": "center",
+                            # Allinea il testo a sinistra
+                            "textAlign": "left",
+                            # Dimensione del nome:
+                            "font-size": "25px",
+                            # Colore del testo
+                            "color": "gray"
+                        }
+                    ),
+                    # id del pulsante
                     id={"type": "btn-paziente", "index": d["id"]},
+                    # Colore del pulsante    
                     color="light",
+                    # Stile del pulsante
                     style={
-                        "textAlign": "left",
-                        "marginBottom": "10px",
-                        "border": "1px solid #ccc",
-                        "borderRadius": "10px",
+                        "marginBottom": "15px",
+                        #"border": "1px solid #ccc",
+                        "borderRadius": "15px",
                         "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
                     },
-                    className="text-start"
                 )
+                # Per ogni paziente
                 for d in pazienti
             ]
         ]
@@ -1205,7 +1286,9 @@ def render_lista_pazienti_glicemia(pazienti):
 
 def crea_div_paziente(cfanno, info, segnalazioni):
     codice_fiscale, eta = cfanno[0]
+    # Codice fiscale
     str_cf = f"Codice fiscale: {codice_fiscale}"
+    # età
     str_eta = f"Età: {eta}"
 
     if not info:
@@ -1242,9 +1325,10 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                     dbc.ModalFooter(dbc.Button("Chiudi", id="close-insert-infopaz", className="ml-auto")),
                 ],
                 id="popup-inserisci-info",
-                is_open=False,
+                is_open=False
             )
-        ])
+        ]
+        )
 
     # Preparo set per info cliniche
     patologie_pregresse = set()
@@ -1411,21 +1495,59 @@ def crea_div_terapia_dropdown(terapie):
 
 
 # ******************************************************************************************************************
+# Metodo che crea una card di informazioni di base del paziente: da visualizzare nella dashboard del dottore (card 4)
 def crea_div_info_base_paziente(info_paziente):
     if not info_paziente:
         return html.Div("Nessuna informazione disponibile per questo paziente.")
 
     username, nome, cognome, data_nascita, sesso, media_glicemia = info_paziente[0]
 
-    return dbc.Card([
-        dbc.CardHeader(html.H5(f"{nome} {cognome}", className="mb-0")),
-        dbc.CardBody([
-            html.P(f"Username: {username}"),
-            html.P(f"Data di nascita: {data_nascita.strftime('%d/%m/%Y')}"),
-            html.P(f"Sesso: {'Maschio' if sesso == 'M' else 'Femmina'}"),
-            html.P(f"Glicata stimata: {(float(media_glicemia)+46.7)/28.7:.2f} mg/dL" if media_glicemia else "Nessun valore glicemico registrato"),
-        ])
-    ], className="card")
+    return html.Div([
+        # Nome + Username
+        # 'padding': '5px 20px', 'textAlign': 'center' 
+        html.Div(
+            [
+                html.H3(f"{nome} {cognome}", style={"display": "inline-block", "margin-right": "20px", 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'padding': '5px 10px', 'textAlign': 'center'}),
+                html.H5(f"{username}", style={"display": "inline-block", "color": "gray"}),
+            ],
+            className="text-inline"
+        ),
+        # Data di nascita + sesso
+        html.Div([
+            html.Div([
+                html.P(f"Data di nascita:  {data_nascita.strftime('%d/%m/%Y')}", style={'font-size': '20px'}),
+                html.P(f"Sesso:  {'Femmina' if sesso == 'F' else 'Maschio'}", style={'font-size': '20px'})
+                ],
+                style={
+                    'flex': 1,
+                    'display': 'flex',
+                    'flexDirection': 'column',
+                    'padding': '10px'
+                }
+            ),
+
+            html.Div([
+                html.P("Glicemia media:", style={'font-size': '20px'}),
+                html.Div([
+                    html.P(round(media_glicemia, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                    html.P(" mg/dL", style={'display': 'inline-block', 'color': 'gray'})
+                ]),
+            ],
+                style={
+                    'flex': 1,
+                    'padding' : '10px',
+                    'flexDirection': 'column'
+                }
+            )
+
+            ],
+            style={
+                'display': 'flex',
+                'gap': '20px',
+            }
+        )
+        ],        
+    )
 
 # CHAT (= chat_content) -> Già fatta
 
