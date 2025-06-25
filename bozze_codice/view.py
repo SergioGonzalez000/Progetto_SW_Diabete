@@ -917,7 +917,6 @@ doctor_dashboard = html.Div(
                             [
                                 html.H5("Andamento pazienti:", style={"color" : "grey"}),
                                 html.Hr(),
-                                # Qua va inserito un grafico ???
                                 html.Div( id="patient-pie", style={"height": "100%","width": "100%"})
                             ],
                             className="card"
@@ -991,15 +990,48 @@ doctor_patient = html.Div(
                 # Numero 4
                 html.Div(
                     [
-                        html.H5("Grafico:", style={"color" : "grey"}),
+                        html.Div([
+                            html.H5("Grafico:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                            dbc.Button("i", id="popover-button", color="light", style={
+                                "borderRadius": "50%",
+                                "width": "24px",
+                                "height": "24px",
+                                "padding": "0",
+                                "textAlign": "center",
+                                "lineHeight": "1",
+                                "fontSize": "12px"
+                            }),
+                        ], style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "gap": "5px",
+                            "marginBottom": "10px"
+                        }),
+
+                        dbc.Popover(
+                            dbc.PopoverBody(
+                                html.Div([
+                                    html.H6("Andamento:"),
+                                    "mostra i valori di glicemia registrati durante il periodo selezionato",
+                                    html.Br(),
+                                    html.H6("Media durante il giorno:"),
+                                    "mostra la glicemia media per fascia oraria del periodo selezionato"
+                                ])
+                            ),
+                            target="popover-button",  # ID del componente a cui è ancorato
+                            body=True,
+                            trigger="click",          # può essere "hover", "focus", "legacy", "click"
+                            placement="right",        # top, bottom, left, right
+                            id="popover"
+                        ),
                         dcc.Dropdown(id="dropdown-scelta-grafico",
                             options=[
                                 {
-                                    "label": "andamento",
+                                    "label": "Andamento",
                                     "value": "andamento",
                                 },
                                 {
-                                    "label": "media durante il giorno",
+                                    "label": "Media durante il giorno",
                                     "value": "medie"
                                 },
                             ],
@@ -1242,7 +1274,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                 periodo += f" al {data_fine.strftime('%d/%m/%Y')}"
             segnalazioni_div.append(
                 html.Div([
-                    html.Strong(tipo.capitalize() + ": "), html.Span(descrizione),
+                    html.Span(tipo.capitalize() + ": "), html.Span(descrizione),
                     html.Br(), html.Small(periodo),
                     html.Hr()
                 ])
@@ -1329,6 +1361,17 @@ def crea_div_terapia_selezionata(terapia):
                     dbc.Textarea(id="input-indicazioni", value=terapia[9]),
                     html.Br(),
                     dbc.Button("Salva modifiche", id="btn-salva-modifiche-terapia", color="primary",n_clicks=0),
+                    dbc.Button("Elimina terapia", id="btn-elimina-terapia", color="danger",n_clicks=0),
+                    dbc.Modal([
+                        dbc.ModalBody([
+                            html.H6("Sei sicuro di voler eliminare la terapia selezionata?"),
+                            dbc.Button("Si", id="conferma-elimina-terapia",color="primary", n_clicks=0),
+                            dbc.Button("No", id="declina-elimina-terapia",color="danger", n_clicks=0),
+                        ]),
+                    ],
+                        id="popup-elimina-terapia",
+                        is_open=False
+                    ),
                     dbc.Alert(id="modifica-terapia-output", is_open=False),
                 ]),
                 dbc.ModalFooter(
@@ -1376,7 +1419,7 @@ def crea_div_info_base_paziente(info_paziente):
             html.P(f"Username: {username}"),
             html.P(f"Data di nascita: {data_nascita.strftime('%d/%m/%Y')}"),
             html.P(f"Sesso: {'Maschio' if sesso == 'M' else 'Femmina'}"),
-            html.P(f"Media glicemia: {round(media_glicemia, 1)} mg/dL" if media_glicemia else "Nessun valore glicemico registrato"),
+            html.P(f"Glicata stimata: {(float(media_glicemia)+46.7)/28.7:.2f} mg/dL" if media_glicemia else "Nessun valore glicemico registrato"),
         ])
     ], className="card")
 

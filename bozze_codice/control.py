@@ -534,6 +534,8 @@ def registra_callbacks(app):
 
         if not id_paz or not any(n_clicks):
             return "Nessun paziente selezionato"
+        if id_paz and not scelta:
+            return "Seleziona un grafico"
 
         dati = model.get_dati_glicemia_filtrati(id_paz, filtro, scelta)
 
@@ -744,7 +746,8 @@ def registra_callbacks(app):
             return not is_open
         return is_open
 # ******************************************************************************************************************
-#callback per modificare dati terapia
+#callback per modificare dati terapia o per eliminarne una dopo la conferma
+
     @app.callback(
         Output("modifica-terapia-output", "children"),
         Output("modifica-terapia-output", "color"),
@@ -758,35 +761,47 @@ def registra_callbacks(app):
         Input("input-data-inizio", "value"),
         Input("input-data-fine", "value"),
         Input("input-indicazioni", "value"),
+        Input("conferma-elimina-terapia", "n_clicks"),
         State("selected-patient-id", "data"),
         State("terapia-selezionata", "data"),
         prevent_initial_call=True
     )
-    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni, id_paz,id_terapia):
+    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, conferma, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
-        farmaco = farmaco or None
-        dosaggio = dosaggio or None
-        assunzioni = assunzioni or None
-        indicazioni = indicazioni or None
-        data_i = data_i or None
-        data_f = data_f or None
-        if farmaco==None and dosaggio==None and assunzioni==None and indicazioni==None and data_i==None and data_f==None and modifybtn>0:
-            return "Informazioni mancanti", "danger", True
-        if data_i and data_f and data_f<data_i and modifybtn>0:
-            return "Data fine non valida","danger", True
-        
-        if trigger_id != "btn-salva-modifiche-terapia":
-            raise dash.exceptions.PreventUpdate
+        if trigger_id == "conferma-elimina-terapia" and conferma > 0:
+            # Azione di eliminazione terapia
+            model.cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
+            model.connection.commit()
+            model.cur.close()
+            return "Terapia eliminata correttamente", "success", True
 
-        if path == "/doctor-patient" and modifybtn > 0:
-            if not any(n_clicks):
-                return "Seleziona un paziente!", "danger",True
-            print(id_terapia)
-            current_user.modifica_terapia_paziente(id_paz,id_terapia,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
-            return "Modifica avvenuta con successo", "success", True
-        else:
-            return dash.no_update
+        if trigger_id == "btn-salva-modifiche-terapia":
+            # Gestione modifica terapia
+            farmaco = farmaco or None
+            dosaggio = dosaggio or None
+            assunzioni = assunzioni or None
+            indicazioni = indicazioni or None
+            data_i = data_i or None
+            data_f = data_f or None
+            #controlla se sono tutte nulle, in tal caso ritorna informazioni mancanti
+            if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni, data_i, data_f]):
+                return "Informazioni mancanti", "danger", True
+
+            if data_i and data_f and data_f < data_i:
+                return "Data fine non valida", "danger", True
+
+            if path == "/doctor-patient" and modifybtn > 0:
+                if not any(n_clicks):
+                    return "Seleziona un paziente!", "danger", True
+
+                current_user.modifica_terapia_paziente(
+                    id_paz, id_terapia, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni
+                )
+                return "Modifica avvenuta con successo", "success", True
+
+        # Se non è né il bottone salva né quello conferma, non aggiornare nulla
+        raise dash.exceptions.PreventUpdate
 
 #******************************************************************************************************************
     #callback per aprire il pop up aggiungi terapia
@@ -836,7 +851,7 @@ def registra_callbacks(app):
             if not any(n_clicks):
                 return "Seleziona un paziente!", "danger",True
             current_user.inserisci_terapia(id_paz,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
-            return "Modifica avvenuta con successo", "success", True
+            return "Terapia inserita con successo", "success", True
         else:
             return dash.no_update
 
@@ -850,6 +865,17 @@ def registra_callbacks(app):
         if data_inizio:
             return data_inizio  # Imposta la data inizio come minimo selezionabile
         return None
+#*******************************************************************************************************************
+    #callback per gestire il popup che serve a chiedere la conferma per eliminare una terapia
+    @app.callback(
+        Output("popup-elimina-terapia", "is_open"),
+        [Input("btn-elimina-terapia", "n_clicks"), Input("declina-elimina-terapia", "n_clicks")],
+        [State("popup-elimina-terapia", "is_open")]
+    )
+    def apri_elimina_terapia(n_apri, n_chiudi, is_open):
+        if n_apri or n_chiudi:
+            return not is_open
+        return is_open
 #*******************************************************************************************************************
 # Callback aggiornamento cerchio colorato glicemia:
     @app.callback(
