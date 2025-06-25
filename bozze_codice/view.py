@@ -1578,7 +1578,7 @@ admin_dashboard = html.Div(
                                     dcc.Graph(
                                         id= "grafico-glicemia-tutti",
                                         figure= model.visualizza_media_glicemia_per_diabetologi(),
-                                        style={ "height": "66vh"},
+                                        style={ "height": "100vh", "maxHeight": "66vh"},
                                         config={
                                             "displayModeBar": False,           # mostra la barra (puoi anche usare False per nasconderla)
                                         }
@@ -1592,22 +1592,6 @@ admin_dashboard = html.Div(
                 )
             ]
         ),
-        
-        # # Colonna a destra, con le statistiche sui pazienti
-        # html.Div(
-        #     style={
-        #         "flex": 0.5, # Occupa 1/6 del page content
-        #         "padding": "30px",
-        #         "background-color": "#ffffff", # sfondo bianco
-        #         "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-        #         "border": "2px solid #dee2e6", # bordo di 2px grigio
-        #         "border-radius": "15px" # bordi arrotondati
-        #     },
-        #     children=[
-        #         html.H5("Statistiche: ", style={"color": "grey"}),
-        #         html.Hr(),
-        #     ]
-        # )
     ]
 )
 
@@ -1757,7 +1741,7 @@ def render_dati_richiesta(dati):
                 ], width=4, style={"marginBottom": "0.25rem"}),
             ]),
 
-        ], style= {"height": "50vh", "": ""}),      # così si adatta alla dimensione dello schermo
+        ], style= {"height": "66vh"}),      # così si adatta alla dimensione dello schermo
         className="shadow-sm w-100",
         style={"flex": "1", "padding": "0.7rem"}
     )
@@ -1775,7 +1759,7 @@ def render_lista_pazienti(pazienti):
             "padding": "10px",
             "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
             "overflow": "hidden",           # Nasconde la scrollbar esterna
-            "maxHeight": "87.3vh",           # Come nel TUO originale
+            "maxHeight": "100vh",           # Come nel TUO originale
         },
         children=[
             html.Div(
@@ -1809,6 +1793,12 @@ def render_lista_pazienti(pazienti):
     )
 
 
+# POP-UPS DEI BOTTONI DELLA PAGINA ADMIN-PAZIENTE E ADMIN-DIABETOLOGO
+# Popup 1
+
+
+
+
 # appena aggiunta
 def layout_lista_pazienti():
     pazienti = model.get_all_pazienti()
@@ -1822,7 +1812,7 @@ def layout_lista_pazienti():
             "display": "flex",
             "flexDirection": "row",
             "padding": "20px",
-            "gap": "20px"
+            "gap": "20px",
         },
         children=[
             # Colonna sinistra: elenco pazienti
@@ -1882,39 +1872,80 @@ def crea_card_paziente(dati_paziente, dati_diab):
                         "maxHeight": "50vh",
                         "overflowY": "auto",
                         "paddingRight": "2px",
-                        "marginTop": "2px",
-                        "marginBottom": "25px",
+                        "paddingBottom": "2px",
                         "border": "1px solid #dee2e6",
                         "borderRadius": "1px",
                     }),
 
                      # prima riga di pulsanti
-                    dbc.Row([
-                        dbc.Col(dbc.Button("Grafico glicemia paziente",
-                                        id="btn-graf-paz-assoc-diab",
-                                        color="success",
-                                        size="sm",
-                                        className="w-100"), width=6),
-                        dbc.Col(dbc.Button("Modifica dati paziente",
-                                        id="btn-modifica-dati-diab",
-                                        color="warning",
-                                        size="sm",
-                                        className="w-100"), width=6),
-                    ], justify="center", className="mb-2"),
+                    html.Div(
+                    [
+                        # prima riga pulsanti
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Grafico glicemia paziente",
+                                            id="btn-graf-paziente",
+                                            color="success",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(dbc.Button("Modifica dati paziente",
+                                            id="btn-modifica-dati-paz",
+                                            color="warning",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                        ], justify="center", className="mb-2"),
 
-                    # seconda riga
-                    dbc.Row([
-                        dbc.Col(dbc.Button("Rimuovi paziente",
-                                        id="btn-rimuovi-diab",
-                                        color="danger",
-                                        size="sm",
-                                        className="w-100"), width=6),
-                        dbc.Col(),      #vuoto solo per mantenere la forma 
-                    ], justify="center")
-                ]
+                        # seconda riga pulsanti
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Rimuovi paziente",
+                                            id="btn-rimuovi-paz",
+                                            color="danger",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(),      # vuoto per mantenere forma 
+                        ], justify="center"),
+                        ],
+                        style={
+                            "marginTop": "16px",
+                            "display": "flex",
+                            "flexDirection": "column",
+                            "justifyContent": "center",
+                        }
+                    )
+                ],
+                style={
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "height": "100%",
+                    "paddingBottom": "10px",  # evita che tocchi il bordo inferiore
+                }
+        ),
+
+            # salva l'id del paziente, in modo da usarlo per la callback col grafico
+            dcc.Store(      
+                id= "store-id-paziente",
+                data= dati_paziente.get('id_paziente')
+            ),
+
+            # POP-UP DEL GRAFICO DEL PAZIENTE
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Grafico glicemia paziente"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-graf-paziente",
+                            children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
+                            style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-grafico-paziente",
+                is_open=False,
+                size="xl",  
+                centered=True          
             )
         ],
-        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "87.3vh"}
+        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
     )
 
 
@@ -1950,7 +1981,7 @@ def render_lista_diabetologi(diabetologi):
             "padding": "10px",
             "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
             "overflow": "hidden",          # Nasconde scrollbar esterna
-            "maxHeight": "87.3vh",         # Altezza uguale alla prima
+            "maxHeight": "100vh",         # Altezza uguale alla prima
         },
         children=[
             html.Div(
@@ -2037,49 +2068,58 @@ def crea_card_diabetologo(dati_diabetologo):
     return dbc.Card(
         [
             dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),
-            dbc.CardBody(
-                [
+            dbc.CardBody([
                     dbc.ListGroup(dettagli, flush=True, style={
                         "maxHeight": "50vh",
                         "overflowY": "auto",
                         "paddingRight": "2px",
-                        "marginTop": "2px",
-                        "marginBottom": "25px",
                         "border": "1px solid #dee2e6",
                         "borderRadius": "1px",
                     }),
 
-                    # prima riga di pulsanti
-                    dbc.Row([
-                        dbc.Col(dbc.Button("Pazienti associati diabetologo",
-                                        id="btn-lista-paz-assoc-diab",
-                                        color="info",
-                                        size="sm",
-                                        className="w-100"), width=6),
-                        dbc.Col(dbc.Button("Glicemia pazienti associati",
-                                        id="btn-graf-paz-assoc-diab",
-                                        color="success",
-                                        size="sm",
-                                        className="w-100"), width=6),
-                    ], justify="center", className="mb-2"),
+                    html.Div([
+                        # prima riga di pulsanti
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Pazienti associati diabetologo",
+                                            id="btn-lista-paz-assoc-diab",
+                                            color="info",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(dbc.Button("Glicemia media pazienti",
+                                            id="btn-graf-paz-assoc-diab",
+                                            color="success",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                        ], justify="center", className="mb-2"),
 
-                    # seconda riga
-                    dbc.Row([
-                        dbc.Col(dbc.Button("Modifica dati diabetologo",
-                                        id="btn-modifica-dati-diab",
-                                        color="warning",
-                                        size="sm",
-                                        className="w-100"), width=6),
-                        dbc.Col(dbc.Button("Rimuovi diabetologo",
-                                        id="btn-rimuovi-diab",
-                                        color="danger",
-                                        size="sm",
-                                        className="w-100"), width=6),
-                    ], justify="center")
-                ]
-            )
+                        # seconda riga
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Modifica dati diabetologo",
+                                            id="btn-modifica-dati-diab",
+                                            color="warning",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(dbc.Button("Rimuovi diabetologo",
+                                            id="btn-rimuovi-diab",
+                                            color="danger",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                        ], justify="center")], 
+                        
+                        style={
+                            "marginTop": "16px",
+                            "display": "flex",
+                            "flexDirection": "column",
+                            "justifyContent": "center",
+                        }
+                    )
+            ],
+                    style={"display": "flex",
+                    "flexDirection": "column",
+                    "height": "100%",
+                    "paddingBottom": "10px"})
         ],
-        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "87.3vh"}
+        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
     )
 
 
@@ -2100,3 +2140,27 @@ admin_doctor = html.Div(
         layout_lista_diabetologi()
     ]
 )
+
+
+
+
+# Popup 2
+popup_2 = dbc.Modal([
+    dbc.ModalHeader("Dettaglio Grafico Pazienti"),
+    dbc.ModalBody("Contenuto del popup 2..."),
+    dbc.ModalFooter(dbc.Button("Chiudi", id="chiudi-popup-2", className="ms-auto"))
+], id="popup-2", is_open=False)
+
+# Popup 3
+popup_3 = dbc.Modal([
+    dbc.ModalHeader("Dettaglio Modifica Dati"),
+    dbc.ModalBody("Contenuto del popup 3..."),
+    dbc.ModalFooter(dbc.Button("Chiudi", id="chiudi-popup-3", className="ms-auto"))
+], id="popup-3", is_open=False)
+
+# Popup 4
+popup_4 = dbc.Modal([
+    dbc.ModalHeader("Dettaglio Rimozione Diabetologo"),
+    dbc.ModalBody("Contenuto del popup 4..."),
+    dbc.ModalFooter(dbc.Button("Chiudi", id="chiudi-popup-4", className="ms-auto"))
+], id="popup-4", is_open=False)

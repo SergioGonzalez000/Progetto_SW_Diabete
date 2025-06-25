@@ -838,3 +838,70 @@ def registra_callbacks(app):
         # Iperglicemia
         else:
             return valore, {"background-color": '#FF4C4C'}
+        
+
+# ******************************************************************
+
+# callbacks che gestiscono i click sui bottoni del paziente, che aprono i relativi pop-up.
+    @app.callback(
+        Output("pop-admin-grafico-paziente", "is_open"),
+        Input("btn-graf-paziente", "n_clicks"),
+        [State("pop-admin-grafico-paziente", "is_open")]
+    )
+    def gestisci_popup_admin_graf_paziente(n_apri, is_open):
+        if n_apri is None:
+            # All'inizio NON facciamo nulla
+            return is_open
+        if n_apri:
+            # Toggle
+            return not is_open
+        return is_open
+
+    @app.callback(
+        Output("contenitore-popup-graf-paziente", "children"),
+        Input("btn-graf-paziente", "n_clicks"),
+        State("store-id-paziente", "data"),
+        prevent_initial_call= True
+    )
+    def aggiorna_grafico_paziente(n_clicks, id_paziente):
+        if not n_clicks or id_paziente is None:
+            return "Seleziona un paziente e premi il bottone per vedere il grafico."
+
+        fig = model.Diabetologo.visualizza_glicemia_paziente(id_paziente)  
+
+        return dcc.Graph(figure=fig, style={"borderRadius": "2px"})
+        
+
+
+    # CALLBACKS DA FARE PER GLI ALTRI TASTI...
+    @app.callback(
+    Output("popup-2", "is_open"),
+    [Input("btn-graf-paz-assoc-diab", "n_clicks"), Input("chiudi-popup-2", "n_clicks")],
+    [State("popup-2", "is_open")]
+    )
+    def gestisci_popup_2(n_apri, n_chiudi, is_open):
+        if n_apri or n_chiudi:
+            return not is_open
+        return is_open
+
+
+    @app.callback(
+        Output("popup-3", "is_open"),
+        [Input("btn-modifica-dati-diab", "n_clicks"), Input("chiudi-popup-3", "n_clicks")],
+        [State("popup-3", "is_open")]
+    )
+    def gestisci_popup_3(n_apri, n_chiudi, is_open):
+        if n_apri or n_chiudi:
+            return not is_open
+        return is_open
+
+
+    @app.callback(
+        Output("popup-4", "is_open"),
+        [Input("btn-rimuovi-diab", "n_clicks"), Input("chiudi-popup-4", "n_clicks")],
+        [State("popup-4", "is_open")]
+    )
+    def gestisci_popup_4(n_apri, n_chiudi, is_open):
+        if n_apri or n_chiudi:
+            return not is_open
+        return is_open
