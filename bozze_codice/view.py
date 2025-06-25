@@ -1,8 +1,9 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 import model
+import control
 from flask_login import UserMixin, login_user, logout_user, current_user 
-import model
+
 
 # Layout dell'app, intero. Si aggiorna quando viene cambiato l'url.
 def getLayout():
@@ -23,6 +24,8 @@ def getLayout():
             "minHeight": "100vh",
             # Colore sfondo standard fisso
             "background-color": "#e6f2ff",
+            #fil-altezza della parte azzurra che si adatta automaticamente
+            #"height": "auto",
             # Nessun margine al contenuto affinché occupi tutta la pagina disponibile
             "margin": 0
         }
@@ -823,172 +826,7 @@ patient_graphs = html.Div(
     ]
 )
 
-# CHAT
-#   ____________
-#   |   |      |
-#   | 1 |   2  |
-#   |   |      |
-#   |___|______|
 
-chat_content = html.Div(
-    style={
-        "flex": 1,
-        "display": "flex",
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
-        "flex-direction": "row",
-        # spazio dai margini esterni
-        "padding": "40px",
-        # spazio tra le colonne
-        "gap": "40px"
-    },
-    children=[
-        # Pannello delle chat disponibili
-        #   _____
-        #   |   |
-        #   | 1 |
-        #   |   |
-        #   |___|
-
-        html.Div(
-            className="card",
-            style={
-                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
-                "flex-direction": "column",
-            },
-            children=[
-                html.H2("Chat", style={"color": "grey"}),
-                html.Hr(),
-                
-                # DA FARE
-
-                # Funzione che carica la lista delle chat disponibili per l'utente
-            ]
-        ),
-
-        # Box della chat
-        #   ________
-        #   |      |
-        #   |   2  |
-        #   |      |
-        #   |______|
-
-        html.Div(
-            style={
-                # Occupa 2/3 dello spazio disponibile
-                "flex": 2,
-                "display": "flex",
-                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
-                "flexDirection": "column",
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                "border": "2px solid #dee2e6",
-                # Arrotonda gli angoli
-                "border-radius": "15px",
-                "overflow": "hidden",
-            },
-            children=[
-                # Nome del contatto e dati del contatto
-                html.Div(
-                    style={
-                        # Occupa il 100% dello spazio disponibile in larghezza
-                        "width": "100%",
-                        # Occupa solo il 10% dello spazio disponibile in altezza
-                        "height": "10%",
-                        # sfondo bianco
-                        "background-color": "#ffffff",
-                        "padding": "2rem 2rem",
-                        "borderBottom": "2px solid #dee2e6",
-                        
-                    },
-                    children=[
-                        
-                        # DA MODIFICARE
-
-                        html.H2("Nome contatto", style={"color": "grey"})
-                    ]
-                ),
-
-                # Contenitore dei messaggi:
-                html.Div(
-                    id="chat-box",
-                    style={
-                        "flex": "1",
-                        # Occupa il 100% dello spazio disponibile in larghezza
-                        "width": "100%",
-                        # Occupa solo l'80% dello spazio disponibile in altezza
-                        "height": "80%",
-                        'display': 'flex',
-                        # direzione degli elementi nel box: "column" = dall'alto al basso
-                        'flexDirection': 'column',
-                        # mostra la barra dello scroll verticale (y axis) : "auto" = solo se il contenuto
-                        # eccede l'altezza del contenitore
-                        'overflowY': 'auto',
-                        'padding': '20px',
-                        # Nessuno sfondo inserito
-                    },
-                    children=[
-                        # Qua verranno visualizzati i messaggi con una funzione che genera dinamicamente le bubbles
-                        # children= ***nome funzione***
-                    ]
-
-                ),
-
-                # Contenitore dell'Input:
-                html.Div(
-                    style={
-                        # Occupa il 100% dello spazio disponibile in larghezza
-                        "width": "100%",
-                        # Occupa solo il 10% dello spazio disponibile in altezza
-                        "height": "10%",
-                        # sfondo bianco
-                        "background-color": "#ffffff",
-                        "display": "flex",
-                        "alignItems": "center",
-                        "justifyContent": "center",
-                        "borderTop": "2px solid #dee2e6",
-                        "gap": "30px"
-                    },
-                    children=[
-                        # Input text per il messaggio
-                        dbc.Input(
-                            placeholder="Invia un messaggio...",
-                            type="text",
-                            id="input-text",
-                            style={
-                                "width": "70%",
-                                "padding": "15px 20px",
-                                "border-radius": "15px",
-                                "border": "none",
-                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                "background-color": "#f0f0f0",
-                                "fontSize": "20px"
-                            }
-                        ),
-
-                        # Pulsante invio
-                        # NB: il "+" non è perfettamente centrato
-                        dbc.Button(
-                            "+", color="primary",
-                            id="send-btn",
-                            style={
-                                "display": "flex",
-                                "justifyContent": "center",
-                                "align-items": "center",
-                                "width": "55px",
-                                "height": "55px",
-                                "border-radius": "50%",
-                                "margin": "0",
-                                "padding": "0",
-                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                "fontSize": "50px",
-                                "lineHeight": "normal"
-                            }
-                        )
-                    ]
-                )
-            ]
-        )
-    ]
-)
 
 # ******************************************************************************************************************
 # LAYOUT DEL DIABETOLOGO:
@@ -1825,6 +1663,11 @@ def layout_lista_pazienti():
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
+                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                    "border": "2px solid #dee2e6",
+                    "borderRadius": "15px",
+                    "padding": "30px",
+                    "overflow": "auto"
                 },
                 children=[
                     html.H5("Seleziona un paziente per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
@@ -1913,6 +1756,11 @@ def layout_lista_diabetologi():
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
+                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                    "border": "2px solid #dee2e6",
+                    "borderRadius": "15px",
+                    "padding": "30px",
+                    "overflow": "auto"
                 },
                 children=[
                     html.H5("Seleziona un diabetologo per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
@@ -1936,5 +1784,286 @@ admin_doctor = html.Div(
     },
     children=[
         layout_lista_diabetologi()
+    ]
+)
+#################################################################
+def layout_lista_messaggi(messaggi):
+    """Genera card messaggi allineate a sx/dx in base al mittente.
+    
+    Args:
+        messages: Lista di tuple (contenuto, orario,d_is_mittente, user_is_diabetologo). ci appendo i messaggi della query
+    """
+    message_cards = []
+    data_precedente = None  #variabile per capire quando si cambia giorno
+    for contenuto, orario, giorno, d_is_mittente, user_is_diabetologo in messaggi:
+        is_sender = (user_is_diabetologo == d_is_mittente) #se l'utente è il diabetologo e il diabetologo è il mittente allora lo user è il mittente
+        if giorno != data_precedente:
+            #card che segna la data
+            day_header = dbc.Card(
+                children = giorno,
+                style={
+                    'display': 'inline-block',
+                    'width': '120px',
+                    'height': '100px',
+                    'maxHeight': 'fit-content',
+                    'padding-left': '0.618rem',
+                    'fontSize': '0.8rem',
+                    'maxWidth': '62%',
+                    'margin': '5px auto',
+                    'textAlign': 'center'
+                }
+            #className="d-inline-block"  # Classe Bootstrap per inline-block
+            )
+            message_cards.append(day_header)
+            data_precedente = giorno
+        # Stile dinamico
+        card_style = {
+            'maxWidth': '62%',
+            'width': 'fit-content',  # Adatta la larghezza al testo
+            'minHeight': 'auto',     # Altezza minima automatica
+            'maxHeight': 'fit-content',
+            'marginLeft': 'auto' if is_sender else '0',
+            'marginRight': '0' if is_sender else 'auto',
+            'marginBottom': '10px',
+            'padding': '8px 12px',
+            'backgroundColor': "#00B7FF" if is_sender else '#ECECEC',
+            'borderRadius': '12px',
+            'wordBreak': 'break-word',  #Forza a capo per parole lunghe
+            'height':'100px',
+            'fontSize': '1.2em'
+        }        
+        card = dbc.Card(
+            dbc.CardBody([
+                contenuto,
+                html.Br(),
+                html.Small(
+                    orario, 
+                    className="text-muted mt-1", 
+                    style={
+                        'position': 'absolute',
+                        'right': '5px',
+                        'bottom': '5px',
+                        'color': '#999',
+                        'fontSize': '0.8rem'
+                    }
+                )
+            ]),
+            style=card_style
+        )
+        message_cards.append(card)
+    
+    return message_cards
+
+def render_lista_contatti(contatti):
+    return html.Div(
+        className="card",
+        style={
+            "flex": 1,
+            "display": "flex",
+            "flexDirection": "column",
+            "padding": "18px",
+            "overflowY": "auto",
+            "maxHeight": "87.5vh",
+            "border": "2px solid #dee2e6",
+            "borderRadius": "15px",
+            "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+        },
+        children=[
+            # html.H4("Pazienti", style={"color": "grey"}),
+            # html.Hr(),
+            *[
+                dbc.Button(
+                    f"{c['nome']} {c['cognome']}",
+                    id = {
+                        "type": "btn-contatto",
+                        "index": c["id"],
+                    },
+                    color="light",
+                    style={
+                        "textAlign": "left",
+                        "marginBottom": "10px",
+                        "border": "1px solid #ccc",
+                        "borderRadius": "10px",
+                        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+                    },
+                    className="text-start",
+                )
+                for c in contatti
+            ]
+        ]
+    )
+
+def layout_lista_contatti():
+    contatti = model.get_contatti()
+
+
+    if not contatti:
+        return dbc.Alert("Nessun contatto registrato.", color="warning")
+
+    return html.Div(
+
+        children=[
+            # Colonna sinistra: elenco pazienti
+            render_lista_contatti(contatti)
+        ]
+    )
+
+
+# CHAT
+#   ____________
+#   |   |      |
+#   | 1 |   2  |
+#   |   |      |
+#   |___|______|
+
+chat_content = html.Div(
+    style={
+        "flex": 1,
+        "display": "flex",
+        "flexDirection": "row",  # Dash usa camelCase per gli stili
+        "padding": "40px",
+        "gap": "40px",
+        "height": "100vh"  # Importante per il contenitore principale
+    },
+    children=[
+        # Pannello sinistro - Lista chat
+        html.Div(
+            className="card",  
+            style={
+                "flex": 1,  # Occupa 1 parte dello spazio
+                "display": "flex",
+                "flexDirection": "column",
+                "minWidth": "300px",  # Larghezza minima
+                "overflowY": "auto"  # Scroll se necessario
+            },
+            children=[
+                html.H2("Chat", style={"color": "grey", "padding": "10px"}),
+                html.Hr(),
+                html.Div(
+                    id="lista-contatti",
+                    style={"height": "100%","width": "100%", "flex-direction": "column"},
+                    
+                )
+            ]
+        ),
+
+        # Box della chat
+        #   ________
+        #   |      |
+        #   |   2  |
+        #   |      |
+        #   |______|
+
+        html.Div(
+            style={
+                # Occupa 2/3 dello spazio disponibile
+                "flex": 2,
+                "display": "flex",
+                # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
+                "flexDirection": "column",
+                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+                "border": "2px solid #dee2e6",
+                # Arrotonda gli angoli
+                "border-radius": "15px",
+                "overflow": "hidden",
+            },
+            children=[
+                # Nome del contatto e dati del contatto
+                html.Div(
+                    style={
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo il 10% dello spazio disponibile in altezza
+                        "height": "10%",
+                        # sfondo bianco
+                        "background-color": "#ffffff",
+                        "padding": "2rem 2rem",
+                        "borderBottom": "2px solid #dee2e6",
+                        
+                    },
+                    children=[
+                        html.Div(id="nome-contatto", className="chat-header"),  # Aggiungi questo
+                        dcc.Store(id="id-contatto-store", storage_type="memory") #memorizza l'id del contatto
+                    ]
+                ),
+
+                # Contenitore dei messaggi:
+                html.Div(
+                    id="chat-box",
+                    style={
+                        "flex": "1",
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo l'80% dello spazio disponibile in altezza
+                        "height": "80%",
+                        'display': 'flex',
+                        # direzione degli elementi nel box: "column" = dall'alto al basso
+                        'flexDirection': 'column',
+                        # mostra la barra dello scroll verticale (y axis) : "auto" = solo se il contenuto
+                        # eccede l'altezza del contenitore
+                        'scrollbarWidth': 'thin',  
+                        'scrollbarColor': '#cccccc transparent',
+                        'overflowY': 'auto',
+                        'padding': '20px',
+                        # Nessuno sfondo inserito
+                    }
+                ),
+
+                # Contenitore dell'Input:
+                html.Div(
+                    style={
+                        # Occupa il 100% dello spazio disponibile in larghezza
+                        "width": "100%",
+                        # Occupa solo il 10% dello spazio disponibile in altezza
+                        "height": "10%",
+                        # sfondo bianco
+                        "background-color": "#ffffff",
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        "borderTop": "2px solid #dee2e6",
+                        "gap": "30px"
+                    },
+                    children=[
+                        # Input text per il messaggio
+                        dbc.Input(
+                            placeholder="Invia un messaggio...",
+                            type="text",
+                            id="input-text",
+                            style={
+                                "width": "70%",
+                                "padding": "15px 20px",
+                                "border-radius": "15px",
+                                "border": "none",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "background-color": "#f0f0f0",
+                                "fontSize": "20px"
+                            }
+                        ),
+
+                        # Pulsante invio
+                        # NB: il "+" non è perfettamente centrato
+                        dbc.Button(
+                            "+", color="primary",
+                            id="send-btn",
+                            style={
+                                "display": "flex",
+                                "justifyContent": "center",
+                                "align-items": "center",
+                                "width": "55px",
+                                "height": "55px",
+                                "border-radius": "50%",
+                                "margin": "0",
+                                "padding": "0",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "fontSize": "50px",
+                                "lineHeight": "normal"
+                            },
+                            n_clicks = 0
+                        )
+                    ]
+                )
+            ]
+        )
     ]
 )
