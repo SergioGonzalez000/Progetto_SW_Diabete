@@ -37,11 +37,11 @@ def getLayout():
 guest_navlinks = dbc.Nav(
     [
         # Link per la pagina iniziale
-        dbc.NavLink("Home", href="/", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Home", href="/", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         # Link della pagina della chat
-        dbc.NavLink("Login", href="/login", active="exact", style={"fontSize": "20px"}, className="mb-3"), 
+        dbc.NavLink("Login", href="/login", active="exact", style={"fontSize": "25px"}, className="mb-4"), 
         # Link per la pagina dei pazienti
-        dbc.NavLink("Registration", href="/registration", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Registration", href="/registration", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         html.Hr() 
     ],
     # Disposizione dei NavLink in verticale
@@ -54,11 +54,11 @@ guest_navlinks = dbc.Nav(
 patient_navlinks = dbc.Nav(
     [
         # Link della home/dashboard
-        dbc.NavLink("Dashboard", href="/patient-dashboard", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Dashboard", href="/patient-dashboard", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         # Link per la pagina di grafici
-        dbc.NavLink("Grafici", href="/grafici", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Grafici", href="/grafici", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         # Link della pagina della chat
-        dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         html.Hr(),
         # Link per il logout
         html.A("Log out", href="/logout", className="text-danger")
@@ -73,11 +73,11 @@ patient_navlinks = dbc.Nav(
 doctor_navlinks = dbc.Nav(
     [
         # Link per la pagina iniziale
-        dbc.NavLink("Dashboard", href="/doctor-dashboard", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Dashboard", href="/doctor-dashboard", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         # Link per la pagina dei pazienti
-        dbc.NavLink("Pazienti", href="/doctor-patient", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Pazienti", href="/doctor-patient", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         # Link della pagina della chat
-        dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Chat", href="/chat", active="exact", style={"fontSize": "25px"}, className="mb-4"),
                 html.Hr(),
         # Link per il logout
         html.A("Log out", href="/logout", className="text-danger")
@@ -93,13 +93,13 @@ doctor_navlinks = dbc.Nav(
 admin_navlinks = dbc.Nav(
     [
         # Link per la pagina iniziale
-        dbc.NavLink("Dashboard", href="/admin-dashboard", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Dashboard", href="/admin-dashboard", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         # Link della pagina della chat
-        dbc.NavLink("Richieste", href="/request", active="exact", style={"fontSize": "20px"}, className="mb-3"), 
+        dbc.NavLink("Richieste", href="/request", active="exact", style={"fontSize": "25px"}, className="mb-4"), 
         # Link per la pagina dei pazienti
-        dbc.NavLink("Pazienti", href="/admin-patient", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Pazienti", href="/admin-patient", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         # Link per la pagina dei diabetologi
-        dbc.NavLink("Diabetologi", href="/admin-doctor", active="exact", style={"fontSize": "20px"}, className="mb-3"),
+        dbc.NavLink("Diabetologi", href="/admin-doctor", active="exact", style={"fontSize": "25px"}, className="mb-4"),
         html.Hr(),
         # Link per il logout
         html.A("Log out", href="/logout", className="text-danger")       
@@ -114,7 +114,7 @@ admin_navlinks = dbc.Nav(
 sidebar = html.Div(
     [
         # Titolo
-        html.H2("MyAPP", className="text-primary"),
+        html.H1("MyAPP", className="text-primary"),
         html.Hr(),
 
         # Per testare è fissa quella del paziente, da modificare con la callback in base al tipo di utente
@@ -131,14 +131,8 @@ sidebar = html.Div(
         "padding": "2rem 1rem",
         # colore sfondo:
         "backgroundColor" : "white",
-        # Ombreggiatura esterna: 
-        # 0 offset orizzontale
-        # 4px ombra spostata di 4px verso il basso
-        # 8px raggio di sfocatura
-        # rgba() colore di sfocatura blu con opacità del 20%
         "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-        # margine di 2px solido con colore #dee2e6 HEX
-        "border": "1px solid rgba(255, 255, 255, 0.3)",
+        "border": 'none',
         # Arrotonda gli angoli
         "border-radius": "15px",
         # Questo elemento diventa un contenitore "flessibile"
@@ -174,379 +168,357 @@ home = html.Div(
     ]
 )
 
-# LOGIN - Da rivedere
-def login_layout():
-    # Titolo
-    login_title = html.H1(
-        "Login",
-        style={"textAlign": "center"},
-        # margin bottom 3
-        className="mb-3"
-    )
+# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+# LOGIN NUOVO:
+
+login_title = html.H1(
+    "Login",
+    style={"textAlign": "center"},
+    # margin bottom 3
+    className="mb-3"
+)
     
-    # Layout per lo username
-    # ID = "username-input"
-    username_box = html.Div(
-        [
-            html.H5("Username"),
-            dbc.FormFloating(
-                [
-                    # Il placeholder è necessario per il corretto funzionamento di FormFloating() anche se non visibile
-                    dbc.Input(type="text", id="username-input", placeholder="Username"),
-                    dbc.Label("Enter username"),
-                ]
-            )
-        ],
-        # margin bottom 3
-        className="mb-3"
-    )
+# Layout per lo username
+# ID = "username-input"
+username_box = html.Div(
+    [
+        html.H5("Username"),
+        dbc.FormFloating(
+            [
+                # Il placeholder è necessario per il corretto funzionamento di FormFloating() anche se non visibile
+                dbc.Input(type="text", id="username-input", placeholder="Username", className='input'),
+                dbc.Label("Enter username"),
+            ]
+        )
+    ],
+    # margin bottom 3
+    className="mb-3"
+)
 
     # Layout per la password
     # ID = "password-input"
-    password_box = html.Div(
+password_box = html.Div(
+    [
+        html.H5("Password"),
+        dbc.FormFloating(
         [
-            html.H5("Password"),
-            dbc.FormFloating(
-                [
-                    # Il placeholder è necessario per il corretto funzionamento di FormFloating() anche se non visibile
-                    dbc.Input(type="password", id="password-input", placeholder="Password"),
-                    dbc.Label("Password"),
-                ]
-            )            
-        ],
-        # margin bottom 4, qui è a 4 per rendere esteticamente più carino
-        className="mb-4"
-    )
+            # Il placeholder è necessario per il corretto funzionamento di FormFloating() anche se non visibile
+            dbc.Input(type="password", id="password-input", placeholder="Password", className='input'),
+            dbc.Label("Password"),
+        ])           
+    ],
+    # margin bottom 4, qui è a 4 per rendere esteticamente più carino
+    className="mb-4"
+)
 
-    # Pulsante Sign In
-    # ID = "login-input"
-    signIn_button = html.Div(
-        [
-            dbc.Button("Sign In", id="login-input", size="lg", n_clicks=0)
-        ],
-        # Larghezza completa nel box
-        # d-grid di default usa la larghezza 100%
-        className="d-grid gap-2"
-    )
+# Pulsante Sign In
+# ID = "login-input"
+signIn_button = html.Div(
+    dbc.Button("Accedi", id="login-input", size="lg", n_clicks=0, className='button'),
+    style={'marginTop': '30px'}
+)
 
-    # Sign Up link
-    signUp_link = html.Div([
-        html.Span("Don't have an account? "),
-        html.A(
-            "Register",
-            # Rimanda al link "/register" dove c'è la pagina con i form di registrazione
-            href="/registration",
-            className="text-primary"
+# Sign Up link: Link per la pagina di registrazione qualora non si avesse ancora un account
+signUp_link = html.Div([
+    html.Span("Don't have an account? "),
+    html.A(
+        "Register",
+        # Rimanda al link "/register" dove c'è la pagina con i form di registrazione
+        href="/registration",
+        className="text-primary"
+        )
+    ],
+    # Padding da sopra di 2
+    className="mt-4"
+)
+
+# div per gli alert 
+output_box = html.Div(
+    id='output-box'
+)
+
+
+# Layout del form
+form = dbc.Form(
+    [
+        # Titolo
+        login_title,
+        # Box per lo username
+        username_box,
+        # Box per la password
+        password_box,
+        # Pulsante di Login
+        signIn_button,
+        # Link per la registrazione
+        signUp_link,
+        # div per gli alert
+        output_box
+    ])
+
+
+# PAGE CONTENT PER IL LOGIN
+login = html.Div(
+    [
+        html.Div(
+            form,
+            className='form-card'
+        )
+    ],
+    style={'flex' : 1, 'justify-content': 'center', 'align-items': 'center', 'display': 'flex'}
+)
+
+
+# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# REGISTRATION
+
+# Titolo
+registration_title = html.H1(
+    "Registration",
+    style={"textAlign": "center"},
+    # margin bottom 3
+    className="mb-3"
+)
+
+# Form dei dati Anagrafici
+# ID = "radio-user", "name-input", "surname-input", "codiceFiscale-input", "dataNascita-input", "radio-sesso", "next-button"
+form1 = html.Div(
+    [
+        # Scelta paziente o diabetologo
+        dbc.Row(
+            dbc.Col(
+                dbc.RadioItems(
+                    id="radio-user",
+                    options=[
+                        {"label": "Paziente", "value": "P"},
+                        {"label": "Diabetologo", "value": "D"},
+                    ],
+                    value="P",
+                    inline=True,
+                    labelClassName="me-3"
+                ),
+                width="auto"
+            ),
+            justify="center"
+        ),
+        # Riga di Nome + Cognome
+        dbc.Row([
+            dbc.Col(
+                dbc.FormFloating(
+                    [
+                        dbc.Input(type="text", id="name-input", placeholder="Name",  className='input'),
+                        dbc.Label("Nome"),
+                    ]
+                ),
+                width=6 # Metà della riga
+            ),
+            dbc.Col(
+                dbc.FormFloating(
+                    [
+                        dbc.Input(type="text", id="surname-input", placeholder="Surname",  className='input'),
+                        dbc.Label("Cognome")
+                    ]
+                ),
+                width=6 # Metà della riga
             )
         ],
-        # Padding da sopra di 2
-        className="mt-2"
-    )
-
-    # srj - elemento html.Div per poter testare le callback
-    output_box = html.Div(
-        id='output-box'
-    )
-
-
-    # Layout del form
-    form = dbc.Form(
-        [
-            # Titolo
-            login_title,
-            # Box per lo username
-            username_box,
-            # Box per la password
-            password_box,
-            # Pulsante di Login
-            signIn_button,
-            # Link per la registrazione
-            signUp_link,
-
-            # srj - per testare callback
-            output_box
-        ],
-        # mx-auto: margin, x axis, imposta automaticamente; centra un elemento orizzontalmente
-        # p-5: padding di 5 su ogni lato
-        # bg-light: imposta uno sfondo chiaro
-        # border: aggiunge un bordo sottile intorno all'elemento
-        # rounded: arrotonda gli angoli del bordo
-        # w-25: larghezza dell'elemento al 25% di quella del genitore
-        className="mx-auto p-5 bg-light border rounded w-25")
-
-    return dbc.Container(
-        [
-            form
-        ],
-        fluid=True,
-        # vh-100: viewport height 100, altezza dell'elemento al 100% dell'altezza della finestra del browser
-        # d-flex: imposta l'elemento come un contenitore flexbox, utile per allineare
-        # align-items-center: allinea verticalmente -> al centro verticale della pagina 
-        className="vh-100 d-flex align-items-center"
-    )
-
-# REGISTRATION - Da rivedere
-def registration_layout():
-    # Titolo
-    registration_title = html.H1(
-        "Registration",
-        style={"textAlign": "center"},
-        # margin bottom 3
-        className="mb-3"
-    )
-
-    # Form dei dati Anagrafici
-    # ID = "radio-user", "name-input", "surname-input", "codiceFiscale-input", "dataNascita-input", "radio-sesso", "next-button"
-    form1 = html.Div(
-        [
-            # Scelta paziente o diabetologo
-            dbc.Row(
-                dbc.Col(
-                    dbc.RadioItems(
-                        id="radio-user",
-                        options=[
-                            {"label": "Paziente", "value": "P"},
-                            {"label": "Diabetologo", "value": "D"},
-                        ],
-                        value="P",
-                        inline=True,
-                        labelClassName="me-3"
-                    ),
-                    width="auto"
+        className="mt-4 mb-4"
+        ),
+        # Riga del Codice Fiscale
+        dbc.FormFloating(
+            [
+                dbc.Input(type="text", id="codiceFiscale-input", placeholder="Codice Fiscale",  className='input'),
+                dbc.Label("Codice Fiscale")
+            ],
+            className="mb-4"
+        ),
+        # Riga data di Nascita
+        dbc.FormFloating(
+            [
+                dbc.Input(type="date", id="dataNascita-input", placeholder="Data di Nascita", className='input'),
+                dbc.Label("Data di Nascita")
+            ],
+            className="mb-4"
+        ),
+        # Scelta del sesso
+        dbc.Row(
+            dbc.Col(
+                dbc.RadioItems(
+                    id="radio-sesso",
+                    options=[
+                        {"label": "Maschio", "value": "M"},
+                        {"label": "Femmina", "value": "F"},
+                    ],
+                    value="M",
+                    inline=True,
+                    labelClassName="me-3"
                 ),
-                justify="center"
+                width="auto"
             ),
-            # Riga di Nome + Cognome
-            dbc.Row([
-                dbc.Col(
-                    dbc.FormFloating(
-                        [
-                            dbc.Input(type="text", id="name-input", placeholder="Name"),
-                            dbc.Label("Nome"),
-                        ]
-                    ),
-                    width=6 # Metà della riga
-                ),
-                dbc.Col(
-                    dbc.FormFloating(
-                        [
-                            dbc.Input(type="text", id="surname-input", placeholder="Surname"),
-                            dbc.Label("Cognome")
-                        ]
-                    ),
-                    width=6 # Metà della riga
+            justify="center"
+        ),
+        # Link per il Login
+        html.Div(
+            [
+                html.Span("Already have an account? "),
+                html.A(
+                    "Login",
+                    href="/login",
+                    className="text-primary"
                 )
             ],
-            className="mt-3 mb-3"
-            ),
-            # Riga del Codice Fiscale
-            dbc.FormFloating(
-                [
-                    dbc.Input(type="text", id="codiceFiscale-input", placeholder="Codice Fiscale"),
-                    dbc.Label("Codice Fiscale")
-                ],
-                className="mb-3"
-            ),
-            # Riga data di Nascita
-            dbc.FormFloating(
-                [
-                    dbc.Input(type="date", id="dataNascita-input", placeholder="Data di Nascita"),
-                    dbc.Label("Data di Nascita")
-                ],
-                className="mb-3"
-            ),
-            # Scelta del sesso
-            dbc.Row(
+            className="mt-4"
+        ),
+    ],
+    id="form1",
+    style={"display": "block"}
+)
+
+# Form dei dati di contatto
+# ID = "tel-input", "email-input", "indirizzo-input", "city-input", "CAP-input", "prev-button"
+form2 = html.Div(
+    [
+        # Telefono
+        dbc.FormFloating(
+            [
+                dbc.Input(type="tel", id="tel-input", placeholder="Telefono",  className='input'),
+                dbc.Label("Telefono")
+            ],
+            className="mb-4"
+        ),
+        # Email
+        dbc.FormFloating(
+            [
+                dbc.Input(type="email", id="email-input", placeholder="Email",  className='input'),
+                dbc.Label("Email")
+            ],
+            className="mb-4"
+        ),
+        # Indirizzo
+        dbc.FormFloating(
+            [
+                dbc.Input(type="text", id="indirizzo-input", placeholder="Indirizzo",  className='input'),
+                dbc.Label("Indirizzo")
+            ],
+            className="mb-4"
+        ),
+        # Riga di Città + Cap
+        dbc.Row(
+            [
                 dbc.Col(
-                    dbc.RadioItems(
-                        id="radio-sesso",
-                        options=[
-                            {"label": "Maschio", "value": "M"},
-                            {"label": "Femmina", "value": "F"},
-                        ],
-                        value="M",
-                        inline=True,
-                        labelClassName="me-3"
-                    ),
-                    width="auto"
+                    dbc.FormFloating([
+                        dbc.Input(type="text", id="city-input", placeholder="Città",  className='input'),
+                        dbc.Label("Città")
+                    ]),
+                    width=7    
                 ),
-                justify="center"
-            ),
-            # Link per il Login
-            html.Div(
-                [
-                    html.Span("Already have an account? "),
-                    html.A(
-                        "Login",
-                        href="/login",
-                        className="text-primary"
-                    )
-                ],
-                className="mt-2"
-            ),
-        ],
-        id="form1",
-        style={"display": "block"}
-    )
+                dbc.Col(
+                    dbc.FormFloating([
+                        dbc.Input(type="number", id="CAP-input", placeholder="CAP",  className='input'),
+                        dbc.Label("CAP")
+                    ]),
+                    width=5
+                )
+            ],
+            className="mb-4"
+        ),
+        # Link per il Login
+        html.Div(
+            [
+                html.Span("Already have an account? "),
+                html.A(
+                    "Login",
+                    href="/login",
+                    className="text-primary"
+                )
+            ],
+            className="mt-2"
+        ),
+    ],
+    id="form2",
+    style={"display": "none"}
+)
 
-    # Form dei dati di contatto
-    # ID = "tel-input", "email-input", "indirizzo-input", "city-input", "CAP-input", "prev-button"
-    form2 = html.Div(
-        [
-            # Telefono
-            dbc.FormFloating(
-                [
-                    dbc.Input(type="tel", id="tel-input", placeholder="Telefono"),
-                    dbc.Label("Telefono")
-                ],
-                className="mb-3"
-            ),
-            # Email
-            dbc.FormFloating(
-                [
-                    dbc.Input(type="email", id="email-input", placeholder="Email"),
-                    dbc.Label("Email")
-                ],
-                className="mb-3"
-            ),
-            # Indirizzo
-            dbc.FormFloating(
-                [
-                    dbc.Input(type="text", id="indirizzo-input", placeholder="Indirizzo"),
-                    dbc.Label("Indirizzo")
-                ],
-                className="mb-3"
-            ),
-            # Riga di Città + Cap
-            dbc.Row(
-                [
-                    dbc.Col(
-                        dbc.FormFloating([
-                            dbc.Input(type="text", id="city-input", placeholder="Città"),
-                            dbc.Label("Città")
-                        ]),
-                        width=7    
-                    ),
-                    dbc.Col(
-                        dbc.FormFloating([
-                            dbc.Input(type="number", id="CAP-input", placeholder="CAP"),
-                            dbc.Label("CAP")
-                        ]),
-                        width=5
-                    )
-                ],
-                className="mb-3"
-            ),
-            # Link per il Login
-            html.Div(
-                [
-                    html.Span("Already have an account? "),
-                    html.A(
-                        "Login",
-                        href="/login",
-                        className="text-primary"
-                    )
-                ],
-                className="mt-2"
-            ),
-        ],
-        id="form2",
-        style={"display": "none"}
-    )
+# Form Utente + password
+# ID: "generated-username", "scelta-password", "conferma-password", "registration-input"
+form3 = html.Div(
+    [
+        # Username generato
+        dbc.Card(
+            [
+                html.H5("Username:", style={'color': 'gray'}),
+                dbc.CardBody(
+                    [
+                        html.P(id="generated-username")
+                    ]
+                )
+            ], className='mb-4'
+        ),
+        # Scelta password
+        dbc.FormFloating(
+            [
+                dbc.Input(type="password", id="scelta-password", placeholder="Password",  className='input mb-4'),
+                dbc.Label("Scegli una password")
+            ],
+        ),
+        # Conferma password
+        dbc.FormFloating(
+            [
+                dbc.Input(type="password", id="conferma-password", placeholder="Password", className='input mb-4'),
+                dbc.Label("Conferma password")
+            ]
+        ),
 
-    # Form Utente + password
-    # ID: "generated-username", "scelta-password", "conferma-password", "registration-input"
-    form3 = html.Div(
-        [
-            # Username generato
-            dbc.Card(
-                [
-                    dbc.CardHeader("Username:"),
-                    dbc.CardBody(
-                        [
-                            html.P(id="generated-username")
-                        ]
-                    )
-                ],
-                className="mt-3 mb-4"
-            ),
-            # Scelta password
-            dbc.FormFloating(
-                [
-                    dbc.Input(type="password", id="scelta-password", placeholder="Password"),
-                    dbc.Label("Scegli una password")
-                ],
-                className="mb-3"
-            ),
-            # Conferma password
-            dbc.FormFloating(
-                [
-                    dbc.Input(type="password", id="conferma-password", placeholder="Password"),
-                    dbc.Label("Conferma password")
-                ],
-                className="mb-4"
-            ),
+        # Pulsante di registrazione
+        html.Div(
+            dbc.Button("Registrati", id="registration-input", size="lg", n_clicks=0, className='button mb-4')
+        ),
 
-            # Pulsante di registrazione
-            html.Div(
-                [
-                    dbc.Button("Register Now", id="registration-input", size="lg", n_clicks=0)
-                ],
-                # Larghezza completa nel box
-                # d-grid di default usa la larghezza 100%
-                className="d-grid gap-2 mb-5"
-            ),
+        # Link per il Login
+        html.Div(
+            [
+                html.Span("Already have an account? "),
+                html.A(
+                    "Login",
+                    href="/login",
+                    className="text-primary"
+                )
+            ],
+        )
+    ],
+    id="form3",
+    style={"display": "none"}
+)
 
-            # Link per il Login
-            html.Div(
-                [
-                    html.Span("Already have an account? "),
-                    html.A(
-                        "Login",
-                        href="/login",
-                        className="text-primary"
-                    )
-                ],
-                className="mt-2"
-            )
-        ],
-        id="form3",
-        style={"display": "none"}
-    )
+# Pulsanti per la navigazione 
+nav_buttons = html.Div(
+    [
+        dbc.Button("🡨", id="prev-button", n_clicks=0, disabled=True, style={"visibility": "hidden"}),  # inizialmente questo pulsante sarà nascosto (nel form 1)
+        dbc.Button("🡪", id="next-button", n_clicks=0)
+    ],
+    className="mt-3 d-flex justify-content-between"
+)
 
-    # Pulsanti per la navigazione
-    nav_buttons = html.Div(
-        [
-            dbc.Button("🡨", id="prev-button", n_clicks=0, disabled=True, style={"visibility": "hidden"}),  # inizialmente questo pulsante sarà nascosto (nel form 1)
-            dbc.Button("🡪", id="next-button", n_clicks=0)
-        ],
-        className="mt-3 d-flex justify-content-between"
-    )
-
-    # Box per il Form
-    # ID = "form-box"
-    form_box = html.Div(
-        children=[
+# Box per il Form
+# ID = "form-box"
+form_box = html.Div(
+    children=[
         form1,
         form2,
         form3
-        ]
-    )
+    ]
+)
 
-    registration_feedback = html.Div(
-        html.Div(
-        [
-            dbc.Alert(id="registration-feedback", is_open=False, className="mt-3")
-        ],
-        className="mt-3 d-flex justify-content-between",
-        )
-    )
-       
+# Box per gli alert
+registration_feedback = html.Div(
+    dbc.Alert(id="registration-feedback", is_open=False, className="mt-3")
+)
 
-    # Layout del form, contiene tutti gli altri oggetti del layout sopra.
-    form = dbc.Form(
-        [
-            # Titolo
+# CARD DI REGISTRAZIONE
+registration = html.Div(
+    [
+        html.Div([
             registration_title,
             # Box per il form
             form_box,
@@ -554,27 +526,13 @@ def registration_layout():
             nav_buttons,
             # Box per l'output
             registration_feedback,
-        ],
-        # mx-auto: margin, x axis, imposta automaticamente; centra un elemento orizzontalmente
-        # p-5: padding di 5 su ogni lato
-        # bg-light: imposta uno sfondo chiaro
-        # border: aggiunge un bordo sottile intorno all'elemento
-        # rounded: arrotonda gli angoli del bordo
-        # w-25: larghezza dell'elemento al 25% di quella del genitore
-        className="mx-auto p-5 bg-light border rounded w-25"
-    )
-
-    return dbc.Container(
-        [
             dcc.Store(id="form-step", data= 1),  # aggiunto per far comparire il pulsante "indietro" solo nei form 2 e 3
-            form
-        ],
-        fluid = True,
-        # vh-100: viewport height 100, altezza dell'elemento al 100% dell'altezza della finestra del browser
-        # d-flex: imposta l'elemento come un contenitore flexbox, utile per allineare
-        # align-items-center: allinea verticalmente -> al centro verticale della pagina 
-        className="mx-auto vh-100 d-flex align-items-center"
-    )
+            ],
+            className='form-card'
+        ),
+    ],
+    style={'flex' : 1, 'display': 'flex', 'justify-content': 'center', 'align-items': 'center'}
+)
 
 # ******************************************************************************************************************
 # LAYOUT DEL PAZIENTE:
@@ -725,18 +683,9 @@ patient_dashboard = html.Div(
                     type="number",
                     value=0,
                     id="input-glicemia",
-                    debounce=False,
+                    debounce=True,
                     n_submit=0,
-                    style={
-                        "width": "100%", # Occupa l'intera larghezza del box padre
-                        "padding": "15px 20px",
-                        "border-radius": "15px",
-                        "border": "none",
-                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                        "background-color": "#f0f0f0",
-                        "fontSize": "20px"
-                    },
-                    className="mb-3"
+                    className="input mb-3"
                 ),
 
                 # Input Farmaco:
@@ -748,15 +697,7 @@ patient_dashboard = html.Div(
                             dcc.Input(
                                 placeholder="Inserisci farmaco...",
                                 type="text",
-                                style={
-                                    "width": "100%",
-                                    "padding": "15px 20px",
-                                    "border-radius": "15px",
-                                    "border": "none",
-                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                    "background-color": "#f0f0f0",
-                                    "fontSize": "20px"
-                                }
+                                className= 'input'
                             ),
                             width=7
                         ),
@@ -766,15 +707,7 @@ patient_dashboard = html.Div(
                             dcc.Input(
                                 placeholder="Dosaggio...",
                                 type="text",
-                                style={
-                                    "width": "100%",
-                                    "padding": "15px 20px",
-                                    "border-radius": "15px",
-                                    "border": "none",
-                                    "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                    "background-color": "#f0f0f0",
-                                    "fontSize": "20px"
-                                }
+                                className= 'input'  
                             ),
                             width=5
                         )
@@ -788,16 +721,7 @@ patient_dashboard = html.Div(
                 dcc.Input(
                     placeholder="Sintomi...",
                     type="text",
-                    style={
-                        "width": "100%", # Occupa l'intera larghezza del box padre
-                        "padding": "15px 20px",
-                        "border-radius": "15px",
-                        "border": "none",
-                        "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                        "background-color": "#f0f0f0",
-                        "fontSize": "20px"
-                    },
-                    className="mb-3"
+                    className="input mb-3"
                 ),
 
                 html.H6("Misurata:", style={"color": "grey"}),
@@ -1123,6 +1047,7 @@ doctor_patient = html.Div(
 )
 
 #********************************************************************************************************************
+# LISTA PAZIENTI
 # Metodo che crea la lista dei pazienti come lista di Buttons
 def layout_lista_pazienti_associati():
 
@@ -1142,7 +1067,7 @@ def layout_lista_pazienti_associati():
             render_lista_pazienti_glicemia(pazienti),
         ]
     )
-#*******************************************************************************************************************
+
 # Restituisce la lista di pulsanti dei pazienti:
 def render_lista_pazienti_glicemia(pazienti):
 
@@ -1214,12 +1139,8 @@ def render_lista_pazienti_glicemia(pazienti):
                     # Colore del pulsante    
                     color="light",
                     # Stile del pulsante
-                    style={
-                        "marginBottom": "15px",
-                        #"border": "1px solid #ccc",
-                        "borderRadius": "15px",
-                        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                    },
+                    style={"marginBottom": "20px",},
+                    className='button'
                 )
                 # Per ogni paziente
                 for d in pazienti
@@ -1245,6 +1166,8 @@ def crea_div_paziente(cfanno, info, segnalazioni):
             html.H6("Non ci sono informazioni riguardanti il paziente selezionato"),
             html.Br(),
             dbc.Button("Inserisci informazioni", id="modal-insert-btn", n_clicks=0),
+            
+            # POP-UP per le modifiche ai dati clinici del paziente
             dbc.Modal(
                 [
                     dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
@@ -1272,8 +1195,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                 id="popup-inserisci-info",
                 is_open=False
             )
-        ]
-        )
+        ])
 
     # Preparo set per info cliniche
     patologie_pregresse = set()
@@ -2138,13 +2060,13 @@ chat_content = html.Div(
                         "width": "100%",
                         # Occupa solo il 10% dello spazio disponibile in altezza
                         "height": "10%",
+                        'padding': '20px',
                         # sfondo bianco
                         "background-color": "#ffffff",
                         "display": "flex",
                         "alignItems": "center",
                         "justifyContent": "center",
-                        "borderTop": "2px solid #dee2e6",
-                        "gap": "30px"
+                        "borderTop": "2px solid #dee2e6"
                     },
                     children=[
                         # Input text per il messaggio
@@ -2152,36 +2074,9 @@ chat_content = html.Div(
                             placeholder="Invia un messaggio...",
                             type="text",
                             id="input-text",
-                            style={
-                                "width": "70%",
-                                "padding": "15px 20px",
-                                "border-radius": "15px",
-                                "border": "none",
-                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                "background-color": "#f0f0f0",
-                                "fontSize": "20px"
-                            }
-                        ),
-
-                        # Pulsante invio
-                        # NB: il "+" non è perfettamente centrato
-                        dbc.Button(
-                            "+", color="primary",
-                            id="send-btn",
-                            style={
-                                "display": "flex",
-                                "justifyContent": "center",
-                                "align-items": "center",
-                                "width": "55px",
-                                "height": "55px",
-                                "border-radius": "50%",
-                                "margin": "0",
-                                "padding": "0",
-                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
-                                "fontSize": "50px",
-                                "lineHeight": "normal"
-                            },
-                            n_clicks = 0
+                            className='input',
+                            debounce=True,
+                            n_submit=0
                         )
                     ]
                 )

@@ -180,10 +180,10 @@ def registra_callbacks(app):
                 return view.guest_navlinks, view.home, "/"
             # Accesso al login
             elif pathname == "/login":
-                return view.guest_navlinks, view.login_layout(), "/login"
+                return view.guest_navlinks, view.login, "/login"
             # Accesso alla registrazione
             elif pathname == "/registration":
-                return view.guest_navlinks, view.registration_layout(), "/registration"
+                return view.guest_navlinks, view.registration, "/registration"
             # Se il guest cerca di accedere ad una pagina protetta, reindirizza alla home
             return view.guest_navlinks, html.H2("Accesso non autorizzato"), "/"
         
@@ -537,7 +537,7 @@ def registra_callbacks(app):
             return dcc.Graph(figure=grafico, config={'responsive': True})
         else:
             return dash.no_update
-# style={'width': '100%', 'height': '100%'}
+
 # ******************************************************************************************************************
     # Callback che restituisce la card con le informazioni di base di un paziente nella dashboard del dottore:
     @app.callback(

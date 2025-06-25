@@ -10,6 +10,37 @@
     height: 100%;
 }
 
+/* ClassName per i form di registrazione e login*/
+.form-card {
+    padding: 30px;
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0 4px 8px rgba(0, 0, 255, 0.2);
+    border: 2px solid #dee2e6;
+    border-radius: 15px;
+    width: 500px;
+}
+
+/* ClassName per gli input*/
+.input {
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+    background-color: #f8f9fa;
+    font-size: 20px;
+}
+
+/* ClassName per i pulsanti*/
+.button {
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+    font-size: 25px;
+}
+
 /* Cerchio della glicemia */
 .circle-slot {
     height: 45%;
