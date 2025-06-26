@@ -515,6 +515,33 @@ def registra_callbacks(app):
         else:
             return dash.no_update
 
+# ******************************************************************************************************************
+    #callback che mostra i grafici al paziente 
+
+    @app.callback(
+        Output("first-graph", "children"),
+        Output("second-graph", "children"),
+        Output("third-graph", "children"),
+        Output("fourth-graph", "children"),
+        Input("url", "pathname"),
+        Input("filtro-temporale1","value"),
+        Input("filtro-temporale2","value"),
+        Input("filtro-temporale3","value"),
+        prevent_initial_call=True
+    )
+    def visualizza_andamento_glicemia(pathname,filtro1,filtro2,filtro3):
+
+        if pathname == "/grafici":
+            dati_first = model.get_dati_glicemia_filtrati(current_user.get_id_paziente(),filtro1,"andamento")
+            dati_second = model.get_dati_glicemia_filtrati(current_user.get_id_paziente(),filtro2,"medie")
+            dati_third = current_user.get_eventi_basso_glucosio(filtro3)
+            grafico1 = model.visualizza_andamento_glicemia(dati_first)
+            grafico2=model.visualizza_media_glicemica_fasce_orarie(dati_second)
+            grafico3=model.crea_grafico_eventi_basso_glucosio(dati_third)
+            return dcc.Graph(figure=grafico1),dcc.Graph(figure=grafico2),dcc.Graph(figure=grafico3),None
+        else:
+            return dash.no_update
+
 #*************************************************************************************************************************************
     #
     @app.callback(

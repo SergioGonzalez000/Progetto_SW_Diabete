@@ -11,7 +11,7 @@ import dash
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
+import pandas as pd
 
 connection = psycopg2.connect(
     host='aws-0-eu-central-2.pooler.supabase.com',
@@ -226,12 +226,25 @@ class Paziente(Persona):
         
         return id
     
-    def get_eventi_basso_glucosio(self):
+    def get_eventi_basso_glucosio(self,filtro_temporale):
         cursore = connection.cursor()
         
-        cursore.execute("""SELECT valore, data_inserimento
+        query_base="""SELECT valore, data_inserimento
                     FROM Glicemia 
-                    WHERE paziente = %s AND valore < 50""", (self.get_id_paziente(),))
+                    WHERE paziente = %s AND valore < 60"""
+        parametri = [self.get_id_paziente()]
+        if filtro_temporale == "giornaliero":
+            query_base += " AND data_inserimento >= NOW()::date"
+        elif filtro_temporale == "settimanale":
+            query_base += " AND data_inserimento >= NOW() - INTERVAL '7 days'"
+        elif filtro_temporale == "mensile":
+            query_base += " AND data_inserimento >= NOW() - INTERVAL '1 month'"
+        elif filtro_temporale == "annuale":
+            query_base += " AND data_inserimento >= NOW() - INTERVAL '1 year'"
+        # se "tutto", nessun filtro aggiunto
+
+        query_base += " ORDER BY data_inserimento"
+        cursore.execute(query_base,parametri)
         dati=cursore.fetchall()
 
         cursore.close()
@@ -1137,6 +1150,47 @@ def visualizza_media_glicemica_fasce_orarie(dati):
     )
 
     return fig
+
+
+
+
+def crea_grafico_eventi_basso_glucosio(dati):
+    # Converto i dati in DataFrame
+    df = pd.DataFrame(dati, columns=["valore", "data_inserimento"])
+    df["data_inserimento"] = pd.to_datetime(df["data_inserimento"])
+    df["giorno"] = df["data_inserimento"].dt.date
+
+    # Raggruppa per giorno
+    eventi = df.groupby("giorno").size().reset_index(name="frequenza")
+    eventi["settimana"] = pd.to_datetime(eventi["giorno"]).dt.isocalendar().week
+    eventi["anno"] = pd.to_datetime(eventi["giorno"]).dt.isocalendar().year
+    eventi["giorno_settimana"] = pd.to_datetime(eventi["giorno"]).dt.day_name()
+
+    # Ordinamento corretto dei giorni
+    giorni_ordine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    eventi["giorno_settimana"] = pd.Categorical(eventi["giorno_settimana"], categories=giorni_ordine, ordered=True)
+
+    # --- Completa tutti i giorni e settimane mancanti ---
+    settimane = eventi["settimana"].unique()
+    anni = eventi["anno"].unique()
+    idx = pd.MultiIndex.from_product([anni, settimane, giorni_ordine], names=["anno", "settimana", "giorno_settimana"])
+    eventi_full = eventi.set_index(["anno", "settimana", "giorno_settimana"]).reindex(idx, fill_value=0).reset_index()
+
+    # Plot heatmap
+    fig = px.density_heatmap(
+        eventi_full,
+        x="settimana",
+        y="giorno_settimana",
+        z="frequenza",
+        color_continuous_scale="Reds",
+        labels={"settimana": "Settimana", "giorno_settimana": "Giorno", "frequenza": "Eventi"},
+    )
+
+    fig.update_layout(height=400, yaxis_title="Giorno della settimana", xaxis_title="Settimana dell'anno")
+    return fig
+
+
+
 
 def get_info_base_paziente(id_diab,id_paz):
     cursore = connection.cursor()

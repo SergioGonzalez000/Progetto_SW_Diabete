@@ -795,6 +795,8 @@ patient_dashboard = html.Div(
                     className="mb-3"
                 ),
 
+                dbc.Button("Inserisci glicemia",id="inserisci-glicemia"),
+
                 html.H6("Misurata:", style={"color": "grey"}),
                 html.P("Qua da inserire eventuale radioitem per la selezione del pre e del post pranzo")
             ]
@@ -808,19 +810,30 @@ patient_dashboard = html.Div(
 # |___|___|
 # | 2 | 4 |
 # |___|___|
+def filtro_temporale(grafico_id):
+    return dcc.RadioItems(
+        id=f"filtro-temporale{grafico_id}",
+        options=[
+            {'label': 'Tutto', 'value': 'tutto'},
+            {'label': 'Annuale', 'value': 'annuale'},
+            {'label': 'Mensile', 'value': 'mensile'},
+            {'label': 'Settimanale', 'value': 'settimanale'},
+            {'label': 'Giornaliero', 'value': 'giornaliero'}
+        ],
+        value='tutto',
+        labelStyle={'display': 'inline-block', 'margin-right': '15px'},
+        inputStyle={"margin-right": "5px"},
+        style={"textAlign": "center"}
+    )
+
 
 patient_graphs = html.Div(
     style={
-        # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
         "flex": 1,
-        # Spazio dai margini esterni
         "padding": "40px",
-        # divide lo spazio
         "display": "flex",
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
         "flex-direction": "row",
-        # Spazio tra le colonne
-        "gap": "40px" 
+        "gap": "40px"
     },
     children=[
         # Prima colonna
@@ -829,22 +842,31 @@ patient_graphs = html.Div(
                 'flex': 1,
                 'display': 'flex',
                 'flexDirection': 'column',
-                "gap": "40px" 
+                "gap": "40px"
             },
             children=[
                 # Riquadro 1
                 html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
-                    id='first-graph'
+                    children=[
+                        html.Div(id='first-graph'),
+                        html.Br(),
+                        filtro_temporale(1),
+                        
+                    ]
                 ),
 
                 # Riquadro 2
                 html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
-                    id='second-graph'
-                ),                
+                    children=[
+                        html.Div(id='second-graph'),
+                        html.Br(),
+                        filtro_temporale(2),
+                    ]
+                ),
             ]
         ),
 
@@ -854,14 +876,18 @@ patient_graphs = html.Div(
                 'flex': 1,
                 'display': 'flex',
                 'flexDirection': 'column',
-                "gap": "40px" 
+                "gap": "40px"
             },
             children=[
                 # Riquadro 3
                 html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
-                    id='third-graph'
+                    children=[
+                        html.Div(id='third-graph'),
+                        html.Br(),
+                        filtro_temporale(3),
+                    ]
                 ),
 
                 # Riquadro 4
@@ -869,7 +895,7 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     id='fourth-graph'
-                ),                
+                ),
             ]
         )
     ]
@@ -1089,20 +1115,7 @@ doctor_patient = html.Div(
                         # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
                         html.Div( id="patient-graph", style={"height": "100%","width": "100%"}),
                         html.Br(),
-                        dcc.RadioItems(
-                            id='filtro-temporale',
-                            options=[
-                                {'label': 'Tutto', 'value': 'tutto'},
-                                {'label': 'Annuale', 'value': 'annuale'},
-                                {'label': 'Mensile', 'value': 'mensile'},
-                                {'label': 'Settimanale', 'value': 'settimanale'},
-                                {'label': 'Giornaliero', 'value': 'giornaliero'}
-                            ],
-                            value='tutto',  # default
-                            labelStyle={'display': 'inline-block', 'margin-right': '15px'},
-                            inputStyle={"margin-right": "5px"},
-                            style={"textAlign":"center"}
-                        ),
+                        filtro_temporale(""),
                     ],
                     style={"flex": 1},
                     className="card",
