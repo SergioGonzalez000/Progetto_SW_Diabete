@@ -1,4 +1,5 @@
 import json
+import dash.nbextension
 import dash_bootstrap_components as dbc
 from dash import MATCH, html, dcc, Input, Output, State, ALL, ctx
 from flask_login import login_user, logout_user, current_user
@@ -180,10 +181,10 @@ def registra_callbacks(app):
                 return view.guest_navlinks, view.home, "/"
             # Accesso al login
             elif pathname == "/login":
-                return view.guest_navlinks, view.login_layout(), "/login"
+                return view.guest_navlinks, view.login, "/login"
             # Accesso alla registrazione
             elif pathname == "/registration":
-                return view.guest_navlinks, view.registration_layout(), "/registration"
+                return view.guest_navlinks, view.registration, "/registration"
             # Se il guest cerca di accedere ad una pagina protetta, reindirizza alla home
             return view.guest_navlinks, html.H2("Accesso non autorizzato"), "/"
         
@@ -256,17 +257,17 @@ def registra_callbacks(app):
 
 # ******************************************************************************************************************
     
-    #permette di vedere i grafici paziente per paziente al diabetologo
-    @app.callback(
-        Output("dropdown-output","children"),
-        Input("dropdown-pazienti","value"),
-    )
-    def visualizza_grafico_paziente(paziente):
-        if not paziente:
-            return "Seleziona un paziente per visualizzare il grafico."
+    # #permette di vedere i grafici paziente per paziente al diabetologo
+    # @app.callback(
+    #     Output("dropdown-output","children"),
+    #     Input("dropdown-pazienti","value"),
+    # )
+    # def visualizza_grafico_paziente(paziente):
+    #     if not paziente:
+    #         return "Seleziona un paziente per visualizzare il grafico."
     
-        fig = model.Diabetologo.visualizza_glicemia_paziente(paziente)
-        return dcc.Graph(figure=fig)
+    #     fig = model.Diabetologo.visualizza_glicemia_paziente(paziente)
+    #     return dcc.Graph(figure=fig)
     
 
     # ************************************* ZONA DI PURO TEST. NON SO QUELLO CHE STO FACENDO ***********************
@@ -471,34 +472,7 @@ def registra_callbacks(app):
 
         return view.crea_card_diabetologo(dati_diabetologo)
 
-    
-# ******************************************************************************************************************
 
-    #permette di vedere i grafici paziente per paziente al diabetologo
-    @app.callback(
-        Output("dropdown-output-tutti","children"),
-        Output("dropdown-tutti-pazienti","options"),
-        Input("dropdown-tutti-pazienti","value"),
-        Input("filtro-pazienti","value")
-    )
-    def visualizza_lista_pazienti(paziente,scelta):
-        
-        id = current_user.get_id_diabetologo()
-
-        if scelta=='PA':
-            lista=model.Diabetologo.visualizza_pazienti_associati(id)
-        else:
-            lista=model.Diabetologo.visualizza_tutti_pazienti()
-
-        opzioni = [{"label": nome, "value": nome} for nome in lista]
-
-        if not paziente:
-            return "Seleziona un paziente per visualizzare il grafico.",opzioni
-        #per test ora ritorna patient-dashboard ma dovrà ritornare quella del dottore
-        return view.patient_dashboard,opzioni
-       
-        
-       
 # ******************************************************************************************************************
     @app.callback(
         Output("doctor-patient-queue", "children"),
@@ -511,31 +485,32 @@ def registra_callbacks(app):
             return dash.no_update
         
 # ******************************************************************************************************************
-    
     #permette di vedere i grafici paziente per paziente al diabetologo
     @app.callback(
-        Output("patient-number", "children"),
+        Output("doctor-info", "children"),
         Output("patient-pie", "children"),
         Input("url", "pathname"),
         prevent_initial_call=True
     )
     def mostra_dati_dashboard(pathname):
         cur=model.connection.cursor()
-        if pathname=="/doctor-dashboard":    
-            labels = ['Alterata','Normale','Ottima']
+        if pathname=="/doctor-dashboard":
+            id=current_user.get_id_diabetologo()
+            # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
+            labels = ['Fuori dal limite','Alta','Normale']
             cur.execute("""
                 SELECT AVG(g.valore)
                 FROM Paziente p
                 JOIN Glicemia g on p.id_paziente=g.paziente
                 WHERE p.diabetologo_associato=%s
                 GROUP BY id_paziente
-            """, (current_user.get_id_diabetologo(),))
+            """, (id,))
             media_glicemie = cur.fetchall()
 
             a = n = o = 0
             for media in media_glicemie:
                 valore = media[0]
-                if valore < 70 or valore > 180:
+                if valore < 80 or valore > 180:
                     a += 1
                 elif 130 < valore < 180:
                     n += 1
@@ -543,63 +518,134 @@ def registra_callbacks(app):
                     o += 1
 
             values = [a,n,o]
-            num_paz=current_user.get_numero_pazienti_associati()
+            info=model.get_info_base_diabetologo(id)
             if(a==0 and n==0 and o==0):
-                return num_paz,"Nessun dato glicemico inserito"
+                return view.crea_div_info_base(info,False),"Nessun dato glicemico inserito"
             colors = ["#FF4C4C", '#FFD93B', '#08ff46'] 
             torta = go.Figure(data=[go.Pie(labels=labels, values=values,marker=dict(colors=colors))])
-            return num_paz,dcc.Graph(figure=torta)
+            return view.crea_div_info_base(info,False),dcc.Graph(figure=torta)
         else:
             return dash.no_update
+        
 # ******************************************************************************************************************
-
+    #callback che mostra i grafici del paziente al diabetologo con il dropdown
 
     @app.callback(
         Output("patient-graph", "children"),
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        Input("filtro-temporale", "value"),
+        Input("dropdown-scelta-grafico","value"),
+        State("selected-patient-id", "data"),
         prevent_initial_call=True
     )
-    def visualizza_andamento_glicemia(pathname, n_clicks):
-        triggered = ctx.triggered
+    def visualizza_andamento_glicemia(pathname, n_clicks, filtro, scelta, stored_id_paz):
+        triggered_id = ctx.triggered_id
 
-        if not triggered or not any(n_clicks):
+        # Se è stato cliccato un nuovo paziente
+        if isinstance(triggered_id, dict) and triggered_id.get("type") == "btn-paziente":
+            id_paz = triggered_id["index"]
+        else:
+            # Nessun nuovo paziente cliccato → usa quello memorizzato
+            id_paz = stored_id_paz
+
+        if not id_paz or not any(n_clicks):
             return "Nessun paziente selezionato"
+        if id_paz and not scelta:
+            return "Seleziona un grafico"
 
-        # Ottieni ID del paziente cliccato
-        prop_id = triggered[0]['prop_id']
-        id_dict_str = prop_id.split('.')[0]
-        try:
-            id_dict = json.loads(id_dict_str)
-        except json.JSONDecodeError:
-            raise dash.exceptions.PreventUpdate
+        dati = model.get_dati_glicemia_filtrati(id_paz,filtro,scelta)
 
-        id_paz = id_dict['index']
-
-        if pathname == "/doctor-patient":
-            grafico = model.Diabetologo.visualizza_glicemia_paziente(id_paz)
+        if pathname == "/doctor-patient" and scelta:
+            grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati)
             return dcc.Graph(figure=grafico)
         else:
             return dash.no_update
 
 # ******************************************************************************************************************
+    #callback che mostra i grafici al paziente 
+
     @app.callback(
-        Output("doctor-patient-info", "children"),
+        Output("first-graph", "children"),
+        Output("second-graph", "children"),
+        Output("third-graph", "children"),
+        Output("fourth-graph", "children"),
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        Input("filtro-temporale1","value"),
+        Input("filtro-temporale2","value"),
+        Input("filtro-temporale3","value"),
+        prevent_initial_call=True
+    )
+    def visualizza_andamento_glicemia(pathname,filtro1,filtro2,filtro3):
+
+        if pathname == "/grafici":
+            dati_first = model.get_dati_glicemia_filtrati(current_user.get_id_paziente(),filtro1,"andamento")
+            dati_second = model.get_dati_glicemia_filtrati(current_user.get_id_paziente(),filtro2,"medie")
+            dati_third = current_user.get_eventi_basso_glucosio(filtro3)
+            grafico1 = model.visualizza_andamento_glicemia(dati_first)
+            grafico2=model.visualizza_media_glicemica_fasce_orarie(dati_second)
+            grafico3=model.crea_grafico_eventi_basso_glucosio(dati_third)
+            return dcc.Graph(figure=grafico1),dcc.Graph(figure=grafico2),dcc.Graph(figure=grafico3),None
+        else:
+            return dash.no_update
+
+#*************************************************************************************************************************************
+    #
+    @app.callback(
+        Output("andamento-giornaliero", "children"),
+        Input("url", "pathname"),
+        Input("trigger-aggiorna-grafico", "data"),
+    )
+    def visualizza_andamento_giornaliero(pathname, _):
+        if pathname == "/patient-dashboard":
+            id_paz = current_user.get_id_paziente()
+            dati = model.get_dati_glicemia_filtrati(id_paz, "giornaliero", "andamento")
+            grafico = model.visualizza_andamento_glicemia(dati)
+            return dcc.Graph(figure=grafico)
+        return dash.no_update
+
+
+# ******************************************************************************************************************
+    #callback che fa vedere al diabetologo le informazioni di base del paziente 
+    @app.callback(
+        # Div delle Informazioni del paziente
+        Output("doctor-patient-info", "children"),
+        # Prende l'url della pagina
+        Input("url", "pathname"),
+        # Prende il pulsante del paziente
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
     )
     def visualizza_infopaziente_base(path, n_clicks):
         trigger_id = ctx.triggered_id
 
+        # All'apertura della pagina dashboard viene visualizzato di default questo messaggio:
         if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
             return "Nessun paziente selezionato"            
 
         id_paz = trigger_id.get('index')
-
         if path == "/doctor-dashboard":
-            info = current_user.get_info_base_paziente_associato(id_paz)
-            div = view.crea_div_info_base_paziente(info)
+            id_diab=current_user.get_id_diabetologo()
+            info = model.get_info_base_paziente(id_diab,id_paz)
+            div = view.crea_div_info_base(info,True)
+            return div
+        else:
+            return dash.no_update
+# ******************************************************************************************************************
+    #callback che fa vedere al paziente le sue informazioni di base 
+    @app.callback(
+        Output("info-paz", "children"),
+        Input("url", "pathname"),
+        prevent_initial_call=True
+    )
+    def visualizza_info_base_paziente(path):
+        
+        if path == "/patient-dashboard":
+            id_paz = current_user.get_id_paziente()
+            diab= current_user.get_diabetologo()[0]
+            id_diab=diab["id"]
+            info = model.get_info_base_paziente(id_diab,id_paz)
+            div = view.crea_div_info_base(info,True)
             return div
         else:
             return dash.no_update
@@ -609,7 +655,7 @@ def registra_callbacks(app):
     @app.callback(
         Output("patient-info", "children"),
         Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),  # CORRETTO
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
     )
     def visualizza_infopaziente_dettagliate(path, n_clicks):
@@ -618,13 +664,14 @@ def registra_callbacks(app):
         if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
             return "Nessun paziente selezionato"            
 
+        # id del paziente
         id_paz = trigger_id.get('index')
 
+        # Se siamo nella pagine 'Pazienti' del diabetologo
         if path == "/doctor-patient":
             dati = current_user.visualizza_dati_paziente(id_paz)
             segnalazioni=current_user.get_segnalazioni_paziente(id_paz)
-            div = view.crea_div_paziente(dati[0], dati[1],segnalazioni)
-            return div
+            return view.crea_div_paziente(dati[0], dati[1],segnalazioni)
         else:
             return dash.no_update
 
@@ -736,6 +783,7 @@ def registra_callbacks(app):
             return not is_open
         return is_open
 # ******************************************************************************************************************
+    #mostra al diabetologo la div col dropdown che contiene tutte le terapie
     @app.callback(
          Output("patient-therapy","children"),
          Input("url","pathname"),
@@ -748,27 +796,66 @@ def registra_callbacks(app):
             return "Nessun paziente selezionato"            
         id_paz = trigger_id.get('index')
         if path=="/doctor-patient":
-            terapie=current_user.get_terapie_paziente(id_paz)
+            id_diab=current_user.get_id_diabetologo()
+            terapie=model.get_terapie_paziente(id_diab,id_paz)
             return view.crea_div_terapia_dropdown(terapie)
         else:
-            return dash.no_update()
+            return dash.no_update
         
+# ******************************************************************************************************************
+    #mostra al paziente la div col dropdown che contiene tutte le terapie
+    @app.callback(
+         Output("terapie-paz","children"),
+         Input("url","pathname"),
+    )
+    def visualizza_dropdown_terapie_paz(path):
+                    
+        if path=="/patient-dashboard":
+            id_paz=current_user.get_id_paziente()
+            diab= current_user.get_diabetologo()[0]
+            id_diab=diab["id"]
+            terapie=model.get_terapie_paziente(id_diab,id_paz)
+            return view.crea_div_terapia_dropdown(terapie)
+        else:
+            return dash.no_update
+#*****************************************************************************************************************************       
+    #mostra al diabetologo le terapie del paziente selezionato e al paziente le sue, in base al path
     @app.callback(
         Output("div-terapia-selezionata", "children"),
         Input("dropdown-terapia-selezionata", "value"),
+        Input("url","pathname"),
         State("selected-patient-id", "data"),
         prevent_initial_call=True
     )
-    def mostra_terapia_selezionata(id_terapia, id_paz):
-        if id_terapia is None:
-            return html.Div("Seleziona una terapia.")
+    def mostra_terapia_selezionata(id_terapia,path, id_paz):
+        if path == "/doctor-patient":
+            if id_terapia is None:
+                return html.Div("Seleziona una terapia.")
+            id_diab=current_user.get_id_diabetologo()
+            lista_terapie = model.get_terapie_paziente(id_diab,id_paz)
+            terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
+            if terapia is None:
+                return html.Div("Terapia non trovata.")
 
-        lista_terapie = current_user.get_terapie_paziente(id_paz)
-        terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
-        if terapia is None:
-            return html.Div("Terapia non trovata.")
+            return view.crea_div_terapia_selezionata(terapia,True)
+        
+        elif path == "/patient-dashboard":
+            if id_terapia is None:
+                return html.Div("Seleziona una terapia.")
+            id_paz=current_user.get_id_paziente()
+            diab= current_user.get_diabetologo()[0]
+            id_diab=diab["id"]
+            lista_terapie = model.get_terapie_paziente(id_diab,id_paz)
+            terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
+            if terapia is None:
+                return html.Div("Terapia non trovata.")
 
-        return view.crea_div_terapia_selezionata(terapia)
+            return view.crea_div_terapia_selezionata(terapia,False)
+        else:
+            return dash.no_update
+        
+#*****************************************************************************************************************************       
+        
 
 # ******************************************************************************************************************
     #callback per aprire il popup di modifica terapia
@@ -782,7 +869,8 @@ def registra_callbacks(app):
             return not is_open
         return is_open
 # ******************************************************************************************************************
-#callback per modificare dati terapia
+#callback per modificare dati terapia o per eliminarne una dopo la conferma
+
     @app.callback(
         Output("modifica-terapia-output", "children"),
         Output("modifica-terapia-output", "color"),
@@ -796,33 +884,47 @@ def registra_callbacks(app):
         Input("input-data-inizio", "value"),
         Input("input-data-fine", "value"),
         Input("input-indicazioni", "value"),
+        Input("conferma-elimina-terapia", "n_clicks"),
         State("selected-patient-id", "data"),
+        State("terapia-selezionata", "data"),
         prevent_initial_call=True
     )
-    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni, id_paz):
+    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, conferma, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
-        farmaco = farmaco or None
-        dosaggio = dosaggio or None
-        assunzioni = assunzioni or None
-        indicazioni = indicazioni or None
-        data_i = data_i or None
-        data_f = data_f or None
-        if farmaco==None and dosaggio==None and assunzioni==None and indicazioni==None and data_i==None and data_f==None and modifybtn>0:
-            return "Informazioni mancanti", "danger", True
-        if data_i and data_f and data_f<data_i:
-            return "Data fine non valida","danger", True
-        
-        if trigger_id != "btn-salva-modifiche-terapia":
-            raise dash.exceptions.PreventUpdate
+        if trigger_id == "conferma-elimina-terapia" and conferma > 0:
+            # Azione di eliminazione terapia
+            model.cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
+            model.connection.commit()
+            model.cur.close()
+            return "Terapia eliminata correttamente", "success", True
 
-        if path == "/doctor-patient" and modifybtn > 0:
-            if not any(n_clicks):
-                return "Seleziona un paziente!", "danger",True
-            current_user.modifica_terapia_paziente(id_paz,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
-            return "Modifica avvenuta con successo", "success", True
-        else:
-            return dash.no_update
+        if trigger_id == "btn-salva-modifiche-terapia":
+            # Gestione modifica terapia
+            farmaco = farmaco or None
+            dosaggio = dosaggio or None
+            assunzioni = assunzioni or None
+            indicazioni = indicazioni or None
+            data_i = data_i or None
+            data_f = data_f or None
+            #controlla se sono tutte nulle, in tal caso ritorna informazioni mancanti
+            if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni, data_i, data_f]):
+                return "Informazioni mancanti", "danger", True
+
+            if data_i and data_f and data_f < data_i:
+                return "Data fine non valida", "danger", True
+
+            if path == "/doctor-patient" and modifybtn > 0:
+                if not any(n_clicks):
+                    return "Seleziona un paziente!", "danger", True
+
+                current_user.modifica_terapia_paziente(
+                    id_paz, id_terapia, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni
+                )
+                return "Modifica avvenuta con successo", "success", True
+
+        # Se non è né il bottone salva né quello conferma, non aggiornare nulla
+        raise dash.exceptions.PreventUpdate
 
 #******************************************************************************************************************
     #callback per aprire il pop up aggiungi terapia
@@ -872,7 +974,7 @@ def registra_callbacks(app):
             if not any(n_clicks):
                 return "Seleziona un paziente!", "danger",True
             current_user.inserisci_terapia(id_paz,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
-            return "Modifica avvenuta con successo", "success", True
+            return "Terapia inserita con successo", "success", True
         else:
             return dash.no_update
 
@@ -887,32 +989,54 @@ def registra_callbacks(app):
             return data_inizio  # Imposta la data inizio come minimo selezionabile
         return None
 #*******************************************************************************************************************
-# Callback aggiornamento cerchio colorato glicemia:
+    #callback per gestire il popup che serve a chiedere la conferma per eliminare una terapia
     @app.callback(
-        # Numero centrale visualizzato
+        Output("popup-elimina-terapia", "is_open"),
+        [Input("btn-elimina-terapia", "n_clicks"), Input("declina-elimina-terapia", "n_clicks")],
+        [State("popup-elimina-terapia", "is_open")]
+    )
+    def apri_elimina_terapia(n_apri, n_chiudi, is_open):
+        if n_apri or n_chiudi:
+            return not is_open
+        return is_open
+#*******************************************************************************************************************
+# Callback aggiornamento cerchio colorato glicemia e per inserire la glicemia nella base di dati (pagina paziente)
+    @app.callback(
         Output("number", "children"),
-        # Colore dello sfondo
         Output("cerchio-colorato", "style"),
-        Input("input-glicemia", "n_submit"),
+        Output("inserisci-glicemia-output", "children"),
+        Output("inserisci-glicemia-output", "is_open"),
+        Output("inserisci-glicemia-output", "color"),
+        Output("trigger-aggiorna-grafico", "data"),
+        Input("url", "pathname"),
+        Input("inserisci-glicemia", "n_clicks"),
+        Input("input-farmaco-usato", "value"),
+        Input("input-dosaggio-usato", "value"),
+        Input("input-sintomi-riscontrati", "value"),
         State("input-glicemia", "value"),
         State("number", "children"),
         State("cerchio-colorato", "style"),
+        State("trigger-aggiorna-grafico", "data"),
         prevent_initial_call=True
     )
-    def aggiorna_cerchio(n_submit, valore, number, stile_corrente):
-        if not n_submit:
-            return number, stile_corrente
-        
-        # Ipoglicemia
-        if valore < 70:
-            return valore, {"background-color": "#FF4C4C"}
-        # Normoglicemia
-        elif 70 <= valore <= 130:
-            return valore, {"background-color": '#08ff46'}
-        # Glicemia alta (merita attenzione)
-        elif 131 <= valore <= 180:
-            return valore, {"background-color": '#FFD93B'}
-        # Iperglicemia
+    def aggiorna_cerchio(path, n_clicks, farmaco, dosaggio, sintomi, valore, number, stile_corrente, trigger):
+        if path != "/patient-dashboard":
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
+
+        if n_clicks and farmaco and dosaggio and valore:
+            current_user.inserisci_glicemia(valore, farmaco, dosaggio, sintomi)
+            if valore < 70:
+                colore = "#FF4C4C"
+            elif 80 <= valore <= 130:
+                colore = "#08ff46"
+            elif 131 <= valore <= 180:
+                colore = "#FFD93B"
+            else:
+                colore = "#FF4C4C"
+            return valore, {"background-color": colore}, "Inserimento corretto", True, "success", trigger + 1
+
+        elif n_clicks:
+            return number, stile_corrente, "Informazioni mancanti", True, "danger", trigger
         else:
             return valore, {"background-color": '#FF4C4C'}
         
@@ -994,17 +1118,56 @@ def registra_callbacks(app):
                 return nuova_lista, False
         
         return dash.no_update, False
-
-
-    # DA FARE
-    # scheletro per la terza callback del admin-paziente,
-    # quella che permette la modifica dei dati
+        
+    
+#*************************************************************************************************************************
+# sacre callback      
+#callback di gestione della chat:
     @app.callback(
-        Output("popup-3", "is_open"),
-        [Input("btn-modifica-dati-diab", "n_clicks"), Input("chiudi-popup-3", "n_clicks")],
-        [State("popup-3", "is_open")]
+            Output("lista-contatti", "children"),
+            Input("url","pathname")
     )
-    def gestisci_popup_3(n_apri, n_chiudi, is_open):
-        if n_apri or n_chiudi:
-            return not is_open
-        return is_open
+    def aggiorna_lista_contatti(path):
+        if path=="/chat":
+            return view.layout_lista_contatti()
+        else:
+            return dash.no_update
+        
+    @app.callback(
+        Output("nome-contatto","data"),
+        Input({"type": "btn-contatto","index": dash.ALL},"n_clicks"),
+        prevent_initial_call=True
+    )
+    def seleziona_chat(n_clicks):
+        ctx = dash.callback_context
+        if not ctx.triggered : return dash.no_update
+        id_contatto = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])["index"]
+        return id_contatto
+    
+    @app.callback(
+    [
+        Output("chat-box", "children"),
+        Output("nome-contatto","children")
+    ],
+    [
+        Input({"type": "btn-contatto", "index": dash.ALL}, "n_clicks"),  # Pulsante contatto
+        Input("send-btn", "n_clicks")  # Pulsante invio messaggio
+    ],
+    [
+        State("input-text", "value"),
+        State("nome-contatto", "data")
+    ],
+    prevent_initial_call=True
+    )
+    def update_chat(btn_clicks, send_clicks, messaggio, id_contatto):
+        triggered_id = ctx.triggered_id  # Capisci quale input ha attivato la callback
+
+        # Caso 1: Click su un contatto (prima si fa un check per capire se il trigger è un dizionario)
+        if isinstance(triggered_id, dict) and triggered_id["type"] == "btn-contatto":
+            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), triggered_id["index"])), model.get_nomecognome(triggered_id["index"])
+
+        # Caso 2: Click su "Invia messaggio"
+        elif triggered_id == "send-btn" and messaggio:
+            model.insert_messaggio(model.get_user_id(), id_contatto, messaggio)
+            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto)       
+        return dash.no_update
