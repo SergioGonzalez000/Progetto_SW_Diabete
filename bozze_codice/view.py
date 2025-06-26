@@ -1704,11 +1704,13 @@ def crea_div_info_base(info,flagpaziente):
 
 # CHAT (= chat_content) -> Già fatta
 
+
 # ******************************************************************************************************************
 # LAYOUT DELL'ADMIN:
 # 1. Dashboard
 # 2. Richieste
 # 3. Pazienti
+# 4. Diabetologi
 # ******************************************************************************************************************
 
 # DASHBOARD ADMIN
@@ -1752,14 +1754,14 @@ admin_dashboard = html.Div(
                             style={
                                 "flex": 1,
                                 "padding": "20px",
-                                "background-color": "#ffffff", # sfondo bianco
-                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                                "border-radius": "15px" # bordi arrotondati
+                                "background-color": "#ffffff",                    # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",     # ombra standard diciamo
+                                "border": "2px solid #dee2e6",                      # bordo di 2px grigio
+                                "border-radius": "15px"                             # bordi arrotondati
                             },
                             children=[
-                                html.H5("Glicemia media dei pazienti gestiti da ciascun diabetologo", style={"color" : "grey"}),
-                                html.Hr(),
+                                html.H4("Glicemia media dei pazienti gestiti da ciascun diabetologo", style={"color" : "black"}),
+                                html.Hr(style={"color" : "black"}),
                                 
                                 html.Div(
 
@@ -1787,104 +1789,82 @@ admin_dashboard = html.Div(
 
 
 # RICHIESTE DI INSERIMENTO NELLA PIATTAFORMA 
-# funzione che organizza in due colonne le richieste: una per pazienti e una diabetologi
+# funzione che organizza in due colonne SEPARATE le richieste: una per pazienti e una diabetologi
 def render_richieste_account():
+    style_div_interno = {
+        "flex": "1",
+        "minHeight": "1",          
+        "overflowY": "auto",
+        "padding": "20px",
+        "backgroundColor": "#ffffff",
+        "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)",
+        "border": "2px solid #dee2e6",
+        "borderRadius": "15px",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "5px",
+    }
+
     return html.Div(
         style={
             "display": "flex",
             "flexDirection": "row",
-            "width": "100%",
-            "gap": "20px",
+            "flex": "1",            
+            "gap": "40px",
+            "minHeight": "1",       
         },
         children=[
             html.Div(
-                style={
-                    "flex": "1",
-                    "maxHeight": "100vh",
-                    "overflowY": "auto",
-                    "padding": "0",
-                    "margin": "0",
-                },
+                style=style_div_interno,
                 children=[
                     html.H4("Richieste Pazienti"),
                     dcc.Dropdown(
-                        id="dropdown-richieste-pazienti",
-                        placeholder="Seleziona una richiesta paziente..."
+                        id="dropdown-richieste-pazienti",           
+                        placeholder="Seleziona una richiesta per visualizzarne i dettagli..."
                     ),
-                    html.Div(id="dettagli-richiesta-paziente"),
+                    html.Div(id="dettagli-richiesta-paziente", style= {"marginTop": "10px"}),       # qui dentro viene messa la card coi dettagli del paziente. Oppure gli Alert.
                     html.Div([
-                        dbc.Button("Accetta", id="btn-accetta-paziente", color="success", className="me-2 mt-2"),
+                        dbc.Button("Accetta", id="btn-accetta-paziente", color="primary", className="me-2 mt-2"),
                         dbc.Button("Rifiuta", id="btn-rifiuta-paziente", color="danger", className="mt-2"),
-                    ], style= {
-                        "display": "flex",          
-                        "justifyContent": "center", # centra bottoni
-                        "gap": "10px",              
-                        "marginTop": "10px"         # distanza minima dal contenitore sopra
-                    }),       
+                    ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
                 ]
             ),
             html.Div(
-                style={
-                    "flex": "1",
-                    "maxHeight": "100vh",
-                    "overflowY": "auto",
-                    "padding": "0",
-                    "margin": "0",
-                },
+                style=style_div_interno,
                 children=[
                     html.H4("Richieste Diabetologi"),
                     dcc.Dropdown(
                         id="dropdown-richieste-diabetologi",
-                        placeholder="Seleziona una richiesta diabetologo..."
+                        placeholder="Seleziona una richiesta per visualizzarne i dettagli..."
                     ),
-                    html.Div(id="dettagli-richiesta-diabetologo"),
+                    html.Div(id="dettagli-richiesta-diabetologo", style= {"marginTop": "10px"}),    # qui dentro viene messa la card coi dettagli del diabetologo.
                     html.Div([
-                        dbc.Button("Accetta", id="btn-accetta-diabetologo", color="success", className="me-2 mt-2"),
+                        dbc.Button("Accetta", id="btn-accetta-diabetologo", color="primary", className="me-2 mt-2"),
                         dbc.Button("Rifiuta", id="btn-rifiuta-diabetologo", color="danger", className="mt-2"),
-                    ], style={
-                        "display": "flex",          
-                        "justifyContent": "center", # centra bottoni
-                        "gap": "10px",              
-                        "marginTop": "10px"         # distanza minima dal contenitore sopra
-                    }),  
+                    ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
                 ]
-            ),
+            )
         ]
     )
 
 
-
-# layout per la pagina delle richieste admin. 
+# layout principale della pagina della richiesta di inserimento nella piattaforma
 admin_request = html.Div(
-    style={
-        'flex': 1,
-        'display': 'flex',
-        'flexDirection': 'column',
-        'padding': '40px',
-        'gap': '40px',
-        "maxHeight": "100vh",
-        "maxWidth": "100vw"
-
+    style={ 
+        "flex": "1",
+        "display": "flex",
+        "flexDirection": "column",
+        "height": "100vh",
+        "boxSizing": "border-box",
+        "margin": "0",
+        "padding": "40px",
+        "gap": "20px",
     },
     children=[
-        html.Div(
-            style={
-                "padding": "20px",
-                "background-color": "#ffffff",
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                "border": "2px solid #dee2e6",
-                "border-radius": "15px",
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "5px",
-                "height": "100vh"
-            },
-            children=[
-                render_richieste_account()
-            ]
-        )
+        render_richieste_account()
     ]
 )
+
 
 
 # funzione che prende i dati e li rende sotto forma di card piu carin e leggibile 
@@ -2014,7 +1994,7 @@ def render_lista_pazienti(pazienti):
     )
 
 
-# funzione che da il layout completo della pagina di gestione dei pazienti dell'admin.
+# funzione che da il layout COMPLETO della pagina di gestione dei pazienti dell'admin.
 def layout_lista_pazienti():
     pazienti = model.get_all_pazienti()
 
@@ -2027,7 +2007,7 @@ def layout_lista_pazienti():
             "display": "flex",
             "flexDirection": "row",
             "padding": "20px",
-            "gap": "20px",
+            "gap": "40px",
         },
         children=[
 
@@ -2036,7 +2016,7 @@ def layout_lista_pazienti():
                 id= "contenitore-lista-pazienti",
                 children= render_lista_pazienti(pazienti),
                 style={
-                    "flex": 1
+                    "flex": 1,
                 }    
             ),
             
@@ -2047,11 +2027,6 @@ def layout_lista_pazienti():
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
-                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                    "border": "2px solid #dee2e6",
-                    "borderRadius": "15px",
-                    "padding": "30px",
-                    "overflow": "auto"
                 },
                 children=[
                     html.H5("Seleziona un paziente per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
@@ -2067,18 +2042,18 @@ def crea_card_paziente(dati_paziente, dati_diab):
     header_content = html.Div([
         html.Span(
             f"Paziente: {dati_paziente.get('nome', '')} {dati_paziente.get('cognome', '')}",
-            style={'font-weight': 'bold', 'font-size': '1.05rem', 'margin-right': '10px'}
+            style={'font-weight': 'bold', 'font-size': '1.1rem'}
         ),
         html.Span(
             children=[
                 "(Diabetologo: ",
                 html.Span(
                     f"{dati_diab.get('nome', '')} {dati_diab.get('cognome', '')}" if dati_diab else "Nessun diabetologo associato",
-                    style={'font-style': 'italic', 'color': '#555555'}
+                    style={'font-style': 'italic', 'color': "#5A5A5A"}
                 ),
                 ")"
             ],
-            style={'font-size': '0.95rem'}
+            style={'font-size': '0.95rem', "marginLeft": "40px"}
         ) if dati_diab else None
     ])
 
@@ -2095,23 +2070,25 @@ def crea_card_paziente(dati_paziente, dati_diab):
             dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),
             dbc.CardBody(
                 [
-                    dbc.ListGroup(dettagli, flush=True, style={
-                        "maxHeight": "50vh",
-                        "overflowY": "auto",
-                        "paddingRight": "2px",
-                        "paddingBottom": "2px",
-                        "border": "1px solid #dee2e6",
-                        "borderRadius": "1px",
-                    }),
+                    dbc.ListGroup(dettagli, flush=True, 
+                        style={
+                            "maxHeight": "50vh",
+                            "overflowY": "auto",
+                            "paddingBottom": "2px",
+                            "border": "1px solid #dee2e6",
+                            "borderRadius": "1px",
+                            "width": "100%"
+                        },
+                        className="w-100"
+                    ),
 
-                     
                     html.Div(
                     [
                         # prima riga pulsanti
                         dbc.Row([
                             dbc.Col(dbc.Button("Grafico glicemia paziente",
                                             id="btn-graf-paziente",
-                                            color="success",
+                                            color="primary",
                                             size="medium",
                                             className="w-100"), width=6),
                             dbc.Col(dbc.Button("Modifica dati paziente",
@@ -2129,22 +2106,25 @@ def crea_card_paziente(dati_paziente, dati_diab):
                                             size="medium",
                                             className="w-100"), width=6),
                             dbc.Col(),      # vuoto per mantenere forma 
-                        ], justify="center"),
-                        ],
-                        style={
-                            "marginTop": "16px",
-                            "display": "flex",
-                            "flexDirection": "column",
-                            "justifyContent": "center",
-                        }
-                    )
+                            ], justify="center"),
+                    ],
+                    style={
+                        "marginTop": "16px",
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "justifyContent": "center",
+                        "width": "100%"},
+                    className="w-100")
+
                 ],
                 style={
                     "display": "flex",
                     "flexDirection": "column",
                     "height": "100%",
-                    "paddingBottom": "10px",  # evita che tocchi il bordo inferiore
-                }
+                    "padding": "0",          # IMPORTANTE: FA SI CHE IL CONTENUTO DELLA CARD BODY (le info del paziente) SI PRENDANO IL GIUSTO SPAZIO
+                    "width": "100%",
+                }, 
+                className="w-100"
         ),
 
             # salva l'id del paziente, in modo da usarlo per la callback col grafico
@@ -2179,8 +2159,19 @@ def crea_card_paziente(dati_paziente, dati_diab):
                     dbc.ModalBody(
                         html.Div([
                             dbc.Alert(
-                                """L'eliminazione di un account è un operazione irreversibile.
-                                E' sicuro/a di voler eliminare il paziente selezionato?""", color="danger"
+                                f"""L'eliminazione di un account è un operazione irreversibile. 
+                                E' sicuro/a di voler eliminare il/la paziente {dati_paziente.get('nome')} {dati_paziente.get('cognome')}?""",
+
+                                color="danger",  # rosso
+                                className="text-center",  # centra il testo orizzontalmente
+                                style={
+                                    "padding": "10px",
+                                    "fontWeight": "bold",
+                                    "fontSize": "1rem",
+                                    "borderRadius": "10px",
+                                    "margin": "10px",
+                                    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
+                                }
                             ),
                             dbc.Row(
                                 [
@@ -2193,7 +2184,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                                             size="md",
                                             className="w-100"
                                         ),
-                                        width=5
+                                        width=3
                                     ),
                                     dbc.Col(
                                         dbc.Button(
@@ -2203,7 +2194,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                                             size="md",
                                             className="w-100"
                                         ),
-                                        width=5
+                                        width=3
                                     )
                                 ],
                                 justify="center",
@@ -2215,11 +2206,12 @@ def crea_card_paziente(dati_paziente, dati_diab):
                 ],
                 id="pop-admin-delete-patient",
                 is_open=False,
-                size="lg",  
+                size="md",  
                 centered=True          
             )
         ],
-        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
+        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"},
+        className="w-100"
     )
 
 
@@ -2305,7 +2297,7 @@ def layout_lista_diabetologi():
             "display": "flex",
             "flexDirection": "row",
             "padding": "20px",
-            "gap": "20px"
+            "gap": "40px"
         },
         children=[
 
@@ -2323,11 +2315,6 @@ def layout_lista_diabetologi():
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
-                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                    "border": "2px solid #dee2e6",
-                    "borderRadius": "15px",
-                    "padding": "30px",
-                    "overflow": "auto"
                 },
                 children=[
                     html.H5("Seleziona un diabetologo per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
@@ -2404,13 +2391,148 @@ def crea_card_diabetologo(dati_diabetologo):
                         }
                     )
             ],
-                    style={"display": "flex",
-                    "flexDirection": "column",
-                    "height": "100%",
-                    "paddingBottom": "10px"})
+                style={"display": "flex",
+                "flexDirection": "column",
+                "height": "100%",
+                "padding": "0",          # IMPORTANTE: FA SI CHE IL CONTENUTO DELLA CARD BODY (le info del paziente) SI PRENDANO IL GIUSTO SPAZIO,
+                "paddingBottom": "0px"}),
+
+
+            # salva l'id del diabetologo, in modo da usarlo per la callback col grafico
+            dcc.Store(      
+                id= "store-id-diabetologo",
+                data= dati_diabetologo.get('id_diabetologo')
+            ),
+
+            # POP-UP DEL GRAFICO DEL DIABETOLOGO
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Glicemia media pazienti associati"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-graf-diabetologo",
+                            children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
+                            style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-grafico-diabetologo",
+                is_open=False,
+                size="xl",  
+                centered=True          
+            ),
+
+            # POP-UP per la rimozione del diabetologo selezionato
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Attenzione!"),
+                    dbc.ModalBody(
+                        html.Div([
+                            dbc.Alert(
+                                f"""L'eliminazione di un account è un operazione irreversibile. 
+                                E' sicuro/a di voler eliminare il/la diabetologo/a {dati_diabetologo.get('nome')} {dati_diabetologo.get('cognome')}?""",
+
+                                color="danger",  # rosso
+                                className="text-center",  # centra il testo orizzontalmente
+                                style={
+                                    "padding": "10px",
+                                    "fontWeight": "bold",
+                                    "fontSize": "1rem",
+                                    "borderRadius": "10px",
+                                    "margin": "10px",
+                                    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
+                                }),
+                            dbc.Row(
+                                [
+                                    # pulsanti per la conferma o annullamento della rimozione del paziente
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Si",
+                                            id="btn-delete-diab-confirm-YES",
+                                            color="danger",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=3
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "No",
+                                            id="btn-delete-diab-confirm-NO",
+                                            color="success",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=3
+                                    )
+                                ],
+                                justify="center",
+                                className="d-flex justify-content-center mt-3"
+                            )
+                        ]),
+                        style={"padding": "10px", "color": ""}          # da modificare perchè si vuole mettere il colore del "danger" tipo
+                    ),
+                ],
+                id="pop-admin-delete-diab",
+                is_open=False,
+                size="md",  
+                centered=True          
+            ),  
+
+            # popup per visualizzare la lista di pazienti associati a uno specifico diabetologo.
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(f"Pazienti associati a {dati_diabetologo.get('nome')} {dati_diabetologo.get('cognome')}"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-lista-paz-diabetologo",
+                            children=[],                                  
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-lista-pazienti-ass",
+                is_open=False,
+                size="md",  
+                centered=True          
+            )      
         ],
         style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
     )
+
+
+# funzione che crea la lista di pazienti associati a un diabetologo visualizzato dentro il modal del pulsante "lista pazienti associati" 
+def genera_lista_pazienti_associati(lista_pazienti):
+    
+    if not lista_pazienti:
+        return dbc.Alert(
+            "Nessun paziente associato.",
+            color="danger",  # rosso
+            className="text-center",  # centra il testo orizzontalmente
+            style={
+                "padding": "20px",
+                "fontWeight": "bold",
+                "fontSize": "1.1rem",
+                "borderRadius": "10px",
+                "margin": "20px",
+                "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
+            })
+
+    return dbc.ListGroup(
+        [
+            dbc.ListGroupItem(
+                [
+                    html.Span(f"{p['nome']} {p['cognome']}", style={"fontWeight": "bold"}),
+                    html.Span(f" — username: {p['username']}", className="text-muted", style={"marginLeft": "8px"}),
+                ]
+            )
+            for p in lista_pazienti
+        ],
+        flush=True,
+        style={"margin": "0.5rem", "padding": "0px"}
+    )
+
 
 
 # DIABETOLOGI ADMIN PRINCIPALE. riunisce tutto ciò che c'è di grafico riguardo alla pagina url "/admin-doctor"

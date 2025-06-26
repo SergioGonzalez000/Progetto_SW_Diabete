@@ -510,12 +510,42 @@ class Admin(Persona):
         
         cursore_4.close()
 
+    def rifiuta_richiesta(id_richiesta):
+        """cambia lo stato della richiesta da << in_attesa >> a << rifiutata >>"""
+
+        cursore = connection.cursor()
+        
+        cursore.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s", (id_richiesta,))
+        richiesta = cursore.fetchone()
+        
+        if richiesta is None:
+            cursore.close()
+            raise ValueError(f"Richiesta con id {id_richiesta} non trovata.")
+
+        cursore.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s",
+            ('rifiutata', id_richiesta)
+        )
+        connection.commit()
+        
+        cursore.close()
+
     # funzione che elimina un paziente nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
     def elimina_paziente(id_paziente):
-        """elimina un paziente dalla DB dato il suo id_paziente"""
+        """elimina un paziente dal DB dato il suo id_paziente"""
 
         cursore = connection.cursor()
         cursore.execute("DELETE FROM Paziente WHERE id_paziente = %s", (id_paziente,))
+        connection.commit()
+
+        cursore.close()
+
+    # funzione che elimina un diabetologo nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
+    def elimina_diabetologo(id_diabetologo):
+        """elimina un diabetologo dal DB dato il suo id_diabetologo"""
+
+        cursore = connection.cursor()
+        cursore.execute("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
         connection.commit()
 
         cursore.close()
@@ -971,6 +1001,73 @@ def visualizza_media_glicemia_per_diabetologi():
     return fig
 
     # ***********************
+
+# funzione che permette di prendere il grafico un solo diabetologo
+def visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo):
+    """Ritorna un grafico a istogramma contenente la media glicemica dei pazienti associati ad un diabetologo."""
+    cursore = connection.cursor()
+    cursore.execute("SELECT * FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
+    r = cursore.fetchone()
+
+    if not r:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Diabetologo non trovato",
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=18, color="red")
+        )
+        return fig
+
+    # Istanzia l'oggetto Diabetologo
+    Diab = Diabetologo(r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12])
+    dati_pazienti = Diab.visualizza_n_c_pazienti_associati()   # <-- cambia qui
+
+    if not dati_pazienti:
+        fig = go.Figure()
+        fig.add_annotation(
+            text=f"Nessun dato per {r[1]} {r[2]}",
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=18, color="red")
+        )
+        return fig
+
+    # Adattato per usare la lista di dizionari
+    nomi_pazienti = [f"{p['nome']} {p['cognome']}" for p in dati_pazienti]
+    medie_glicemia = [round(p["media"], 2) for p in dati_pazienti]
+
+    fig = go.Figure(data=[
+        go.Bar(x=nomi_pazienti, y=medie_glicemia, marker_color="teal")
+    ])
+    fig.update_layout(
+        xaxis_title="Pazienti",
+        yaxis_title="Glicemia (mg/dL)",
+        margin=dict(l=10, r=10, t=30, b=40),
+    )
+    return fig
+
+
+def visualizza_pazienti_associati_singolo_diab(id_diabetologo):
+    cursore = connection.cursor()
+    cursore.execute("""
+        SELECT p.nome, p.cognome, p.username
+        FROM paziente p
+        WHERE p.diabetologo_associato = %s
+        ORDER BY p.cognome, p.nome
+    """, (id_diabetologo,))
+    
+    risultati = cursore.fetchall()
+    pazienti = [
+        {
+            "nome": r[0],
+            "cognome": r[1],
+            "username": r[2]
+        } for r in risultati
+    ]
+    cursore.close()
+
+    return pazienti
 
 
 def get_id_paziente_by_username(username):
