@@ -271,23 +271,6 @@ def registra_callbacks(app):
 
     # ****************************************************************
 
-    # CALLBACK che mostra i dettagli delle singole richieste (è indipendente dal tipo di utente)
-    @app.callback(
-        Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),
-        Input("dropdown-selezione-richiesta-account", "value"),
-        prevent_initial_call=True
-    )
-    def mostra_dettagli_richiesta(id_richiesta):
-        if not id_richiesta:
-            return None
-
-        dati = model.get_dati_richiesta_account_by_id(id_richiesta)
-        if not dati:
-            return dbc.Alert("Non ci sono dati", color="danger")
-
-        return view.render_dati_richiesta(dati)
-    
-
     # CALLBACKS PER L'ELENCO PAZIENTI
     # callback che carica i dettagli di un paziente scelto nel dropdown
     @app.callback(
@@ -963,15 +946,6 @@ def registra_callbacks(app):
         
         return dash.no_update, False
     
-    # callback accessoria che aggiorna l'elenco PAZIENTI ogni volta che si entra nel url "admin-patient"
-    # # FORSE è RIDONDANTE MA PER ORA FUNZIONA. 
-    @app.callback(
-    Output("contenitore-lista-pazienti", "children", allow_duplicate=True),
-    Input("url", "pathname"), prevent_initial_call= True)
-    def carica_lista_diabetologi(pathname):
-        if pathname == "/admin-patient":
-            return view.render_lista_pazienti(model.get_all_pazienti())
-
 
     #####################################################
     # DA FARE:                                          #
@@ -1046,15 +1020,36 @@ def registra_callbacks(app):
 
         return dash.no_update, False
     
-    
-    # callback accessoria che aggiorna l'elenco DIABETOLOGI ogni volta che si entra nel url "admin-doctor"
-    # # FORSE è RIDONDANTE MA PER ORA FUNZIONA. 
-    @app.callback(
-    Output("contenitore-lista-diabetologi", "children", allow_duplicate=True),
-    Input("url", "pathname"),
-    prevent_initial_call= True)
-    def carica_lista_diabetologi(pathname):
-        if pathname == "/admin-doctor":
-            return view.render_lista_diabetologi(model.get_all_diabetologi())
 
+
+    @app.callback(
+    Output("pop-admin-lista-pazienti-ass", "is_open"),
+    Input("btn-lista-paz-assoc-diab", "n_clicks"),
+    State("pop-admin-lista-pazienti-ass", "is_open"),
+    prevent_initial_call=True
+    )
+    def toggle_modal(n_clicks, is_open):
+        if n_clicks:
+            return not is_open
+        return is_open
+    
+    @app.callback(
+    Output("contenitore-popup-lista-paz-diabetologo", "children", allow_duplicate= True),
+    Input("btn-lista-paz-assoc-diab", "n_clicks"),
+    State("store-id-diabetologo", "data"),      
+    prevent_initial_call=True
+    )
+    def mostra_lista_pazienti_assoc(n_clicks, id_diabetologo):
+        if not id_diabetologo:
+            return html.Div("Errore: ID diabetologo mancante.")
+
+        lista_pazienti = model.visualizza_pazienti_associati_singolo_diab(id_diabetologo)
+
+        return view.genera_lista_pazienti_associati(lista_pazienti)
+    
+
+    ########################################################
+    # DA FARE:                                             #
+    # CALLBACK PER IL PULSANTE "MODIFICA DATI DIABETOLOGO" #
+    ########################################################
     

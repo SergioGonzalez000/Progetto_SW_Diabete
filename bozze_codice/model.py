@@ -1064,6 +1064,27 @@ def visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo):
     return fig
 
 
+def visualizza_pazienti_associati_singolo_diab(id_diabetologo):
+    cursore = connection.cursor()
+    cursore.execute("""
+        SELECT p.nome, p.cognome, p.username
+        FROM paziente p
+        WHERE p.diabetologo_associato = %s
+        ORDER BY p.cognome, p.nome
+    """, (id_diabetologo,))
+    
+    risultati = cursore.fetchall()
+    pazienti = [
+        {
+            "nome": r[0],
+            "cognome": r[1],
+            "username": r[2]
+        } for r in risultati
+    ]
+    cursore.close()
+
+    return pazienti
+
 
 def get_id_paziente_by_username(username):
     cursore = connection.cursor()
