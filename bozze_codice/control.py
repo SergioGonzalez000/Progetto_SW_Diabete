@@ -269,11 +269,14 @@ def registra_callbacks(app):
         return dcc.Graph(figure=fig)
     
 
-    # ************************
-    # callback che gestisce i click dentro il dropdown della richiesta admin
+    # ************************************* ZONA DI PURO TEST. NON SO QUELLO CHE STO FACENDO ***********************
+
+    # --- CALLBACKS PER ADMIN (richieste singole) ---
+
     @app.callback(
-        Output("contenitore-informazioni-richiesta", "children"),
+        Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),
         Input("dropdown-selezione-richiesta-account", "value"),
+        prevent_initial_call=True
     )
     def mostra_dettagli_richiesta(id_richiesta):
         if not id_richiesta:
@@ -283,25 +286,11 @@ def registra_callbacks(app):
         if not dati:
             return dbc.Alert("Non ci sono dati", color="danger")
 
-        # crea lista di paragrafi con i dati
         return view.render_dati_richiesta(dati)
     
 
-    # ******************************************
-    # callback che triggera il refresh delle opzioni disponibili all'interno del dropdown delle richieste di account
     @app.callback(
-        Output("dropdown-selezione-richiesta-account", "options"),
-        Input("dropdown-selezione-richiesta-account", "search_value")
-    )
-    def aggiorna_opzioni_dropdown(search_value):
-        options = model.get_all_richieste_account()
-        return options
-
-
-    # **********************
-    # callback che popola il dropdown e gestisce i bottoni nella pagina delle richieste, dell'admin.
-    @app.callback(
-        [Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),  # aggiorna magari con un messaggio di conferma
+        [Output("contenitore-informazioni-richiesta", "children", allow_duplicate=True),
         Output("dropdown-selezione-richiesta-account", "options", allow_duplicate=True)],
         [Input("btn-accetta-richiesta", "n_clicks"),
         Input("btn-rifiuta-richiesta", "n_clicks")],
@@ -310,37 +299,125 @@ def registra_callbacks(app):
         allow_duplicate=True
     )
     def gestisci_richiesta_accetta_o_rifiuta(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
-        ctx = dash.callback_context
-
-        # controlla se è stato effettivamente premuto un bottone
         if not ctx.triggered:
             return dash.no_update, dash.no_update
 
         bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
 
-        # nessuna richiesta selezionata
         if not id_richiesta:
-            # ritorna un Alert in caso di azione a vuoto
             return dbc.Alert("Seleziona una richiesta prima di accettare o rifiutare.", color="warning", dismissable=True), dash.no_update
 
-        # azioni da compiere in base al bottone premuto
         if bottone_premuto == "btn-accetta-richiesta":
-            # funzione per accettare la richiesta
-            model.Admin.approva_richiesta(id_richiesta)     # gia definita
+            model.Admin.approva_richiesta(id_richiesta)
             alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
 
         elif bottone_premuto == "btn-rifiuta-richiesta":
-            # chiamo la funzione che gestisce il rifiuto
-            model.rifiuta_richiesta(id_richiesta)                 # da fare
+            model.rifiuta_richiesta(id_richiesta)
             alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
-            
         else:
             return dash.no_update, dash.no_update
 
-        # aggiorna il dropdown con le richieste rimanenti
-        options = model.get_all_richieste_account()     # deve restituire lista di tuple/dict
+        return alert, dash.no_update
 
+
+    # --- CALLBACKS PER PAZIENTI ---
+
+    @app.callback(
+        Output("dettagli-richiesta-paziente", "children"),
+        Input("dropdown-richieste-pazienti", "value")
+    )
+    def mostra_dettagli_paziente(id_richiesta):
+        if not id_richiesta:
+            return dbc.Alert("Seleziona una richiesta per vedere i dettagli.", color="secondary")
+        dati = model.get_dati_richiesta_account_by_id(id_richiesta)
+        return view.render_dati_richiesta(dati)
+
+
+    @app.callback(
+        Output("dropdown-richieste-pazienti", "options"),
+        Input("dropdown-richieste-pazienti", "search_value")
+    )
+    def aggiorna_opzioni_pazienti(search_value):
+        return model.get_richieste_account_pazienti()
+
+
+    @app.callback(
+        [Output("dettagli-richiesta-paziente", "children", allow_duplicate=True),
+        Output("dropdown-richieste-pazienti", "options", allow_duplicate=True)],
+        [Input("btn-accetta-paziente", "n_clicks"),
+        Input("btn-rifiuta-paziente", "n_clicks")],
+        State("dropdown-richieste-pazienti", "value"),
+        prevent_initial_call=True,
+        allow_duplicate=True
+    )
+    def gestisci_richiesta_paziente(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
+        if not id_richiesta:
+            return dbc.Alert("Seleziona una richiesta prima di accettare o rifiutare.", color="warning", dismissable=True), dash.no_update
+
+        bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        if bottone_premuto == "btn-accetta-paziente":
+            model.Admin.approva_richiesta(id_richiesta)
+            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
+
+        elif bottone_premuto == "btn-rifiuta-paziente":
+            model.rifiuta_richiesta(id_richiesta)
+            alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
+
+        options = model.get_richieste_account_pazienti()
         return alert, options
+
+
+    # --- CALLBACKS PER DIABETOLOGI ---
+
+    @app.callback(
+        Output("dettagli-richiesta-diabetologo", "children"),
+        Input("dropdown-richieste-diabetologi", "value")
+    )
+    def mostra_dettagli_diabetologo(id_richiesta):
+        if not id_richiesta:
+            return dbc.Alert("Seleziona una richiesta per vedere i dettagli.", color="secondary")
+        dati = model.get_dati_richiesta_account_by_id(id_richiesta)
+        return view.render_dati_richiesta(dati)
+
+
+    @app.callback(
+        Output("dropdown-richieste-diabetologi", "options"),
+        Input("dropdown-richieste-diabetologi", "search_value")
+    )
+    def aggiorna_opzioni_diabetologi(search_value):
+        return model.get_richieste_account_diabetologi()
+
+
+    @app.callback(
+        [Output("dettagli-richiesta-diabetologo", "children", allow_duplicate=True),
+        Output("dropdown-richieste-diabetologi", "options", allow_duplicate=True)],
+        [Input("btn-accetta-diabetologo", "n_clicks"),
+        Input("btn-rifiuta-diabetologo", "n_clicks")],
+        State("dropdown-richieste-diabetologi", "value"),
+        prevent_initial_call=True,
+        allow_duplicate=True
+    )
+    def gestisci_richiesta_diabetologo(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
+        if not id_richiesta:
+            return dbc.Alert("Seleziona una richiesta prima di accettare o rifiutare.", color="warning", dismissable=True), dash.no_update
+
+        bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        if bottone_premuto == "btn-accetta-diabetologo":
+            model.Admin.approva_richiesta(id_richiesta)
+            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
+
+        elif bottone_premuto == "btn-rifiuta-diabetologo":
+            model.rifiuta_richiesta(id_richiesta)
+            alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
+
+        options = model.get_richieste_account_diabetologi()
+        return alert, options
+
+    # ************************************* FINE ZONA DI PURO TEST *************************************************
+
+    
     
 # ******************************************************************************************************************
 
@@ -843,6 +920,10 @@ def registra_callbacks(app):
 # ******************************************************************
 
 # callbacks che gestiscono i click sui bottoni del paziente, che aprono i relativi pop-up.
+    
+    # PRIMO PULSANTE ADMIN-PAZIENTE
+    # "Grafico glicemia paziente"
+    # callback di gestione del pop-up
     @app.callback(
         Output("pop-admin-grafico-paziente", "is_open"),
         Input("btn-graf-paziente", "n_clicks"),
@@ -850,13 +931,15 @@ def registra_callbacks(app):
     )
     def gestisci_popup_admin_graf_paziente(n_apri, is_open):
         if n_apri is None:
-            # All'inizio NON facciamo nulla
+            # all'inizio NON si fa nulla 
             return is_open
         if n_apri:
-            # Toggle
+            # toggle
             return not is_open
         return is_open
 
+    # callback di gestione del grafico, con il giusto id_paziente. è attivata dallo stesso pulsante di 
+    # quella sopra (forse si posssono unire?)
     @app.callback(
         Output("contenitore-popup-graf-paziente", "children"),
         Input("btn-graf-paziente", "n_clicks"),
@@ -872,36 +955,56 @@ def registra_callbacks(app):
         return dcc.Graph(figure=fig, style={"borderRadius": "2px"})
         
 
-
-    # CALLBACKS DA FARE PER GLI ALTRI TASTI...
+    # SECONDO PULSANTE ADMIN-PAZIENTE
+    # "Rimuovi paziente". questa callback gestisce l'apertura e la chiusura del popup
     @app.callback(
-    Output("popup-2", "is_open"),
-    [Input("btn-graf-paz-assoc-diab", "n_clicks"), Input("chiudi-popup-2", "n_clicks")],
-    [State("popup-2", "is_open")]
+        Output("pop-admin-delete-patient", "is_open", allow_duplicate=True),
+        Input("btn-rimuovi-paz", "n_clicks"),
+        [State("pop-admin-delete-patient", "is_open")],
+        prevent_initial_call= True
     )
-    def gestisci_popup_2(n_apri, n_chiudi, is_open):
-        if n_apri or n_chiudi:
+    def gestisci_popup_admin_rimozione_paziente(n_apri, is_open):
+        if n_apri is None:
+            return is_open
+        if n_apri:
+            # toggle
             return not is_open
         return is_open
 
+    # callback dei pulsanti dentro il popup per confermare o meno la cancellazione di un paziente
+    @app.callback(
+    Output("contenitore-lista-pazienti", "children"),
+    Output("pop-admin-delete-patient", "is_open"),
+    Input("btn-delete-paz-confirm-YES", "n_clicks"),
+    Input("btn-delete-paz-confirm-NO", "n_clicks"),
+    State("store-id-paziente", "data"),
+    prevent_initial_call=True
+    )
+    def rimozione_aggiornamento_lista_popup(n_clicks_yes, n_clicks_no, id_paziente):
+        """gestisce la rimozione del paziente, aggiornando la lista."""
 
+        # click sul pulsante "No"
+        if n_clicks_no:
+            return dash.no_update, False
+
+        # click sul pulsante "Sì"
+        if n_clicks_yes:
+                model.Admin.elimina_paziente(id_paziente)                           # elimina dal DB
+                nuova_lista = view.render_lista_pazienti(model.get_all_pazienti())  # aggiorna la lista in modo da togliere l'eliminato. N.B. Manca togliere l'eliminato anche dalla card a destra!
+                return nuova_lista, False
+        
+        return dash.no_update, False
+
+
+    # DA FARE
+    # scheletro per la terza callback del admin-paziente,
+    # quella che permette la modifica dei dati
     @app.callback(
         Output("popup-3", "is_open"),
         [Input("btn-modifica-dati-diab", "n_clicks"), Input("chiudi-popup-3", "n_clicks")],
         [State("popup-3", "is_open")]
     )
     def gestisci_popup_3(n_apri, n_chiudi, is_open):
-        if n_apri or n_chiudi:
-            return not is_open
-        return is_open
-
-
-    @app.callback(
-        Output("popup-4", "is_open"),
-        [Input("btn-rimuovi-diab", "n_clicks"), Input("chiudi-popup-4", "n_clicks")],
-        [State("popup-4", "is_open")]
-    )
-    def gestisci_popup_4(n_apri, n_chiudi, is_open):
         if n_apri or n_chiudi:
             return not is_open
         return is_open

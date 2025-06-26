@@ -1595,18 +1595,87 @@ admin_dashboard = html.Div(
     ]
 )
 
-# RICHIESTE
+
+
+# RICHIESTE DI INSERIMENTO NELLA PIATTAFORMA 
+# funzione che organizza in due colonne le richieste: una per pazienti e una diabetologi
+def render_richieste_account():
+    return html.Div(
+        style={
+            "display": "flex",
+            "flexDirection": "row",
+            "width": "100%",
+            "gap": "20px",
+        },
+        children=[
+            html.Div(
+                style={
+                    "flex": "1",
+                    "maxHeight": "100vh",
+                    "overflowY": "auto",
+                    "padding": "0",
+                    "margin": "0",
+                },
+                children=[
+                    html.H4("Richieste Pazienti"),
+                    dcc.Dropdown(
+                        id="dropdown-richieste-pazienti",
+                        placeholder="Seleziona una richiesta paziente..."
+                    ),
+                    html.Div(id="dettagli-richiesta-paziente"),
+                    html.Div([
+                        dbc.Button("Accetta", id="btn-accetta-paziente", color="success", className="me-2 mt-2"),
+                        dbc.Button("Rifiuta", id="btn-rifiuta-paziente", color="danger", className="mt-2"),
+                    ], style= {
+                        "display": "flex",          
+                        "justifyContent": "center", # centra bottoni
+                        "gap": "10px",              
+                        "marginTop": "10px"         # distanza minima dal contenitore sopra
+                    }),       
+                ]
+            ),
+            html.Div(
+                style={
+                    "flex": "1",
+                    "maxHeight": "100vh",
+                    "overflowY": "auto",
+                    "padding": "0",
+                    "margin": "0",
+                },
+                children=[
+                    html.H4("Richieste Diabetologi"),
+                    dcc.Dropdown(
+                        id="dropdown-richieste-diabetologi",
+                        placeholder="Seleziona una richiesta diabetologo..."
+                    ),
+                    html.Div(id="dettagli-richiesta-diabetologo"),
+                    html.Div([
+                        dbc.Button("Accetta", id="btn-accetta-diabetologo", color="success", className="me-2 mt-2"),
+                        dbc.Button("Rifiuta", id="btn-rifiuta-diabetologo", color="danger", className="mt-2"),
+                    ], style={
+                        "display": "flex",          
+                        "justifyContent": "center", # centra bottoni
+                        "gap": "10px",              
+                        "marginTop": "10px"         # distanza minima dal contenitore sopra
+                    }),  
+                ]
+            ),
+        ]
+    )
+
+
+
+# layout per la pagina delle richieste admin. 
 admin_request = html.Div(
     style={
-        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
-        'flex' : 1,
+        'flex': 1,
         'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
-        'flex-direction': 'column',
-        # Spazio dai margini esterni
+        'flexDirection': 'column',
         'padding': '40px',
-        # Spazio interno tra le colonne
-        'gap': '40px'
+        'gap': '40px',
+        "maxHeight": "100vh",
+        "maxWidth": "100vw"
+
     },
     children=[
         html.Div(
@@ -1618,58 +1687,16 @@ admin_request = html.Div(
                 "border-radius": "15px",
                 "display": "flex",
                 "flexDirection": "column",
-                "gap": "20px"
+                "gap": "5px",
+                "height": "100vh"
             },
             children=[
-                html.H5("Elenco richieste", style={"color": "grey"}),
-
-                # dropdown contenente le richieste
-                dcc.Dropdown(
-                    id="dropdown-selezione-richiesta-account",
-                    options= [],  # riempito via callback. 
-                    multi=False,
-                    placeholder="Seleziona una o più richieste...",
-                    style={
-                        "fontSize": "18px"
-                    }
-                ),
-                
-                # contenitore delle informazioni nella richiesta (output)
-                html.Div(
-                    id="contenitore-informazioni-richiesta",
-                    children=["Seleziona una richiesta per vederne i dettagli"],
-                    style={
-                        "maxHeight": "320px",
-                        "overflowY": "auto",
-                        "padding": "5px",
-                        "textAlign": "center"
-                    }
-                ),
-
-                # bottoni per rifiutare o accettare la richiesta
-                html.Div(
-                    className="d-flex justify-content-center gap-2 mt-1",
-                    children=[
-                        dbc.Button(
-                            "Accetta richiesta",
-                            id="btn-accetta-richiesta",
-                            color="success",
-                            className="me-3",  # margin-end
-                            n_clicks=0
-                        ),
-                        dbc.Button(
-                            "Rifiuta richiesta",
-                            id="btn-rifiuta-richiesta",
-                            color="danger",
-                            n_clicks=0
-                        )
-                    ],
-                    style={"marginTop": "10px", "textAlign": "left"}
-                )
+                render_richieste_account()
             ]
         )
     ]
 )
+
 
 # funzione che prende i dati e li rende sotto forma di card piu carin e leggibile 
 def render_dati_richiesta(dati):
@@ -1741,16 +1768,21 @@ def render_dati_richiesta(dati):
                 ], width=4, style={"marginBottom": "0.25rem"}),
             ]),
 
-        ], style= {"height": "66vh"}),      # così si adatta alla dimensione dello schermo
+        ], style= {"maxHeight": "100vh", "maxWidth": "100vw"}),      # così si adatta alla dimensione dello schermo
+        
+        # questi sono i parametri della card esterna
         className="shadow-sm w-100",
         style={"flex": "1", "padding": "0.7rem"}
     )
 
 
+
+
+# funzione che crea l'elenco di pazienti dato un dict di pazienti.
 def render_lista_pazienti(pazienti):
     return html.Div(
         className="card",
-        style={  # CONTENITORE ESTERNO
+        style={                                 # CONTENITORE ESTERNO
             "flex": 1,
             "display": "flex",
             "flexDirection": "column",
@@ -1758,19 +1790,19 @@ def render_lista_pazienti(pazienti):
             "borderRadius": "15px",
             "padding": "10px",
             "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-            "overflow": "hidden",           # Nasconde la scrollbar esterna
-            "maxHeight": "100vh",           # Come nel TUO originale
+            "overflow": "hidden",               # nasconde la scrollbar esterna
+            "maxHeight": "100vh",           
         },
         children=[
             html.Div(
-                style={  # CONTENUTO SCROLLABILE
+                style={                         # CONTENUTO SCROLLABILE
                     "display": "flex",
                     "flexDirection": "column",
                     "padding": "5px",
-                    "paddingRight": "15px",  # Spazio extra sulla destra
+                    "paddingRight": "15px",     # spazio extra sulla destra
                     "overflowY": "auto",
                     "boxSizing": "border-box",
-                    "maxHeight": "82vh",      # Altezza scrollabile più piccola
+                    "maxHeight": "82vh",        # sltezza scrollabile più piccola
                 },
                 children=[
                     dbc.Button(
@@ -1793,13 +1825,7 @@ def render_lista_pazienti(pazienti):
     )
 
 
-# POP-UPS DEI BOTTONI DELLA PAGINA ADMIN-PAZIENTE E ADMIN-DIABETOLOGO
-# Popup 1
-
-
-
-
-# appena aggiunta
+# funzione che da il layout completo della pagina di gestione dei pazienti dell'admin.
 def layout_lista_pazienti():
     pazienti = model.get_all_pazienti()
 
@@ -1815,10 +1841,17 @@ def layout_lista_pazienti():
             "gap": "20px",
         },
         children=[
-            # Colonna sinistra: elenco pazienti
-            render_lista_pazienti(pazienti),
 
-            # Colonna destra: dettagli del paziente selezionato
+            # colonna sinistra: elenco pazienti
+            html.Div(
+                id= "contenitore-lista-pazienti",
+                children= render_lista_pazienti(pazienti),
+                style={
+                    "flex": 1
+                }    
+            ),
+            
+            # colonna destra: dettagli del paziente selezionato
             html.Div(
                 id="dettagli-paziente",
                 style={
@@ -1877,7 +1910,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                         "borderRadius": "1px",
                     }),
 
-                     # prima riga di pulsanti
+                     
                     html.Div(
                     [
                         # prima riga pulsanti
@@ -1943,24 +1976,72 @@ def crea_card_paziente(dati_paziente, dati_diab):
                 is_open=False,
                 size="xl",  
                 centered=True          
+            ),
+
+            # pop-up per la rimozione del paziente selezionato
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Attenzione!"),
+                    dbc.ModalBody(
+                        html.Div([
+                            dbc.Alert(
+                                """L'eliminazione di un account è un operazione irreversibile.
+                                E' sicuro/a di voler eliminare il paziente selezionato?""", color="danger"
+                            ),
+                            dbc.Row(
+                                [
+                                    # pulsanti per la conferma o annullamento della rimozione del paziente
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Si",
+                                            id="btn-delete-paz-confirm-YES",
+                                            color="danger",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=5
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "No",
+                                            id="btn-delete-paz-confirm-NO",
+                                            color="success",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=5
+                                    )
+                                ],
+                                justify="center",
+                                className="d-flex justify-content-center mt-3"
+                            )
+                        ]),
+                        style={"padding": "10px", "color": "red"}  
+                    ),
+                ],
+                id="pop-admin-delete-patient",
+                is_open=False,
+                size="lg",  
+                centered=True          
             )
         ],
         style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
     )
 
 
-# PAZIENTI ADMIN
+# PAZIENTI ADMIN PRINCIPALE. riunisce tutto ciò che c'è di grafico riguardo alla pagina url "/admin-patient"
 admin_patient = html.Div(
+    id= "contenitore-admin-layout-gestione-pazienti",
     style={
         # la doctor_dashboard si adatta automaticamente allo spazio disponibile
         'flex' : 1,
 
         'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        # "row" = da sinistra a destra
         'flex-direction': 'row',
-        # Spazio dai margini esterni
+        # sazio dai margini esterni
         'padding': '20px',
-        # Spazio interno tra le colonne
+        # spazio interno tra le colonne
         'gap': '20px'
     },
     children=[
@@ -1972,7 +2053,7 @@ admin_patient = html.Div(
 def render_lista_diabetologi(diabetologi):
     return html.Div(
         className="card",
-        style={  # CONTENITORE ESTERNO
+        style={                 # CONTENITORE ESTERNO
             "flex": 1,
             "display": "flex",
             "flexDirection": "column",
@@ -1980,21 +2061,23 @@ def render_lista_diabetologi(diabetologi):
             "borderRadius": "15px",
             "padding": "10px",
             "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-            "overflow": "hidden",          # Nasconde scrollbar esterna
-            "maxHeight": "100vh",         # Altezza uguale alla prima
+            "overflow": "hidden",           # nasconde scrollbar esterna
+            "maxHeight": "100vh",           
         },
         children=[
             html.Div(
-                style={  # CONTENUTO SCROLLABILE
+                style={         # CONTENUTO SCROLLABILE
                     "display": "flex",
                     "flexDirection": "column",
                     "padding": "5px",
-                    "paddingRight": "15px",   # Spazio extra sulla destra
+                    "paddingRight": "15px",   # spazio extra sulla destra per ospitale la scrollbar
                     "overflowY": "auto",
                     "boxSizing": "border-box",
-                    "maxHeight": "82vh",      # Altezza scrollabile come nella prima
+                    "maxHeight": "82vh",      # altezza scrollabile
                 },
                 children=[
+                    
+                    # bottoni che compongono l'elenco di diabetologi
                     dbc.Button(
                         f"{d['nome']} {d['cognome']}",
                         id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
@@ -2031,7 +2114,15 @@ def layout_lista_diabetologi():
             "gap": "20px"
         },
         children=[
-            render_lista_diabetologi(diabetologi),
+
+            # elenco dei diabetologi
+            html.Div(
+                id="contenitore-lista-diabetologi",
+                children= render_lista_diabetologi(diabetologi),
+                style= {"flex": 1}
+            ),
+
+            # card a destra della lista diabetologi, con dentro i dettagli 
             html.Div(
                 id="dettagli-diabetologo",
                 style={
@@ -2123,44 +2214,21 @@ def crea_card_diabetologo(dati_diabetologo):
     )
 
 
-# DIABETOLOGI ADMIN
+# DIABETOLOGI ADMIN PRINCIPALE. riunisce tutto ciò che c'è di grafico riguardo alla pagina url "/admin-doctor"
 admin_doctor = html.Div(
+    id= "contenitore-admin-layout-gestione-diabetologi",
     style={
         # la doctor_dashboard si adatta automaticamente allo spazio disponibile
         'flex' : 1,
         'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        # "row" = da sinistra a destra
         'flex-direction': 'row',
-        # Spazio dai margini esterni
+        # spazio dai margini esterni
         'padding': '20px',
-        # Spazio interno tra le colonne
+        # spazio interno tra le colonne
         'gap': '20px'
     },
     children=[
         layout_lista_diabetologi()
     ]
 )
-
-
-
-
-# Popup 2
-popup_2 = dbc.Modal([
-    dbc.ModalHeader("Dettaglio Grafico Pazienti"),
-    dbc.ModalBody("Contenuto del popup 2..."),
-    dbc.ModalFooter(dbc.Button("Chiudi", id="chiudi-popup-2", className="ms-auto"))
-], id="popup-2", is_open=False)
-
-# Popup 3
-popup_3 = dbc.Modal([
-    dbc.ModalHeader("Dettaglio Modifica Dati"),
-    dbc.ModalBody("Contenuto del popup 3..."),
-    dbc.ModalFooter(dbc.Button("Chiudi", id="chiudi-popup-3", className="ms-auto"))
-], id="popup-3", is_open=False)
-
-# Popup 4
-popup_4 = dbc.Modal([
-    dbc.ModalHeader("Dettaglio Rimozione Diabetologo"),
-    dbc.ModalBody("Contenuto del popup 4..."),
-    dbc.ModalFooter(dbc.Button("Chiudi", id="chiudi-popup-4", className="ms-auto"))
-], id="popup-4", is_open=False)

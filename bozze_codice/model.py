@@ -541,6 +541,16 @@ class Admin(Persona):
         
         cursore_4.close()
 
+    # funzione che elimina un paziente nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
+    def elimina_paziente(id_paziente):
+        """elimina un paziente dalla DB dato il suo id_paziente"""
+
+        cursore = connection.cursor()
+        cursore.execute("DELETE FROM Paziente WHERE id_paziente = %s", (id_paziente,))
+        connection.commit()
+
+        cursore.close()
+
         
 
 #fil - design pattern factory, per rendere la creazione di oggetti riguardanti gli attori principali più 'elegante'
@@ -766,13 +776,13 @@ def get_by_username(username_utente):
 
 
 
-
+# PER I PAZIENTI
 # funzione che ritorna tutte le richieste di creazione account con stato "in_attesa"
-def get_all_richieste_account():
+def get_richieste_account_pazienti():
     
     cursore_8 = connection.cursor()
 
-    cursore_8.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s", ("in_attesa",))
+    cursore_8.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s", ("in_attesa", "TRUE",))
     result = cursore_8.fetchall()
     
     cursore_8.close()
@@ -783,6 +793,26 @@ def get_all_richieste_account():
         for id_richiesta, nome, cognome, codice_fiscale in result
     ]
     return options
+
+
+# PER I DIABETOLOGI
+# funzione che ritorna tutte le richieste di creazione account con stato "in_attesa"
+def get_richieste_account_diabetologi():
+    
+    cursore_23 = connection.cursor()
+
+    cursore_23.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s", ("in_attesa", "FALSE",))
+    result = cursore_23.fetchall()
+    
+    cursore_23.close()
+
+    # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
+    options = [
+        {"label": f"{nome} {cognome} {codice_fiscale}", "value": id_richiesta}
+        for id_richiesta, nome, cognome, codice_fiscale in result
+    ]
+    return options
+
 
 
 
@@ -827,7 +857,7 @@ def get_dettagli_paziente(id_paziente):
     return None
 
 
-# funzione che prende tutti i pazienti nella db
+# funzione che prende tutti i pazienti nella db, e ne ritorna i dati in un dict
 def get_all_pazienti():
     cursore_6 = connection.cursor()
     cursore_6.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente")
@@ -851,7 +881,7 @@ def get_all_pazienti():
     return pazienti
 
 
-# funzione che dato l'id di un diabetologo, ritorna tutti i dati
+# funzione che dato l'id di un diabetologo, ritorna tutti i suoi dati (tranne pw)
 def get_dettagli_diabetologo(id_diabetologo):
     cursore_21 = connection.cursor()
     cursore_21.execute("""
@@ -882,7 +912,7 @@ def get_dettagli_diabetologo(id_diabetologo):
     return None
 
 
-# funzione che prende tutti i diabetologi nella db
+# funzione che prende tutti i diabetologi nella db e li restituisce sotto forma di dict.
 def get_all_diabetologi():
     cursore_7 = connection.cursor()
     cursore_7.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo")
@@ -904,59 +934,8 @@ def get_all_diabetologi():
     cursore_7.close()
     return diabetologi
 
-
-# funzione che permette di visualizzare il grafico di tutti i pazienti nella db.
-# problema: come fare i filtri?
-def visualizza_glicemia_tutti_pazienti():
-    
-    cursore_17 = connection.cursor()
-
-    cursore_17.execute("SELECT id_paziente, username FROM Paziente")
-    pazienti = cursore_17.fetchall()
-
-    fig = go.Figure()
-
-    for id_paziente, username in pazienti:
-        cursore_17.execute("""
-            SELECT valore, data_inserimento 
-            FROM Glicemia 
-            WHERE paziente = %s
-            ORDER BY data_inserimento
-        """, (id_paziente,))
-        dati = cursore_17.fetchall()
-
-        if not dati:
-            continue                    # per i pazienti senza dati
-
-        valori = [r[0] for r in dati]
-        date = [r[1] for r in dati]
-
-        fig.add_trace(go.Scatter(
-            x=date,
-            y=valori,
-            mode='lines+markers',
-            name=f"{username}"
-        ))
-
-    # layout del grafico
-    fig.update_layout(
-        xaxis_title="data di inserimento",
-        yaxis_title="glicemia (mg/dL)",
-         legend=dict(
-            orientation="h",  # orizzontale
-            yanchor="bottom",
-            y=1.02,  # poco sopra il grafico (usa y=0 per sotto)
-            xanchor="left",
-            x=0
-        ),
-        margin=dict(l=10, r=10, t=5, b=10),  # riduco i margini del grafico
-    )
-
-    cursore_17.close()
-
-    return fig
-
-    # *********************** test
+# ***********************
+# funzione che ritorna il grafico delle media della glicemia dei pazienti di ogni diabetologo
 def visualizza_media_glicemia_per_diabetologi():
     cursore=connection.cursor()
     diabetologi = get_all_diabetologi()
@@ -974,7 +953,7 @@ def visualizza_media_glicemia_per_diabetologi():
         nomi.append(nome_completo)
 
         if not dati_pazienti:
-            medie.append(0)  # oppure None, se vuoi lasciare vuota la colonna
+            medie.append(0)  # oppure None, se si vuole lasciare vuota la colonna
             continue
 
         media_diabetologo = sum([r[1] for r in dati_pazienti]) / len(dati_pazienti)
@@ -997,7 +976,7 @@ def visualizza_media_glicemia_per_diabetologi():
         legend=dict(
             orientation="h",  # orizzontale
             yanchor="bottom",
-            y=1.02,  # poco sopra il grafico (usa y=0 per sotto)
+            y=1.02,  # poco sopra il grafico (y=0 per sotto)
             xanchor="left",
             x=0),
         margin=dict(l=10, r=10, t=5, b=10)
