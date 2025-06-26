@@ -441,7 +441,7 @@ def registra_callbacks(app):
 # ******************************************************************************************************************
     #permette di vedere i grafici paziente per paziente al diabetologo
     @app.callback(
-        Output("patient-number", "children"),
+        Output("doctor-info", "children"),
         Output("patient-pie", "children"),
         Input("url", "pathname"),
         prevent_initial_call=True
@@ -449,6 +449,7 @@ def registra_callbacks(app):
     def mostra_dati_dashboard(pathname):
         cur=model.connection.cursor()
         if pathname=="/doctor-dashboard":
+            id=current_user.get_id_diabetologo()
             # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
             labels = ['Fuori dal limite','Alta','Normale']
             cur.execute("""
@@ -457,7 +458,7 @@ def registra_callbacks(app):
                 JOIN Glicemia g on p.id_paziente=g.paziente
                 WHERE p.diabetologo_associato=%s
                 GROUP BY id_paziente
-            """, (current_user.get_id_diabetologo(),))
+            """, (id,))
             media_glicemie = cur.fetchall()
 
             a = n = o = 0
@@ -471,12 +472,12 @@ def registra_callbacks(app):
                     o += 1
 
             values = [a,n,o]
-            num_paz=current_user.get_numero_pazienti_associati()
+            info=model.get_info_base_diabetologo(id)
             if(a==0 and n==0 and o==0):
-                return num_paz,"Nessun dato glicemico inserito"
+                return view.crea_div_info_base(info,False),"Nessun dato glicemico inserito"
             colors = ["#FF4C4C", '#FFD93B', '#08ff46'] 
             torta = go.Figure(data=[go.Pie(labels=labels, values=values,marker=dict(colors=colors))])
-            return num_paz,dcc.Graph(figure=torta)
+            return view.crea_div_info_base(info,False),dcc.Graph(figure=torta)
         else:
             return dash.no_update
         
@@ -581,7 +582,7 @@ def registra_callbacks(app):
         if path == "/doctor-dashboard":
             id_diab=current_user.get_id_diabetologo()
             info = model.get_info_base_paziente(id_diab,id_paz)
-            div = view.crea_div_info_base_paziente(info)
+            div = view.crea_div_info_base(info,True)
             return div
         else:
             return dash.no_update
@@ -599,7 +600,7 @@ def registra_callbacks(app):
             diab= current_user.get_diabetologo()[0]
             id_diab=diab["id"]
             info = model.get_info_base_paziente(id_diab,id_paz)
-            div = view.crea_div_info_base_paziente(info)
+            div = view.crea_div_info_base(info,True)
             return div
         else:
             return dash.no_update

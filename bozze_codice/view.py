@@ -774,11 +774,13 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     children=[
+                        html.H5("Andamento: ", style={"color" : "grey"}),
+                        html.Hr(),
                         html.Div(id='first-graph'),
                         html.Br(),
                         filtro_temporale(1),
-                        
-                    ]
+                    ],                    
+
                 ),
 
                 # Riquadro 2
@@ -786,6 +788,8 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     children=[
+                        html.H5("Media per fascia oraria: ", style={"color" : "grey"}),
+                        html.Hr(),
                         html.Div(id='second-graph'),
                         html.Br(),
                         filtro_temporale(2),
@@ -808,6 +812,8 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     children=[
+                        html.H5("Eventi glucosio basso: ", style={"color" : "grey"}),
+                        html.Hr(),
                         html.Div(id='third-graph'),
                         html.Br(),
                         filtro_temporale(3),
@@ -887,26 +893,10 @@ doctor_dashboard = html.Div(
                         # Numero 5
                         html.Div(
                             [
-                                html.H5("Pazienti totali:", style={"color" : "grey"}),
+                                html.H5("Le tue info:", style={"color" : "grey"}),
                                 html.Hr(),
                                 # Qua va inserito il numero dei pazienti (associati)
-                                html.Div(
-                                    [
-                                        "0"
-                                    ],
-                                    style={
-                                        "height": "100%",
-                                        "width": "100%",
-                                        "display": "flex",
-                                        "align-items": "center",
-                                        "justify-content": "center",
-                                        # dimensione del numero
-                                        "font-size": "150px",
-                                        # colore per tutti i numeri
-                                        "color": "#555"
-                                    },
-                                    id="patient-number"
-                                )
+                                html.Div(id="doctor-info")
                             ],
                             className="card"
                         ),
@@ -1085,12 +1075,11 @@ doctor_patient = html.Div(
                                         dbc.Label("Indicazioni"),
                                         dbc.Textarea(id="input-nuovo-indicazioni"),
                                         html.Br(),
-                                        dbc.Button("Salva", id="salva-nuova-terapia-btn", color="primary",n_clicks=0),
+                                        dbc.Button("Salva", id="salva-nuova-terapia-btn", color="primary",n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
+                                        dbc.Button("Annulla", id="chiudi-nuova-terapia",color="danger", className="ms-auto",style={"flex":1,"display":"flex","border-radius":"25px"}),
                                         dbc.Alert(id="aggiungi-terapia-output", is_open=False)
                                     ]),
-                                    dbc.ModalFooter(
-                                        dbc.Button("Chiudi", id="chiudi-nuova-terapia", className="ms-auto")
-                                    ),
+                                    
                                 ],
                                 id="popup-nuova-terapia",
                                 is_open=False,
@@ -1219,7 +1208,7 @@ def render_lista_pazienti_glicemia(pazienti):
 #fil-funzione che permette di creare una lista ordinata dalle info dei paziente 
 
 def crea_div_paziente(cfanno, info, segnalazioni):
-    codice_fiscale, eta = cfanno[0]
+    codice_fiscale, eta, nome = cfanno[0]
     # Codice fiscale
     str_cf = f"Codice fiscale: {codice_fiscale}"
     # età
@@ -1254,11 +1243,11 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                         html.Label("Comorbidità:"),
                         dbc.Input(id="insert-comorb", type="text", value=""),
                         html.Br(), html.Br(),
-                        dbc.Button("Salva modifiche", id="inserisci-modifiche-btn", n_clicks=0),
+                        dbc.Button("Salva modifiche", id="inserisci-modifiche-btn", n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
+                        dbc.Button("Annulla", id="close-insert-infopaz",color="danger", className="ml-auto",style={"flex":1,"display":"flex","border-radius":"25px"}),
                         html.Br(),
                         dbc.Alert(id="inserisci-info-output", is_open=False),
                     ])),
-                    dbc.ModalFooter(dbc.Button("Chiudi", id="close-insert-infopaz", className="ml-auto")),
                 ],
                 id="popup-inserisci-info",
                 is_open=False
@@ -1332,11 +1321,11 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                     html.Label("Comorbidità:"),
                     dbc.Input(id="input-comorb", type="text", value=", ".join(sorted(comorbidita))),
                     html.Br(), html.Br(),
-                    dbc.Button("Salva modifiche", id="salva-modifiche-btn", n_clicks=0),
+                    dbc.Button("Salva modifiche", id="salva-modifiche-btn", n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
+                    dbc.Button("Annulla", id="close-modifica-infopaz",color="danger", className="ml-auto",style={"flex":1,"display":"flex","border-radius":"25px"}),
                     html.Br(),
                     dbc.Alert(id="modifica-info-output", is_open=False),
                 ])),
-                dbc.ModalFooter(dbc.Button("Chiudi", id="close-modifica-infopaz", className="ml-auto")),
             ],
             id="popup-modifica-info",
             is_open=False,
@@ -1380,13 +1369,18 @@ def crea_div_terapia_selezionata(terapia, modificabile):
                         dbc.Label("Indicazioni"),
                         dbc.Textarea(id="input-indicazioni", value=terapia[9]),
                         html.Br(),
-                        dbc.Button("Salva modifiche", id="btn-salva-modifiche-terapia", color="primary", n_clicks=0),
-                        dbc.Button("Elimina terapia", id="btn-elimina-terapia", color="danger", n_clicks=0),
+                        html.Div(
+                            [
+                                dbc.Button("Salva modifiche", id="btn-salva-modifiche-terapia", color="primary", n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
+                                dbc.Button("Elimina terapia", id="btn-elimina-terapia", color="danger", n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
+                                dbc.Button("Annulla", id="chiudi-modal-terapia",color="primary", className="ms-auto",style={"flex":1,"display":"flex","border-radius":"25px"}),
+                            ]
+                        ),
                         dbc.Modal([
                             dbc.ModalBody([
                                 html.H6("Sei sicuro di voler eliminare la terapia selezionata?"),
-                                dbc.Button("Si", id="conferma-elimina-terapia", color="primary", n_clicks=0),
-                                dbc.Button("No", id="declina-elimina-terapia", color="danger", n_clicks=0),
+                                dbc.Button("Si", id="conferma-elimina-terapia", color="primary", n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
+                                dbc.Button("No", id="declina-elimina-terapia", color="danger", n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
                             ]),
                         ],
                             id="popup-elimina-terapia",
@@ -1394,9 +1388,7 @@ def crea_div_terapia_selezionata(terapia, modificabile):
                         ),
                         dbc.Alert(id="modifica-terapia-output", is_open=False),
                     ]),
-                    dbc.ModalFooter(
-                        dbc.Button("Chiudi", id="chiudi-modal-terapia", className="ms-auto")
-                    )
+                    
                 ],
                 id="popup-modifica-terapia",
                 is_open=False
@@ -1431,58 +1423,108 @@ def crea_div_terapia_dropdown(terapie):
 
 # ******************************************************************************************************************
 # Metodo che crea una card di informazioni di base del paziente: da visualizzare nella dashboard del dottore (card 4)
-def crea_div_info_base_paziente(info_paziente):
-    if not info_paziente:
-        return html.Div("Nessuna informazione disponibile per questo paziente.")
+def crea_div_info_base(info,flagpaziente):
+    if not info:
+            return html.Div("Nessuna informazione disponibile per questo paziente.")
+    if flagpaziente:
 
-    username, nome, cognome, data_nascita, sesso, media_glicemia = info_paziente[0]
+        username, nome, cognome, data_nascita, sesso, media_glicemia = info[0]
 
-    return html.Div([
-        # Nome + Username
-        # 'padding': '5px 20px', 'textAlign': 'center' 
-        html.Div(
-            [
-                html.H3(f"{nome} {cognome}", style={"display": "inline-block", "margin-right": "20px", 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'padding': '5px 10px', 'textAlign': 'center'}),
-                html.H5(f"{username}", style={"display": "inline-block", "color": "gray"}),
-            ],
-            className="text-inline"
-        ),
-        # Data di nascita + sesso
-        html.Div([
+        return html.Div([
+            # Nome + Username
+            # 'padding': '5px 20px', 'textAlign': 'center' 
+            html.Div(
+                [
+                    html.H3(f"{nome} {cognome}", style={"display": "inline-block", "margin-right": "20px", 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'padding': '5px 10px', 'textAlign': 'center'}),
+                    html.H5(f"{username}", style={"display": "inline-block", "color": "gray"}),
+                ],
+                className="text-inline"
+            ),
+            # Data di nascita + sesso
             html.Div([
-                html.P(f"Data di nascita:  {data_nascita.strftime('%d/%m/%Y')}", style={'font-size': '20px'}),
-                html.P(f"Sesso:  {'Femmina' if sesso == 'F' else 'Maschio'}", style={'font-size': '20px'})
+                html.Div([
+                    html.P(f"Data di nascita:  {data_nascita.strftime('%d/%m/%Y')}", style={'font-size': '20px'}),
+                    html.P(f"Sesso:  {'Femmina' if sesso == 'F' else 'Maschio'}", style={'font-size': '20px'})
+                    ],
+                    style={
+                        'flex': 1,
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                        'padding': '10px'
+                    }
+                ),
+
+                html.Div([
+                    html.P("Glicata:", style={'font-size': '20px'}),
+                    html.Div([
+                        html.P(round((float(media_glicemia)*0.0348)+1.63, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                        html.P(" mg/dL", style={'display': 'inline-block', 'color': 'gray'})
+                    ]),
+                ],
+                    style={
+                        'flex': 1,
+                        'padding' : '10px',
+                        'flexDirection': 'column'
+                    }
+                )
+
                 ],
                 style={
-                    'flex': 1,
                     'display': 'flex',
-                    'flexDirection': 'column',
-                    'padding': '10px'
-                }
-            ),
-
-            html.Div([
-                html.P("Glicata:", style={'font-size': '20px'}),
-                html.Div([
-                    html.P(round((float(media_glicemia)+46.7)/28.7, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
-                    html.P(" mg/dL", style={'display': 'inline-block', 'color': 'gray'})
-                ]),
-            ],
-                style={
-                    'flex': 1,
-                    'padding' : '10px',
-                    'flexDirection': 'column'
+                    'gap': '20px',
                 }
             )
-
-            ],
-            style={
-                'display': 'flex',
-                'gap': '20px',
-            }
+            ], 
         )
-        ],        
-    )
+    else:
+        username, nome, cognome, data_nascita, sesso, pazienti_associati = info[0]
+
+        return html.Div([
+            # Nome + Username
+            # 'padding': '5px 20px', 'textAlign': 'center' 
+            html.Div(
+                [
+                    html.H3(f"{nome} {cognome}", style={"display": "inline-block", "margin-right": "20px", 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'padding': '5px 10px', 'textAlign': 'center'}),
+                    html.H5(f"{username}", style={"display": "inline-block", "color": "gray"}),
+                ],
+                className="text-inline"
+            ),
+            # Data di nascita + sesso
+            html.Div([
+                html.Div([
+                    html.P(f"Data di nascita:  {data_nascita.strftime('%d/%m/%Y')}", style={'font-size': '20px'}),
+                    html.P(f"Sesso:  {'Femmina' if sesso == 'F' else 'Maschio'}", style={'font-size': '20px'})
+                    ],
+                    style={
+                        'flex': 1,
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                        'padding': '10px'
+                    }
+                ),
+
+                html.Div([
+                    html.P("Pazienti associati:", style={'font-size': '20px'}),
+                    html.Div([
+                        html.P(pazienti_associati, style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                    ]),
+                ],
+                    style={
+                        'flex': 1,
+                        'padding' : '10px',
+                        'flexDirection': 'column'
+                    }
+                )
+
+                ],
+                style={
+                    'display': 'flex',
+                    'gap': '20px',
+                }
+            )
+            ], 
+        )       
+        
 
 # CHAT (= chat_content) -> Già fatta
 

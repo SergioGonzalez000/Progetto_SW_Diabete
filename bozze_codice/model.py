@@ -388,18 +388,18 @@ class Diabetologo(Persona):
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def visualizza_dati_paziente(self,id_paz):
         cursore_15=connection.cursor()
-        cursore_15.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita)
+        cursore_15.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita), nome
                         FROM Paziente
                         WHERE id_paziente=%s
                         """,(id_paz,))
-        cfanno=cursore_15.fetchall()
+        cfannonome=cursore_15.fetchall()
         cursore_15.execute("""SELECT i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                 FROM infopaziente i
                                 WHERE i.paziente=%s
                                """,(id_paz, ))
         info=cursore_15.fetchall()
         cursore_15.close()
-        return cfanno,info 
+        return cfannonome,info 
 
     def get_segnalazioni_paziente(self,id_paziente):
         cursore = connection.cursor()
@@ -1052,43 +1052,48 @@ def visualizza_andamento_glicemia(dati):
 
         fig = go.Figure()
 
-        # Area azzurra sotto
-        fig.add_trace(go.Scatter(
-            x=date,
-            y=valori,
-            mode='lines',
-            line=dict(width=0),
-            showlegend=False
-        ))
-
         fig.add_trace(go.Scatter(
             x=date,
             y=valori,
             mode='lines+markers',
-            fill='tonexty',
+            fill='tozeroy',
             fillcolor='rgba(0, 123, 255, 0.2)',
             line=dict(color='blue', width=3),
-            name='Glicemia'
+            marker=dict(size=6),
+            name='Glicemia',
+            hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<extra></extra>'
         ))
 
         # Linee soglia glicemica
         for soglia in [80, 130]:
-            fig.add_trace(go.Scatter(
+            fig.add_trace(go.Scatter(   
                 x=date,
                 y=[soglia]*len(date),
                 mode='lines',
                 line=dict(color="#71BAFF", dash='dash'),
                 name=f'Soglia {soglia} mg/dL',
+                hoverinfo='skip'
             ))
 
         fig.update_layout(
             xaxis_title='Data rilevazione',
             yaxis_title='Glicemia (mg/dL)',
-            yaxis=dict(range=[0, max(valori) + 50]),
+            yaxis=dict(range=[min(50, min(valori)-10), max(valori) + 50]),
             plot_bgcolor="#e6f2ff",
             hovermode='x unified',
             font=dict(family='Arial', size=14),
-            height=500
+            # altezza forzata a 40px
+            height=400,
+            # margini forzati a top/bottom/left/right = 10px
+            margin=dict(t=10, b=10, l=10, r=10),
+            legend=dict(
+                x=0.01, # posizione orizzontale
+                y=0.99, # posizione verticale
+                xanchor='left', # a sinistra
+                yanchor='top', # in alto
+                bgcolor='rgba(255,255,255,0.3)', # sfondo semi trasparente di colore bianco
+                borderwidth=0 # senza bordo
+            )
         )
 
         return fig
@@ -1200,6 +1205,19 @@ def get_info_base_paziente(id_diab,id_paz):
                             WHERE p.diabetologo_associato = %s and p.id_paziente=%s
                             GROUP BY p.id_paziente
                             """,(id_diab,id_paz))
+    result = cursore.fetchall()
+    cursore.close()
+    return result
+
+
+def get_info_base_diabetologo(id_diab):
+    cursore = connection.cursor()
+    cursore.execute("""SELECT d.username, d.nome, d.cognome, d.data_nascita, d.sesso, COUNT(*)
+                            FROM Diabetologo d
+                            JOIN Paziente p ON d.id_diabetologo=p.diabetologo_associato
+                            WHERE id_diabetologo=%s
+                            GROUP BY d.username,d.nome,d.cognome,d.data_nascita,d.sesso
+                            """,(id_diab,))
     result = cursore.fetchall()
     cursore.close()
     return result
