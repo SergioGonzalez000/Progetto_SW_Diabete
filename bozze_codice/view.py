@@ -541,6 +541,35 @@ registration = html.Div(
 # 2. Grafici
 # 3. Chat
 # ******************************************************************************************************************
+#popover generale che viene riutilizzato nelle altre parti della view
+def info_popover(button_id, popover_id, contenuto, title="Informazioni"):
+    return html.Div([
+        dbc.Button("i", id=button_id, color="light", style={
+            "borderRadius": "50%",
+            "width": "24px",
+            "height": "24px",
+            "padding": "0",
+            "textAlign": "center",
+            "lineHeight": "1",
+            "fontSize": "12px"
+        }),
+        dbc.Popover(
+            dbc.PopoverBody([
+                html.H6(title),
+                contenuto
+            ]),
+            target=button_id,
+            body=True,
+            trigger="click",
+            placement="right",
+            id=popover_id
+        )
+    ], style={
+        "display": "flex",
+        "alignItems": "center",
+        "gap": "5px",
+        "marginBottom": "10px"
+    })
 
 # DASHBOARD DEL PAZIENTE
 
@@ -779,8 +808,19 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     children=[
-                        html.H5("Andamento: ", style={"color" : "grey"}),
-                        html.Hr(),
+                        html.Div(
+                            [
+                                html.H5("Andamento: ", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-2",
+                                    popover_id="popover-2",
+                                    contenuto=html.Div([
+                                        "Mostra i valori di glicemia registrati durante il periodo selezionato.",
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
+                        ),
                         html.Div(id='first-graph'),
                         html.Br(),
                         filtro_temporale(1),
@@ -793,8 +833,19 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     children=[
-                        html.H5("Media per fascia oraria: ", style={"color" : "grey"}),
-                        html.Hr(),
+                        html.Div(
+                            [
+                                html.H5("Media:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-3",
+                                    popover_id="popover-3",
+                                    contenuto=html.Div([
+                                        "Mostra i valori medi di glicemia per fascia oraria, registrati durante il periodo selezionato.",
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
+                        ),
                         html.Div(id='second-graph'),
                         html.Br(),
                         filtro_temporale(2),
@@ -817,8 +868,19 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     children=[
-                        html.H5("Eventi glucosio basso: ", style={"color" : "grey"}),
-                        html.Hr(),
+                        html.Div(
+                            [
+                                html.H5("Eventi glucosio basso: ", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-4",
+                                    popover_id="popover-4",
+                                    contenuto=html.Div([
+                                        "Mappa che mostra la probabilità giornaliera di avere un la glicemia bassa.",
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
+                        ),
                         html.Div(id='third-graph'),
                         html.Br(),
                         filtro_temporale(3),
@@ -938,175 +1000,158 @@ doctor_dashboard = html.Div(
 # PAZIENTI DIABETOLOGO
 doctor_patient = html.Div(
     style={
-        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
-        'flex' : 1,
+        'flex': 1,
         'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
         'flex-direction': 'row',
-        # Spazio dai margini esterni
         'padding': '40px',
-        # Spazio interno tra le colonne
         'gap': '40px'
     },
-
-    # Layout finale:
-    # _____________
-    # |   |       |
-    # |   |___4___|
-    # | 3 |   |   |
-    # |___|_5_|_6_|
-    #   1     2  
     children=[
-
-        # Prima colonna che occupa 1/3
+        # Prima colonna (1/3)
         html.Div(
             [
-                html.H5("I tuoi pazienti:", style={"color" : "grey"}),
+                html.H5("I tuoi pazienti:", style={"color": "grey"}),
                 html.Hr(),
-                # Box per la lista dei pazienti
-                html.Div( id="doctor-patient-queue", style={"height": "100%","width": "100%", "flex-direction": "column"})
+                html.Div(
+                    id="doctor-patient-queue",
+                    style={"height": "100%", "width": "100%", "flex-direction": "column"}
+                )
             ],
-            className= "card"
+            className="card"
         ),
 
-        # Seconda colonna che occupa 2/3
+        # Seconda colonna (2/3)
         html.Div(
-            style= {
-                # Occupa 2/3
+            style={
                 "flex": 2,
                 "display": "flex",
-                "flex-direction" : "column",
-                # spazio tra 4 e 5/6 di 40 px
-                'gap': '40px'
+                "flex-direction": "column",
+                "gap": "40px"
             },
             children=[
+                # Riga superiore (Paziente + Terapia)
                 html.Div(
-                    [
-                        # Numero 5
-                        html.Div(
-                            [   
-                                html.H5("Paziente:", style={"color" : "grey"}),
-                                html.Hr(), 
-                                html.Div( id="patient-info", style={"height": "100%","width": "100%"}),
-                                dcc.Store(id="selected-patient-id", storage_type="session")#per salvare l'id del paziente
-                            ],
-                            #style={'Height': '200px'},
-                            className="card",
-                            
-                        ),
-                        # Numero 6
+                    style={
+                        "flex": 1,
+                        "display": "flex",
+                        "flex-direction": "row",
+                        "gap": "40px"
+                    },
+                    children=[
+                        # Box Paziente
                         html.Div(
                             [
-                                html.H5("Terapia:", style={"color" : "grey"}),
+                                html.H5("Paziente:", style={"color": "grey"}),
                                 html.Hr(),
-                                # Qua va inserita la tabella delle terapie
-                                html.Div( id="patient-therapy", style={"height": "100%","width": "100%"}),
+                                html.Div(
+                                    id="patient-info",
+                                    style={"height": "100%", "width": "100%"}
+                                ),
+                                dcc.Store(id="selected-patient-id", storage_type="session")
+                            ],
+                            className="card"
+                        ),
+
+                        # Box Terapia
+                        html.Div(
+                            [
+                                html.H5("Terapia:", style={"color": "grey"}),
                                 html.Hr(),
-                                dbc.Button("Aggiungi terapia",id="aggiungi-terapia-btn",n_clicks=0),
+                                html.Div(
+                                    id="patient-therapy",
+                                    style={"height": "100%", "width": "100%"}
+                                ),
+                                html.Hr(),
+                                dbc.Button("Aggiungi terapia", id="aggiungi-terapia-btn", n_clicks=0),
                                 dbc.Modal(
-                                [
-                                    dbc.ModalHeader(dbc.ModalTitle("Nuova Terapia")),
-                                    dbc.ModalBody([
-                                        dbc.Label("Farmaco"),
-                                        dbc.Input(id="input-nuovo-farmaco", type="text"),
-                                        dbc.Label("Dosaggio (mg)"),
-                                        dbc.Input(id="input-nuovo-dosaggio", type="number"),
-                                        dbc.Label("Assunzioni al giorno"),
-                                        dbc.Input(id="input-nuovo-assunzioni", type="number"),
-                                        dbc.Label("Data inizio"),
-                                        dcc.DatePickerSingle(id="input-nuovo-data-inizio"),
-                                        dbc.Label("Data fine"),
-                                        dcc.DatePickerSingle(id="input-nuovo-data-fine",min_date_allowed=None),
-                                        dbc.Label("Indicazioni"),
-                                        dbc.Textarea(id="input-nuovo-indicazioni"),
-                                        html.Br(),
-                                        dbc.Button("Salva", id="salva-nuova-terapia-btn", color="primary",n_clicks=0,style={"flex":1,"display":"flex","border-radius":"25px"}),
-                                        dbc.Button("Annulla", id="chiudi-nuova-terapia",color="danger", className="ms-auto",style={"flex":1,"display":"flex","border-radius":"25px"}),
-                                        dbc.Alert(id="aggiungi-terapia-output", is_open=False)
-                                    ]),
-                                    
-                                ],
-                                id="popup-nuova-terapia",
-                                is_open=False,
-                            ),
-    
+                                    [
+                                        dbc.ModalHeader(dbc.ModalTitle("Nuova Terapia")),
+                                        dbc.ModalBody([
+                                            dbc.Label("Farmaco"),
+                                            dbc.Input(id="input-nuovo-farmaco", type="text"),
+                                            dbc.Label("Dosaggio (mg)"),
+                                            dbc.Input(id="input-nuovo-dosaggio", type="number"),
+                                            dbc.Label("Assunzioni al giorno"),
+                                            dbc.Input(id="input-nuovo-assunzioni", type="number"),
+                                            dbc.Label("Data inizio"),
+                                            dcc.DatePickerSingle(id="input-nuovo-data-inizio"),
+                                            dbc.Label("Data fine"),
+                                            dcc.DatePickerSingle(id="input-nuovo-data-fine", min_date_allowed=None),
+                                            dbc.Label("Indicazioni"),
+                                            dbc.Textarea(id="input-nuovo-indicazioni"),
+                                            html.Br(),
+                                            dbc.Button(
+                                                "Salva",
+                                                id="salva-nuova-terapia-btn",
+                                                color="primary",
+                                                n_clicks=0,
+                                                style={"flex": 1, "display": "flex", "border-radius": "25px"}
+                                            ),
+                                            dbc.Button(
+                                                "Annulla",
+                                                id="chiudi-nuova-terapia",
+                                                color="danger",
+                                                className="ms-auto",
+                                                style={"flex": 1, "display": "flex", "border-radius": "25px"}
+                                            ),
+                                            dbc.Alert(id="aggiungi-terapia-output", is_open=False)
+                                        ])
+                                    ],
+                                    id="popup-nuova-terapia",
+                                    is_open=False
+                                )
                             ],
                             className="card",
                             style={'maxHeight': '100vh'}
                         )
-                    ],
-                    style={
-                        "flex": 1,
-                        "display": "flex",
-                        "flex-direction" : "row",
-                        # spazio tra 5 e 6 di 40 px
-                        "gap": "40px"
-                    }
+                    ]
                 ),
 
-                # Numero 4
+                # Riga inferiore (Grafico)
                 html.Div(
                     [
-                        html.Div([
-                            html.H5("Grafico:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
-                            dbc.Button("i", id="popover-button", color="light", style={
-                                "borderRadius": "50%",
-                                "width": "24px",
-                                "height": "24px",
-                                "padding": "0",
-                                "textAlign": "center",
-                                "lineHeight": "1",
-                                "fontSize": "12px"
-                            }),
-                        ], style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "gap": "5px",
-                            "marginBottom": "10px"
-                        }),
-
-                        dbc.Popover(
-                            dbc.PopoverBody(
-                                html.Div([
-                                    html.H6("Andamento:"),
-                                    "mostra i valori di glicemia registrati durante il periodo selezionato",
-                                    html.Br(),
-                                    html.H6("Media durante il giorno:"),
-                                    "mostra la glicemia media per fascia oraria del periodo selezionato"
-                                ])
-                            ),
-                            target="popover-button",  # ID del componente a cui è ancorato
-                            body=True,
-                            trigger="click",          # può essere "hover", "focus", "legacy", "click"
-                            placement="right",        # top, bottom, left, right
-                            id="popover"
+                        html.Div(
+                            [
+                                html.H5("Grafico:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-1",
+                                    popover_id="popover-1",
+                                    contenuto=html.Div([
+                                        "Mostra i valori di glicemia registrati durante il periodo selezionato.",
+                                        html.Br(),
+                                        html.H6("Media giornaliera:"),
+                                        "La media è calcolata su fasce orarie."
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
                         ),
-                        dcc.Dropdown(id="dropdown-scelta-grafico",
+
+                        dcc.Dropdown(
+                            id="dropdown-scelta-grafico",
                             options=[
-                                {
-                                    "label": "Andamento",
-                                    "value": "andamento",
-                                },
-                                {
-                                    "label": "Media durante il giorno",
-                                    "value": "medie"
-                                },
+                                {"label": "Andamento", "value": "andamento"},
+                                {"label": "Media durante il giorno", "value": "medie"}
                             ],
                             placeholder="Scegli una tipologia di grafico",
-                            style={"width": "100%"}),
+                            style={"width": "100%"}
+                        ),
                         html.Hr(),
-                        # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
-                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"}),
+                        html.Div(
+                            id="patient-graph",
+                            style={"height": "100%", "width": "100%"}
+                        ),
                         html.Br(),
-                        filtro_temporale(""),
+                        filtro_temporale("")
                     ],
                     style={"flex": 1},
-                    className="card",
-                ),
+                    className="card"
+                )
             ]
         )
     ]
 )
+
 
 #********************************************************************************************************************
 # LISTA PAZIENTI
