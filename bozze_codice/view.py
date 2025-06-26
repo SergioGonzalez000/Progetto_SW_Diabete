@@ -1515,11 +1515,13 @@ def crea_div_info_base_paziente(info_paziente):
 
 # CHAT (= chat_content) -> Già fatta
 
+
 # ******************************************************************************************************************
 # LAYOUT DELL'ADMIN:
 # 1. Dashboard
 # 2. Richieste
 # 3. Pazienti
+# 4. Diabetologi
 # ******************************************************************************************************************
 
 # DASHBOARD ADMIN
@@ -1563,10 +1565,10 @@ admin_dashboard = html.Div(
                             style={
                                 "flex": 1,
                                 "padding": "20px",
-                                "background-color": "#ffffff", # sfondo bianco
-                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                                "border-radius": "15px" # bordi arrotondati
+                                "background-color": "#ffffff",                    # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",     # ombra standard diciamo
+                                "border": "2px solid #dee2e6",                      # bordo di 2px grigio
+                                "border-radius": "15px"                             # bordi arrotondati
                             },
                             children=[
                                 html.H5("Glicemia media dei pazienti gestiti da ciascun diabetologo", style={"color" : "grey"}),
@@ -1598,104 +1600,82 @@ admin_dashboard = html.Div(
 
 
 # RICHIESTE DI INSERIMENTO NELLA PIATTAFORMA 
-# funzione che organizza in due colonne le richieste: una per pazienti e una diabetologi
+# funzione che organizza in due colonne SEPARATE le richieste: una per pazienti e una diabetologi
 def render_richieste_account():
+    style_div_interno = {
+        "flex": "1",
+        "minHeight": "1",          
+        "overflowY": "auto",
+        "padding": "20px",
+        "backgroundColor": "#ffffff",
+        "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)",
+        "border": "2px solid #dee2e6",
+        "borderRadius": "15px",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "5px",
+    }
+
     return html.Div(
         style={
             "display": "flex",
             "flexDirection": "row",
-            "width": "100%",
-            "gap": "20px",
+            "flex": "1",            
+            "gap": "40px",
+            "minHeight": "1",       
         },
         children=[
             html.Div(
-                style={
-                    "flex": "1",
-                    "maxHeight": "100vh",
-                    "overflowY": "auto",
-                    "padding": "0",
-                    "margin": "0",
-                },
+                style=style_div_interno,
                 children=[
                     html.H4("Richieste Pazienti"),
                     dcc.Dropdown(
-                        id="dropdown-richieste-pazienti",
-                        placeholder="Seleziona una richiesta paziente..."
+                        id="dropdown-richieste-pazienti",           
+                        placeholder="Seleziona una richiesta per visualizzarne i dettagli..."
                     ),
-                    html.Div(id="dettagli-richiesta-paziente"),
+                    html.Div(id="dettagli-richiesta-paziente", style= {"marginTop": "10px"}),       # qui dentro viene messa la card coi dettagli del paziente. Oppure gli Alert.
                     html.Div([
                         dbc.Button("Accetta", id="btn-accetta-paziente", color="success", className="me-2 mt-2"),
                         dbc.Button("Rifiuta", id="btn-rifiuta-paziente", color="danger", className="mt-2"),
-                    ], style= {
-                        "display": "flex",          
-                        "justifyContent": "center", # centra bottoni
-                        "gap": "10px",              
-                        "marginTop": "10px"         # distanza minima dal contenitore sopra
-                    }),       
+                    ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
                 ]
             ),
             html.Div(
-                style={
-                    "flex": "1",
-                    "maxHeight": "100vh",
-                    "overflowY": "auto",
-                    "padding": "0",
-                    "margin": "0",
-                },
+                style=style_div_interno,
                 children=[
                     html.H4("Richieste Diabetologi"),
                     dcc.Dropdown(
                         id="dropdown-richieste-diabetologi",
-                        placeholder="Seleziona una richiesta diabetologo..."
+                        placeholder="Seleziona una richiesta per visualizzarne i dettagli..."
                     ),
-                    html.Div(id="dettagli-richiesta-diabetologo"),
+                    html.Div(id="dettagli-richiesta-diabetologo", style= {"marginTop": "10px"}),    # qui dentro viene messa la card coi dettagli del diabetologo.
                     html.Div([
                         dbc.Button("Accetta", id="btn-accetta-diabetologo", color="success", className="me-2 mt-2"),
                         dbc.Button("Rifiuta", id="btn-rifiuta-diabetologo", color="danger", className="mt-2"),
-                    ], style={
-                        "display": "flex",          
-                        "justifyContent": "center", # centra bottoni
-                        "gap": "10px",              
-                        "marginTop": "10px"         # distanza minima dal contenitore sopra
-                    }),  
+                    ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
                 ]
-            ),
+            )
         ]
     )
 
 
-
-# layout per la pagina delle richieste admin. 
+# layout principale della pagina della richiesta di inserimento nella piattaforma
 admin_request = html.Div(
-    style={
-        'flex': 1,
-        'display': 'flex',
-        'flexDirection': 'column',
-        'padding': '40px',
-        'gap': '40px',
-        "maxHeight": "100vh",
-        "maxWidth": "100vw"
-
+    style={ 
+        "flex": "1",
+        "display": "flex",
+        "flexDirection": "column",
+        "height": "100vh",
+        "boxSizing": "border-box",
+        "margin": "0",
+        "padding": "40px",
+        "gap": "20px",
     },
     children=[
-        html.Div(
-            style={
-                "padding": "20px",
-                "background-color": "#ffffff",
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                "border": "2px solid #dee2e6",
-                "border-radius": "15px",
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "5px",
-                "height": "100vh"
-            },
-            children=[
-                render_richieste_account()
-            ]
-        )
+        render_richieste_account()
     ]
 )
+
 
 
 # funzione che prende i dati e li rende sotto forma di card piu carin e leggibile 
@@ -1705,74 +1685,72 @@ def render_dati_richiesta(dati):
 
     return dbc.Card(
         dbc.CardBody([
-            html.H5(f"{dati['nome']} {dati['cognome']}", className="mb-2"),
-            
+            html.H5(f"{dati['nome']} {dati['cognome']}", className="mb-1", style={"fontSize": "1.25rem"}),
+
             dbc.Row([
                 dbc.Col([
                     html.Span("Codice Fiscale: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["codice_fiscale"]))
-                ], width=6, style={"marginBottom": "0.25rem"}),
+                ], width=6),
                 dbc.Col([
                     html.Span("Data di nascita: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["data_nascita"]))
-                ], width=6, style={"marginBottom": "0.25rem"}),
-            ]),
-            
+                ], width=6),
+            ], className="g-2", style={"marginBottom": "0.25rem", "justifyContent": "space-between"}),
+
             dbc.Row([
                 dbc.Col([
                     html.Span("Sesso: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["sesso"]))
-                ], width=6, style={"marginBottom": "0.25rem"}),
+                ], width=6),
                 dbc.Col([
                     html.Span("Città: ", style={"fontWeight": "600"}),
-                    html.Span(str(dati['citta']))
-                ], width=6, style={"marginBottom": "0.25rem"}),
-            ]),
-            
+                    html.Span(str(dati["citta"]))
+                ], width=6),
+            ], className="g-2", style={"marginBottom": "0.25rem", "justifyContent": "space-between"}),
+
             dbc.Row([
                 dbc.Col([
                     html.Span("Indirizzo: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["indirizzo"]))
-                ], width=6, style={"marginBottom": "0.25rem"}),
+                ], width=6),
                 dbc.Col([
                     html.Span("CAP: ", style={"fontWeight": "600"}),
-                    html.Span(str(dati['cap']))
-                ], width=6, style={"marginBottom": "0.25rem"}),
-            ]),
-            
+                    html.Span(str(dati["cap"]))
+                ], width=6),
+            ], className="g-2", style={"marginBottom": "0.25rem", "justifyContent": "space-between"}),
+
             dbc.Row([
                 dbc.Col([
                     html.Span("Telefono: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["telefono"]))
-                ], width=6, style={"marginBottom": "0.25rem"}),
+                ], width=6),
                 dbc.Col([
                     html.Span("Email: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["email"]))
-                ], width=6, style={"marginBottom": "0.25rem"}),
-            ]),
+                ], width=6),
+            ], className="g-2", style={"marginBottom": "0.25rem", "justifyContent": "space-between"}),
 
-            html.Hr(style={"margin": "0.5rem 0"}),
+            html.Hr(style={"margin": "0.25rem"}),
 
             dbc.Row([
                 dbc.Col([
                     html.Span("Tipo account: ", style={"fontWeight": "600"}),
                     html.Span("Paziente" if dati["paziente"] else "Diabetologo")
-                ], width=4, style={"marginBottom": "0.25rem"}),
+                ], width=4),
                 dbc.Col([
                     html.Span("Data richiesta: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["data_richiesta"]))
-                ], width=4, style={"marginBottom": "0.25rem"}),
+                ], width=4),
                 dbc.Col([
                     html.Span("Stato: ", style={"fontWeight": "600"}),
                     html.Span(str(dati["stato_richiesta"]))
-                ], width=4, style={"marginBottom": "0.25rem"}),
-            ]),
+                ], width=4),
+            ], className="g-2", style={"marginBottom": "0.25rem", "justifyContent": "space-between"}),
+        ], style={"fontSize": "1rem", "padding": "0.5rem"}),
 
-        ], style= {"maxHeight": "100vh", "maxWidth": "100vw"}),      # così si adatta alla dimensione dello schermo
-        
-        # questi sono i parametri della card esterna
         className="shadow-sm w-100",
-        style={"flex": "1", "padding": "0.7rem"}
+        style={"flex": "1", "padding": "0.25rem", "maxHeight": "50vh", "borderRadius": "4px", "border": "1px solid #ccc"}
     )
 
 

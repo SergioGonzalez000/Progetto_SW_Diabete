@@ -541,6 +541,26 @@ class Admin(Persona):
         
         cursore_4.close()
 
+    def rifiuta_richiesta(id_richiesta):
+        """cambia lo stato della richiesta da << in_attesa >> a << rifiutata >>"""
+
+        cursore = connection.cursor()
+        
+        cursore.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s", (id_richiesta,))
+        richiesta = cursore.fetchone()
+        
+        if richiesta is None:
+            cursore.close()
+            raise ValueError(f"Richiesta con id {id_richiesta} non trovata.")
+
+        cursore.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s",
+            ('rifiutata', id_richiesta)
+        )
+        connection.commit()
+        
+        cursore.close()
+
     # funzione che elimina un paziente nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
     def elimina_paziente(id_paziente):
         """elimina un paziente dalla DB dato il suo id_paziente"""
