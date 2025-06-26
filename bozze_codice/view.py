@@ -2307,9 +2307,13 @@ chat_content = html.Div(
                         'overflowY': 'auto',
                         'padding': '20px',
                         # Nessuno sfondo inserito
-                    }
+                    }, 
                 ),
-
+                dcc.Interval(
+                    id='interval-component',
+                    interval=1000,
+                    n_intervals = 0
+                ),
                 # Contenitore dell'Input:
                 html.Div(
                     style={
@@ -2334,7 +2338,26 @@ chat_content = html.Div(
                             className='input',
                             debounce=True,
                             n_submit=0
+                        ),
+                        dbc.Button(
+                            "+", color="primary",
+                            id="send-btn",
+                            style={
+                                "display": "flex",
+                                "justifyContent": "center",
+                                "align-items": "center",
+                                "width": "55px",
+                                "height": "55px",
+                                "border-radius": "50%",
+                                "margin": "0",
+                                "padding": "0",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "fontSize": "50px",
+                                "lineHeight": "normal"
+                            },
+                            n_clicks = 0
                         )
+                    
                     ]
                 )
             ]

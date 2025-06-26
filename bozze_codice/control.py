@@ -983,3 +983,60 @@ def registra_callbacks(app):
         # Iperglicemia
         else:
             return valore, {"background-color": '#FF4C4C'}
+#*************************************************************************************************************************
+# sacre callback      
+#callback di gestione della chat:
+    @app.callback(
+            Output("lista-contatti", "children"),
+            Input("url","pathname")
+    )
+    def aggiorna_lista_contatti(path):
+        if path=="/chat":
+            return view.layout_lista_contatti()
+        else:
+            return dash.no_update
+        
+    @app.callback(
+        Output("nome-contatto","data"),
+        Input({"type": "btn-contatto","index": dash.ALL},"n_clicks"),
+        prevent_initial_call=True
+    )
+    def seleziona_chat(n_clicks):
+        ctx = dash.callback_context
+        if not ctx.triggered : return dash.no_update
+        id_contatto = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])["index"]
+        return id_contatto
+
+    @app.callback(
+    [
+        Output("chat-box", "children"),
+        Output("nome-contatto","children"),
+        Output("input-text","value")
+    ],
+    [
+        Input({"type": "btn-contatto", "index": dash.ALL}, "n_clicks"),  # Pulsante contatto
+        Input("send-btn", "n_clicks"),  # Pulsante invio messaggio
+        Input("interval-component","n_intervals")
+    ],
+    [
+        State("input-text", "value"),
+        State("nome-contatto", "data")
+    ],
+    prevent_initial_call=True
+    )
+    def update_chat(btn_clicks, send_clicks, n_intervals, messaggio, id_contatto):
+        triggered_id = ctx.triggered_id  # Capisci quale input ha attivato la callback
+
+        # Caso 1: Click su un contatto (prima si fa un check per capire se il trigger è un dizionario)
+        if isinstance(triggered_id, dict) and triggered_id["type"] == "btn-contatto":
+            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), triggered_id["index"])), model.get_nomecognome(triggered_id["index"]), dash.no_update
+
+        # Caso 2: Click su "Invia messaggio"
+        elif triggered_id == "send-btn" and messaggio:
+            model.insert_messaggio(model.get_user_id(), id_contatto, messaggio)
+            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto), ""
+
+        # Caso 3: aggiornamento periodico
+        elif n_intervals and id_contatto:
+            view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto), dash.no_update 
+        return dash.no_update, dash.no_update, dash.no_update
