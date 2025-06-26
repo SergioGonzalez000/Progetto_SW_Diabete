@@ -563,10 +563,20 @@ class Admin(Persona):
 
     # funzione che elimina un paziente nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
     def elimina_paziente(id_paziente):
-        """elimina un paziente dalla DB dato il suo id_paziente"""
+        """elimina un paziente dal DB dato il suo id_paziente"""
 
         cursore = connection.cursor()
         cursore.execute("DELETE FROM Paziente WHERE id_paziente = %s", (id_paziente,))
+        connection.commit()
+
+        cursore.close()
+
+    # funzione che elimina un diabetologo nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
+    def elimina_diabetologo(id_diabetologo):
+        """elimina un diabetologo dal DB dato il suo id_diabetologo"""
+
+        cursore = connection.cursor()
+        cursore.execute("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
         connection.commit()
 
         cursore.close()
@@ -1004,6 +1014,55 @@ def visualizza_media_glicemia_per_diabetologi():
     return fig
 
     # ***********************
+
+# funzione che permette di prendere il grafico un solo diabetologo
+def visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo):
+    """Ritorna un grafico a istogramma contenente la media glicemica dei pazienti associati ad un diabetologo."""
+
+    cursore = connection.cursor()
+    cursore.execute("SELECT * FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
+    r = cursore.fetchone()
+
+    if not r:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Diabetologo non trovato",
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=18, color="red")
+        )
+        return fig
+
+    # Istanzia l'oggetto Diabetologo
+    Diab = Diabetologo(r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12])
+    dati_pazienti = Diab.visualizza_pazienti_associati()
+
+    if not dati_pazienti:
+        fig = go.Figure()
+        fig.add_annotation(
+            text=f"Nessun dato per {r[1]} {r[2]}",
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=18, color="red")
+        )
+        return fig
+
+    # dati_pazienti è una sequenza di tuple/dizionari dove:
+    # - dati_pazienti[i][0]: nome paziente
+    # - dati_pazienti[i][1]: media glicemia
+    nomi_pazienti = [dp[0] for dp in dati_pazienti]
+    medie_glicemia = [round(dp[1], 2) for dp in dati_pazienti]
+
+    fig = go.Figure(data=[
+        go.Bar(x=nomi_pazienti, y=medie_glicemia, marker_color="teal")
+    ])
+    fig.update_layout(
+        xaxis_title="Pazienti",
+        yaxis_title="Glicemia (mg/dL)",
+        margin=dict(l=10, r=10, t=30, b=40),
+    )
+    return fig
+
 
 
 def get_id_paziente_by_username(username):

@@ -1816,7 +1816,7 @@ def layout_lista_pazienti():
             "display": "flex",
             "flexDirection": "row",
             "padding": "20px",
-            "gap": "20px",
+            "gap": "40px",
         },
         children=[
 
@@ -1825,7 +1825,7 @@ def layout_lista_pazienti():
                 id= "contenitore-lista-pazienti",
                 children= render_lista_pazienti(pazienti),
                 style={
-                    "flex": 1
+                    "flex": 1,
                 }    
             ),
             
@@ -2089,7 +2089,7 @@ def layout_lista_diabetologi():
             "display": "flex",
             "flexDirection": "row",
             "padding": "20px",
-            "gap": "20px"
+            "gap": "40px"
         },
         children=[
 
@@ -2186,7 +2186,78 @@ def crea_card_diabetologo(dati_diabetologo):
                     style={"display": "flex",
                     "flexDirection": "column",
                     "height": "100%",
-                    "paddingBottom": "10px"})
+                    "paddingBottom": "10px"}),
+            # salva l'id del diabetologo, in modo da usarlo per la callback col grafico
+            dcc.Store(      
+                id= "store-id-diabetologo",
+                data= dati_diabetologo.get('id_diabetologo')
+            ),
+
+            # POP-UP DEL GRAFICO DEL DIABETOLOGO
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Glicemia media pazienti associati"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-graf-diabetologo",
+                            children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
+                            style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-grafico-diabetologo",
+                is_open=False,
+                size="xl",  
+                centered=True          
+            ),
+
+            # pop-up per la rimozione del diabetologo selezionato
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Attenzione!"),
+                    dbc.ModalBody(
+                        html.Div([
+                            dbc.Alert(
+                                """L'eliminazione di un account è un operazione irreversibile.
+                                E' sicuro/a di voler eliminare il paziente selezionato?""", color="danger"
+                            ),
+                            dbc.Row(
+                                [
+                                    # pulsanti per la conferma o annullamento della rimozione del paziente
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Si",
+                                            id="btn-delete-diab-confirm-YES",
+                                            color="danger",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=5
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "No",
+                                            id="btn-delete-diab-confirm-NO",
+                                            color="success",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=5
+                                    )
+                                ],
+                                justify="center",
+                                className="d-flex justify-content-center mt-3"
+                            )
+                        ]),
+                        style={"padding": "10px", "color": "red"}  
+                    ),
+                ],
+                id="pop-admin-delete-diab",
+                is_open=False,
+                size="lg",  
+                centered=True          
+            ),        
         ],
         style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
     )
