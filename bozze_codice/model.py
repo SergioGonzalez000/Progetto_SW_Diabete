@@ -1149,9 +1149,16 @@ def visualizza_media_glicemica_fasce_orarie(dati):
         xaxis_title="Fascia oraria",
         yaxis_title="Glicemia media (mg/dL)",
         yaxis=dict(range=[0, y_max + 30]),
-        plot_bgcolor="#f8f9fa",
-        height=500,
-        font=dict(family="Arial", size=14)
+        height=400,
+        margin=dict(t=10, b=10, l=10, r=10),
+        legend=dict(
+                x=0.01, # posizione orizzontale
+                y=0.99, # posizione verticale
+                xanchor='left', # a sinistra
+                yanchor='top', # in alto
+                bgcolor='rgba(255,255,255,0.3)', # sfondo semi trasparente di colore bianco
+                borderwidth=0 # senza bordo
+        )
     )
 
     return fig
@@ -1191,7 +1198,19 @@ def crea_grafico_eventi_basso_glucosio(dati):
         labels={"settimana": "Settimana", "giorno_settimana": "Giorno", "frequenza": "Eventi"},
     )
 
-    fig.update_layout(height=400, yaxis_title="Giorno della settimana", xaxis_title="Settimana dell'anno")
+    fig.update_layout(height=400,
+        yaxis_title="Giorno della settimana",
+        xaxis_title="Settimana dell'anno",
+        margin=dict(t=10, b=10, l=10, r=10),
+        legend=dict(
+                x=0.01, # posizione orizzontale
+                y=0.99, # posizione verticale
+                xanchor='left', # a sinistra
+                yanchor='top', # in alto
+                bgcolor='rgba(255,255,255,0.3)', # sfondo semi trasparente di colore bianco
+                borderwidth=0 # senza bordo
+        )
+    )
     return fig
 
 

@@ -1209,17 +1209,12 @@ def render_lista_pazienti_glicemia(pazienti):
 
 def crea_div_paziente(cfanno, info, segnalazioni):
     codice_fiscale, eta, nome = cfanno[0]
-    # Codice fiscale
-    str_cf = f"Codice fiscale: {codice_fiscale}"
-    # età
-    str_eta = f"Età: {eta}"
-
     # Div per quando non ci sono informazioni:
     no_info = html.Div([
             # Header:
             html.Div([
                 html.Div([
-                    html.H4(f"Nome, {eta}"),
+                    html.H4(f"{nome}, {eta}"),
                     #Codice fiscale tutto maiuscolo
                     html.H6(codice_fiscale.upper(), style={'color': 'gray'})
                 ], style={'flex': 1}),
@@ -1236,7 +1231,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                     dbc.ModalHeader(dbc.ModalTitle("Paziente")),
                     dbc.ModalBody(html.Div([
                         # Informazioni generali
-                        html.H4(f"Nome, {eta}"),
+                        html.H4(f"{nome}, {eta}"),
                         html.H6(codice_fiscale.upper(), style={'color': 'gray', 'margin-bottom': '10px'}),
 
                         # informazioni cliniche:
@@ -1345,7 +1340,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
             # Header:
             html.Div([
                 html.Div([
-                    html.H4(f"Nome, {eta}"),
+                    html.H4(f"{nome}, {eta}"),
                     #Codice fiscale tutto maiuscolo
                     html.H6(codice_fiscale.upper(), style={'color': 'gray'})
                 ], style={'flex': 1}),
