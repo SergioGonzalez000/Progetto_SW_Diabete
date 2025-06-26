@@ -271,7 +271,7 @@ login = html.Div(
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# REGISTRATION
+# REGISTRATION - NUOVO
 
 # Titolo
 registration_title = html.H1(
@@ -965,31 +965,19 @@ doctor_patient = html.Div(
                 'gap': '40px'
             },
             children=[
-                # Numero 4
-                html.Div(
-                    [
-                        html.H5("Andamento glicemia:", style={"color" : "grey"}),
-                        html.Hr(),
-                        # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
-                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"})
-                    ],
-                    style={"flex": 1},
-                    className="card",
-                ),
-
                 html.Div(
                     [
                         # Numero 5
                         html.Div(
                             [   
-                                html.H5("Informazioni paziente:", style={"color" : "grey"}),
+                                html.H5("Paziente:", style={"color" : "grey"}),
                                 html.Hr(), 
                                 html.Div( id="patient-info", style={"height": "100%","width": "100%"}),
                                 dcc.Store(id="selected-patient-id", storage_type="session")#per salvare l'id del paziente
-
                             ],
+                            #style={'Height': '200px'},
                             className="card",
-                            style={'maxHeight': '100vh'}
+                            
                         ),
                         # Numero 6
                         html.Div(
@@ -1040,7 +1028,19 @@ doctor_patient = html.Div(
                         # spazio tra 5 e 6 di 40 px
                         "gap": "40px"
                     }
-                )
+                ),
+
+                # Numero 4
+                html.Div(
+                    [
+                        html.H5("Andamento glicemia:", style={"color" : "grey"}),
+                        html.Hr(),
+                        # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
+                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"})
+                    ],
+                    style={"flex": 1},
+                    className="card",
+                ),
             ]
         )
     ]
@@ -1157,50 +1157,104 @@ def crea_div_paziente(cfanno, info, segnalazioni):
     # età
     str_eta = f"Età: {eta}"
 
-    if not info:
-        return html.Div([
-            html.H6("Generalità"),
-            html.P(str_cf),
-            html.P(str_eta),
-            html.Hr(),
-            html.H6("Non ci sono informazioni riguardanti il paziente selezionato"),
-            html.Br(),
-            dbc.Button("Inserisci informazioni", id="modal-insert-btn", n_clicks=0),
-            
-            # POP-UP per le modifiche ai dati clinici del paziente
+    # Div per quando non ci sono informazioni:
+    no_info = html.Div([
+            # Header:
+            html.Div([
+                html.Div([
+                    html.H4(f"Nome, {eta}"),
+                    #Codice fiscale tutto maiuscolo
+                    html.H6(codice_fiscale.upper(), style={'color': 'gray'})
+                ], style={'flex': 1}),
+                html.Div([
+                    # Pulsante per le annotazioni
+                    dbc.Button("Annota", id="modal-insert-btn", n_clicks=0, style={'border-radius': '25px', 'padding': '10px 25px', 'font-size': '20px'}) 
+                ], style={'flex': 1, 'display': 'flex', 'align-items': 'center', 'justify-content': 'flex-end'})
+            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'margin-bottom': '5px'}),
+
+            html.H5("Non ci sono informazioni."),
+
             dbc.Modal(
                 [
-                    dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
+                    dbc.ModalHeader(dbc.ModalTitle("Paziente")),
                     dbc.ModalBody(html.Div([
-                        html.H6("Generalità"),
-                        html.Label(str_cf),
-                        html.Br(), html.Label(str_eta),
-                        html.Hr(),
-                        html.H6("Informazioni cliniche"),
-                        html.Label("Patologie pregresse:"),
-                        dbc.Textarea(id="insert-patologie", value="", style={"width": "100%", "height": "60px"}),
-                        html.Br(),
-                        html.Label("Fattori di rischio:"),
-                        dbc.Input(id="insert-rischio", type="text", value=""),
-                        html.Br(),
-                        html.Label("Comorbidità:"),
-                        dbc.Input(id="insert-comorb", type="text", value=""),
-                        html.Br(), html.Br(),
-                        dbc.Button("Salva modifiche", id="inserisci-modifiche-btn", n_clicks=0),
-                        html.Br(),
+                        # Informazioni generali
+                        html.H4(f"Nome, {eta}"),
+                        html.H6(codice_fiscale.upper(), style={'color': 'gray', 'margin-bottom': '10px'}),
+
+                        # informazioni cliniche:
+                        html.Div([
+                            html.H5("Informazioni cliniche:"),
+                            
+                            # Patologie pregresse:
+                            html.Div([
+                                html.H6("Patologie pregresse:"),
+                                dbc.Textarea(
+                                    id="insert-patologie", 
+                                    value="", 
+                                    style={
+                                        "width": "100%", 
+                                        "height": "80px",
+                                        'border': 'none',
+                                        'border.radius': '15px',
+                                        })
+                            ]),
+
+                            # Fattori di rischio: 
+                            html.Div([
+                                html.H6("Fattori di rischio:"),
+                                dbc.Input(id="insert-rischio", type="text", value="", style={'border': 'none','border.radius': '15px'}),
+                            ]),
+
+                            # Comorbidità:
+                            html.Div([
+                                html.H6("Comorbidità:"),
+                                dbc.Input(id="insert-comorb", type="text", value="", style={'border': 'none','border.radius': '15px'})
+                            ]),
+                        ],
+                        style={
+                            'flex': 1, 
+                            'flexDirection': 'column',
+                            'display': 'flex',
+                            'gap': '20px', 
+                            'background-color': '#f8f9fa', 
+                            'border-radius': '15px', 
+                            'padding': '5px',
+                            'margin-bottom': '10px'
+                        }),
+
+                        # Alert per gli inserimenti:
                         dbc.Alert(id="inserisci-info-output", is_open=False),
+                        
                     ])),
-                    dbc.ModalFooter(dbc.Button("Chiudi", id="close-insert-infopaz", className="ml-auto")),
+                    # Footer del modal:
+                    dbc.ModalFooter([ # 'border': 'none'
+                        dbc.Button("Annulla", id="close-insert-infopaz", style={'background-color':'red', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                        dbc.Button("Salva", id="inserisci-modifiche-btn", n_clicks=0, style={'background-color':'green', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                    ], style={'display': 'flex', 'justify-content': 'flex-end', 'gap': '10px'}),
                 ],
                 id="popup-inserisci-info",
+                centered=True,
                 is_open=False
             )
-        ])
+        ],
+        style={
+            'flex': 1,
+            'display': 'flex',
+            'flexDirection': 'column',
+            'maxHeight': '250px',
+        }
+    )
+
+    # Se non ci sono info:
+    if not info:
+        return no_info
 
     # Preparo set per info cliniche
     patologie_pregresse = set()
     fattori_rischio = set()
     comorbidita = set()
+
     for riga in info:
         if riga[0]: patologie_pregresse.add(riga[0])
         if riga[1]: fattori_rischio.add(riga[1])
@@ -1212,8 +1266,10 @@ def crea_div_paziente(cfanno, info, segnalazioni):
 
     # Visualizzazione segnalazioni
     segnalazioni_div = []
+    # Se ci sono segnalazioni:
     if segnalazioni:
-        segnalazioni_div.append(html.H6("Segnalazioni del paziente"))
+        # Aggiungi un titolo
+        segnalazioni_div.append(html.H5("Segnalazioni:"))
         for tipo, descrizione, data_inizio, data_fine in segnalazioni:
             periodo = f"Dal {data_inizio.strftime('%d/%m/%Y')}"
             if data_fine:
@@ -1222,58 +1278,133 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                 html.Div([
                     html.Strong(tipo.capitalize() + ": "), html.Span(descrizione),
                     html.Br(), html.Small(periodo),
-                    html.Hr()
                 ])
             )
     else:
         segnalazioni_div = [html.H6("Nessuna segnalazione presente.")]
 
-    return html.Div([
-        html.H6("Generalità"),
-        html.P(str_cf),
-        html.P(str_eta),
-        html.Hr(),
-        html.H6("Informazioni cliniche"),
-        html.P(patologie),
-        html.P(fattori),
-        html.P(comorb),
-        html.Hr(),
-        *segnalazioni_div,
-        html.Br(),
-        dbc.Button("Modifica informazioni", id="modal-modifiche-btn", n_clicks=0),
+    # DIV con informazioni del paziente:
+    con_info = html.Div([
+            # Header:
+            html.Div([
+                html.Div([
+                    html.H4(f"Nome, {eta}"),
+                    #Codice fiscale tutto maiuscolo
+                    html.H6(codice_fiscale.upper(), style={'color': 'gray'})
+                ], style={'flex': 1}),
+                html.Div([
+                    # Pulsante per le annotazioni
+                    dbc.Button("Annota", id="modal-modifiche-btn", n_clicks=0, style={'border-radius': '25px', 'padding': '10px 25px', 'font-size': '20px'}) 
+                ], style={'flex': 1, 'display': 'flex', 'align-items': 'center', 'justify-content': 'flex-end'})
+            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'margin-bottom': '5px'}),
 
-        dbc.Modal(
-            [
-                dbc.ModalHeader(dbc.ModalTitle("Informazioni paziente")),
-                dbc.ModalBody(html.Div([
-                    html.H6("Generalità"),
-                    html.Label(str_cf),
-                    html.Br(), html.Label(str_eta),
-                    html.Hr(),
-                    html.H6("Informazioni cliniche"),
-                    html.Label("Patologie pregresse:"),
-                    dbc.Textarea(
-                        id="input-patologie", 
-                        value=", ".join(sorted(patologie_pregresse)),
-                        style={"width": "100%", "height": "60px"}
-                    ),
-                    html.Br(),
-                    html.Label("Fattori di rischio:"),
-                    dbc.Input(id="input-rischio", type="text", value=", ".join(sorted(fattori_rischio))),
-                    html.Br(),
-                    html.Label("Comorbidità:"),
-                    dbc.Input(id="input-comorb", type="text", value=", ".join(sorted(comorbidita))),
-                    html.Br(), html.Br(),
-                    dbc.Button("Salva modifiche", id="salva-modifiche-btn", n_clicks=0),
-                    html.Br(),
-                    dbc.Alert(id="modifica-info-output", is_open=False),
-                ])),
-                dbc.ModalFooter(dbc.Button("Chiudi", id="close-modifica-infopaz", className="ml-auto")),
-            ],
-            id="popup-modifica-info",
-            is_open=False,
-        )
-    ])
+            # Informazioni cliniche:
+            html.Div([
+                    html.H5("Informazioni cliniche:"),
+                    html.P(patologie),
+                    html.P(fattori),
+                    html.P(comorb)
+                ],
+                style={
+                    'flex': 1, 
+                    'flexDirection': 'column', 
+                    'background-color': '#f8f9fa', 
+                    'border-radius': '15px', 
+                    'overflowY': 'auto', 
+                    'padding': '5px',
+                    'margin-bottom': '10px'
+                }
+            ),
+
+            # Segnalazioni del paziente
+            html.Div([
+                    *segnalazioni_div,
+                ],
+                style={
+                    'flex': 1, 
+                    'flexDirection': 'column', 
+                    'background-color': '#f8f9fa', 
+                    'border-radius': '15px', 
+                    'overflowY': 'auto',
+                    'padding': '5px',
+                }
+            ),
+
+            # POP-UP per modifiche delle informazioni del paziente
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Paziente")),
+                    dbc.ModalBody(html.Div([
+                        # Informazioni generali
+                        html.H4(f"Nome, {eta}"),
+                        html.H6(codice_fiscale.upper(), style={'color': 'gray', 'margin-bottom': '10px'}),
+
+                        # informazioni cliniche:
+                        html.Div([
+                            html.H5("Informazioni cliniche:"),
+                            
+                            # Patologie pregresse:
+                            html.Div([
+                                html.H6("Patologie pregresse:"),
+                                dbc.Textarea(
+                                    id="input-patologie", 
+                                    value=", ".join(sorted(patologie_pregresse)), 
+                                    style={
+                                        "width": "100%", 
+                                        "height": "80px",
+                                        'border': 'none',
+                                        'border.radius': '15px',
+                                        })
+                            ]),
+
+                            # Fattori di rischio: 
+                            html.Div([
+                                html.H6("Fattori di rischio:"),
+                                dbc.Input(id="input-rischio", type="text", value=", ".join(sorted(fattori_rischio)), style={'border': 'none','border.radius': '15px'}),
+                            ]),
+
+                            # Comorbidità:
+                            html.Div([
+                                html.H6("Comorbidità:"),
+                                dbc.Input(id="input-comorb", type="text", value=", ".join(sorted(comorbidita)), style={'border': 'none','border.radius': '15px'})
+                            ]),
+                        ],
+                        style={
+                            'flex': 1, 
+                            'flexDirection': 'column',
+                            'display': 'flex',
+                            'gap': '20px', 
+                            'background-color': '#f8f9fa', 
+                            'border-radius': '15px', 
+                            'padding': '5px',
+                            'margin-bottom': '10px'
+                        }),
+
+                        # Alert per gli inserimenti:
+                        dbc.Alert(id="modifica-info-output", is_open=False),
+                        
+                    ])),
+                    # Footer del modal:
+                    dbc.ModalFooter([ # 'border': 'none'
+                        dbc.Button("Annulla", id="close-modifica-infopaz", style={'background-color':'red', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                        dbc.Button("Salva", id="salva-modifiche-btn", n_clicks=0, style={'background-color':'green', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                    ], style={'display': 'flex', 'justify-content': 'flex-end', 'gap': '10px'}),
+                ],
+                id="popup-modifica-info",
+                centered=True,
+                is_open=False
+            )
+        ],
+        style={
+            'flex': 1,
+            'display': 'flex',
+            'flexDirection': 'column',
+            'maxHeight': '250px',
+        }
+    )
+
+    return con_info
+
 # ******************************************************************************************************************
 
 def crea_div_terapia_selezionata(terapia):
