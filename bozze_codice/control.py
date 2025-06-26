@@ -619,13 +619,14 @@ def registra_callbacks(app):
         if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
             return "Nessun paziente selezionato"            
 
+        # id del paziente
         id_paz = trigger_id.get('index')
 
+        # Se siamo nella pagine 'Pazienti' del diabetologo
         if path == "/doctor-patient":
             dati = current_user.visualizza_dati_paziente(id_paz)
             segnalazioni=current_user.get_segnalazioni_paziente(id_paz)
-            div = view.crea_div_paziente(dati[0], dati[1],segnalazioni)
-            return div
+            return view.crea_div_paziente(dati[0], dati[1],segnalazioni)
         else:
             return dash.no_update
 
