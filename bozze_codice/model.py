@@ -173,12 +173,12 @@ class Paziente(Persona):
         cursore.close()
         return id
     
-    def inserisci_glicemia(id_paz, valore, farmaco, dose, sintomi="" ):
+    def inserisci_glicemia(self, valore, farmaco, dose, sintomi=None ):
         cursore_8=connection.cursor()
         cursore_8.execute("""INSERT INTO Glicemia 
                     (paziente, farmaco, dosaggio, sintomo, valore) 
                     VALUES (%s, %s, %s, %s, %s)""", 
-                    (id_paz, farmaco, dose, sintomi, valore))
+                    (self.get_id_paziente(), farmaco, dose, sintomi, valore))
         connection.commit()
         cursore_8.close()
 

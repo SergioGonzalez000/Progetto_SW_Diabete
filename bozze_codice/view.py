@@ -545,6 +545,7 @@ registration = html.Div(
 # DASHBOARD DEL PAZIENTE
 
 patient_dashboard = html.Div(
+    
     style={
         # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
         "flex": 1,
@@ -567,6 +568,7 @@ patient_dashboard = html.Div(
         # |_______|___|
         #     1     2
         # Colonna a sinistra 1 (divisa in due righe)
+        dcc.Store(id="trigger-aggiorna-grafico", data=0),
         html.Div(
             style={
                 # Occupa 2/3 della page content
@@ -690,6 +692,7 @@ patient_dashboard = html.Div(
                         dbc.Col(
                             # Inserimento del nome del farmaco
                             dcc.Input(
+                                id="input-farmaco-usato",
                                 placeholder="Inserisci farmaco...",
                                 type="text",
                                 className= 'input'
@@ -700,6 +703,7 @@ patient_dashboard = html.Div(
                         dbc.Col(
                             # Inserimento del dosaggio
                             dcc.Input(
+                                id="input-dosaggio-usato",
                                 placeholder="Dosaggio...",
                                 type="text",
                                 className= 'input'  
@@ -714,13 +718,14 @@ patient_dashboard = html.Div(
                 # Input Annotazione sintomi
                 # Input glicemia
                 dcc.Input(
+                    id="input-sintomi-riscontrati",
                     placeholder="Sintomi...",
                     type="text",
                     className="input mb-3"
                 ),
 
-                dbc.Button("Inserisci glicemia",id="inserisci-glicemia"),
-
+                dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0),
+                dbc.Alert(id="inserisci-glicemia-output",is_open=False),
                 html.H6("Misurata:", style={"color": "grey"}),
                 html.P("Qua da inserire eventuale radioitem per la selezione del pre e del post pranzo")
             ]

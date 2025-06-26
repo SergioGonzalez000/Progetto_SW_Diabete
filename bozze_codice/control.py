@@ -1,4 +1,5 @@
 import json
+import dash.nbextension
 import dash_bootstrap_components as dbc
 from dash import MATCH, html, dcc, Input, Output, State, ALL, ctx
 from flask_login import login_user, logout_user, current_user
@@ -548,17 +549,16 @@ def registra_callbacks(app):
     @app.callback(
         Output("andamento-giornaliero", "children"),
         Input("url", "pathname"),
-        prevent_initial_call=True
+        Input("trigger-aggiorna-grafico", "data"),
     )
-    def visualizza_andamento_giornaliero_glicemia(pathname):
-
+    def visualizza_andamento_giornaliero(pathname, _):
         if pathname == "/patient-dashboard":
-            id_paz=current_user.get_id_paziente()
-            dati = model.get_dati_glicemia_filtrati(id_paz,"giornaliero","andamento")
-            grafico = model.visualizza_andamento_glicemia(dati) 
+            id_paz = current_user.get_id_paziente()
+            dati = model.get_dati_glicemia_filtrati(id_paz, "giornaliero", "andamento")
+            grafico = model.visualizza_andamento_glicemia(dati)
             return dcc.Graph(figure=grafico)
-        else:
-            return dash.no_update
+        return dash.no_update
+
 
 # ******************************************************************************************************************
     #callback che fa vedere al diabetologo le informazioni di base del paziente 
@@ -955,34 +955,48 @@ def registra_callbacks(app):
             return not is_open
         return is_open
 #*******************************************************************************************************************
-# Callback aggiornamento cerchio colorato glicemia:
+# Callback aggiornamento cerchio colorato glicemia e per inserire la glicemia nella base di dati (pagina paziente)
     @app.callback(
-        # Numero centrale visualizzato
         Output("number", "children"),
-        # Colore dello sfondo
         Output("cerchio-colorato", "style"),
-        Input("input-glicemia", "n_submit"),
+        Output("inserisci-glicemia-output", "children"),
+        Output("inserisci-glicemia-output", "is_open"),
+        Output("inserisci-glicemia-output", "color"),
+        Output("trigger-aggiorna-grafico", "data"),
+        Input("url", "pathname"),
+        Input("inserisci-glicemia", "n_clicks"),
+        Input("input-farmaco-usato", "value"),
+        Input("input-dosaggio-usato", "value"),
+        Input("input-sintomi-riscontrati", "value"),
         State("input-glicemia", "value"),
         State("number", "children"),
         State("cerchio-colorato", "style"),
+        State("trigger-aggiorna-grafico", "data"),
         prevent_initial_call=True
     )
-    def aggiorna_cerchio(n_submit, valore, number, stile_corrente):
-        if not n_submit:
-            return number, stile_corrente
-        
-        # Ipoglicemia
-        if valore < 70:
-            return valore, {"background-color": "#FF4C4C"}
-        # Normoglicemia
-        elif 80 <= valore <= 130:
-            return valore, {"background-color": '#08ff46'}
-        # Glicemia alta (merita attenzione)
-        elif 131 <= valore <= 180:
-            return valore, {"background-color": '#FFD93B'}
-        # Iperglicemia
+    def aggiorna_cerchio(path, n_clicks, farmaco, dosaggio, sintomi, valore, number, stile_corrente, trigger):
+        if path != "/patient-dashboard":
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
+
+        if n_clicks and farmaco and dosaggio and valore:
+            current_user.inserisci_glicemia(valore, farmaco, dosaggio, sintomi)
+            if valore < 70:
+                colore = "#FF4C4C"
+            elif 80 <= valore <= 130:
+                colore = "#08ff46"
+            elif 131 <= valore <= 180:
+                colore = "#FFD93B"
+            else:
+                colore = "#FF4C4C"
+            return valore, {"background-color": colore}, "Inserimento corretto", True, "success", trigger + 1
+
+        elif n_clicks:
+            return number, stile_corrente, "Informazioni mancanti", True, "danger", trigger
         else:
-            return valore, {"background-color": '#FF4C4C'}
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
+
+        
+    
 #*************************************************************************************************************************
 # sacre callback      
 #callback di gestione della chat:
