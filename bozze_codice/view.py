@@ -977,65 +977,6 @@ doctor_patient = html.Div(
             children=[
                 html.Div(
                     [
-                        html.Div([
-                            html.H5("Grafico:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
-                            dbc.Button("i", id="popover-button", color="light", style={
-                                "borderRadius": "50%",
-                                "width": "24px",
-                                "height": "24px",
-                                "padding": "0",
-                                "textAlign": "center",
-                                "lineHeight": "1",
-                                "fontSize": "12px"
-                            }),
-                        ], style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "gap": "5px",
-                            "marginBottom": "10px"
-                        }),
-
-                        dbc.Popover(
-                            dbc.PopoverBody(
-                                html.Div([
-                                    html.H6("Andamento:"),
-                                    "mostra i valori di glicemia registrati durante il periodo selezionato",
-                                    html.Br(),
-                                    html.H6("Media durante il giorno:"),
-                                    "mostra la glicemia media per fascia oraria del periodo selezionato"
-                                ])
-                            ),
-                            target="popover-button",  # ID del componente a cui è ancorato
-                            body=True,
-                            trigger="click",          # può essere "hover", "focus", "legacy", "click"
-                            placement="right",        # top, bottom, left, right
-                            id="popover"
-                        ),
-                        dcc.Dropdown(id="dropdown-scelta-grafico",
-                            options=[
-                                {
-                                    "label": "Andamento",
-                                    "value": "andamento",
-                                },
-                                {
-                                    "label": "Media durante il giorno",
-                                    "value": "medie"
-                                },
-                            ],
-                            placeholder="Scegli una tipologia di grafico",
-                            style={"width": "100%"}),
-                        html.Hr(),
-                        # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
-                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"}),
-                        html.Br(),
-                        filtro_temporale(""),
-                    ],
-                    style={"flex": 1},
-                    className="card",
-                ),
-
-                html.Div(
-                    [
                         # Numero 5
                         html.Div(
                             [   
@@ -1101,10 +1042,58 @@ doctor_patient = html.Div(
                 # Numero 4
                 html.Div(
                     [
-                        html.H5("Andamento glicemia:", style={"color" : "grey"}),
+                        html.Div([
+                            html.H5("Grafico:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                            dbc.Button("i", id="popover-button", color="light", style={
+                                "borderRadius": "50%",
+                                "width": "24px",
+                                "height": "24px",
+                                "padding": "0",
+                                "textAlign": "center",
+                                "lineHeight": "1",
+                                "fontSize": "12px"
+                            }),
+                        ], style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "gap": "5px",
+                            "marginBottom": "10px"
+                        }),
+
+                        dbc.Popover(
+                            dbc.PopoverBody(
+                                html.Div([
+                                    html.H6("Andamento:"),
+                                    "mostra i valori di glicemia registrati durante il periodo selezionato",
+                                    html.Br(),
+                                    html.H6("Media durante il giorno:"),
+                                    "mostra la glicemia media per fascia oraria del periodo selezionato"
+                                ])
+                            ),
+                            target="popover-button",  # ID del componente a cui è ancorato
+                            body=True,
+                            trigger="click",          # può essere "hover", "focus", "legacy", "click"
+                            placement="right",        # top, bottom, left, right
+                            id="popover"
+                        ),
+                        dcc.Dropdown(id="dropdown-scelta-grafico",
+                            options=[
+                                {
+                                    "label": "Andamento",
+                                    "value": "andamento",
+                                },
+                                {
+                                    "label": "Media durante il giorno",
+                                    "value": "medie"
+                                },
+                            ],
+                            placeholder="Scegli una tipologia di grafico",
+                            style={"width": "100%"}),
                         html.Hr(),
                         # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
-                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"})
+                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"}),
+                        html.Br(),
+                        filtro_temporale(""),
                     ],
                     style={"flex": 1},
                     className="card",
