@@ -1,5 +1,4 @@
 # gestione Database remoto, gestione altra roba logica
-import datetime
 from collections import namedtuple
 import dash_bootstrap_components as dbc
 from abc import ABC,abstractmethod
@@ -251,6 +250,7 @@ class Diabetologo(Persona):
         connection.commit()
         cursore_10.close()
     
+    # Seleziona tutti i campi delle terapie di un paziente correlate al medico
     def get_terapie_paziente(self, id_paz):
         cursore=connection.cursor()
         cursore.execute("SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s",(id_paz,current_user.get_id_diabetologo()))
