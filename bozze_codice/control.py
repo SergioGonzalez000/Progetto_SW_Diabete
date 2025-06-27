@@ -874,20 +874,20 @@ def registra_callbacks(app):
         Input("input-data-inizio", "value"),
         Input("input-data-fine", "value"),
         Input("input-indicazioni", "value"),
-        Input("conferma-elimina-terapia", "n_clicks"),
+        #Input("conferma-elimina-terapia", "n_clicks"),
         State("selected-patient-id", "data"),
         State("terapia-selezionata", "data"),
         prevent_initial_call=True
     )
-    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, conferma, id_paz, id_terapia):
+    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
-        if trigger_id == "conferma-elimina-terapia" and conferma > 0:
+        #if trigger_id == "conferma-elimina-terapia" and conferma > 0:
             # Azione di eliminazione terapia
-            model.cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
-            model.connection.commit()
-            model.cur.close()
-            return "Terapia eliminata correttamente", "success", True
+            #model.cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
+            #model.connection.commit()
+            #model.cur.close()
+            #return "Terapia eliminata correttamente", "success", True
 
         if trigger_id == "btn-salva-modifiche-terapia":
             # Gestione modifica terapia
@@ -1030,11 +1030,9 @@ def registra_callbacks(app):
             return number, stile_corrente, "Informazioni mancanti", True, "danger", trigger
         else:
             return valore, {"background-color": '#FF4C4C'}, dash.no_update, dash.no_update, dash.no_update, dash.no_update
-        
 
-# ******************************************************************
 
-# callbacks che gestiscono i click sui bottoni del paziente, che aprono i relativi pop-up.
+    # callbacks che gestiscono i click sui bottoni del paziente, che aprono i relativi pop-up.
     
     # PRIMO PULSANTE ADMIN-PAZIENTE
     # "Grafico glicemia paziente"
@@ -1111,19 +1109,7 @@ def registra_callbacks(app):
         
         return dash.no_update, False
         
-    
-#*************************************************************************************************************************
-# sacre callback      
-#callback di gestione della chat:
-    @app.callback(
-            Output("lista-contatti", "children"),
-            Input("url","pathname")
-    )
-    def aggiorna_lista_contatti(path):
-        if path=="/chat":
-            return view.layout_lista_contatti()
-        else:
-#*************************************************************************************************************************
+     
 # sacre callback      
 #callback di gestione della chat:
     @app.callback(
