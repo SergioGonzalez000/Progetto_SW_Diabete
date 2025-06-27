@@ -2397,6 +2397,66 @@ def crea_card_paziente(dati_paziente, dati_diab):
                 is_open=False,
                 size="md",  
                 centered=True          
+            ),
+
+            
+            # POP-UP per modificare i dati del paziente
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Modifica Dati Paziente")),
+
+                    dbc.ModalBody([
+                        html.Div([
+                            dbc.Label("Nome:"),
+                            dbc.Input(id="modifica-nome", type="text", value=dati_paziente.get("nome", ""), placeholder="Inserisci il nome")
+                        ], className="mb-3"),
+                        
+                        html.Div([
+                            dbc.Label("Cognome:"),
+                            dbc.Input(id="modifica-cognome", type="text", value=dati_paziente.get("cognome", ""), placeholder="Inserisci il cognome")
+                        ], className="mb-3"),
+                        
+                        html.Div([
+                            dbc.Label("Email:"),
+                            dbc.Input(id="modifica-email", type="email", value=dati_paziente.get("email", ""), placeholder="Inserisci l'email")
+                        ], className="mb-3"),
+                        
+                        html.Div([
+                            dbc.Label("Telefono:"),
+                            dbc.Input(id="modifica-telefono", type="tel", value=dati_paziente.get("telefono", ""), placeholder="Inserisci il numero di telefono")
+                        ], className="mb-3"),
+                        
+                        html.Div([
+                            dbc.Label("Indirizzo:"),
+                            dbc.Input(id="modifica-indirizzo", type="text", value=dati_paziente.get("indirizzo", ""), placeholder="Inserisci l'indirizzo")
+                        ], className="mb-3"),
+                        
+                        html.Div([
+                            dbc.Label("Città:"),
+                            dbc.Input(id="modifica-citta", type="text", value=dati_paziente.get("citta", ""), placeholder="Inserisci la città")
+                        ], className="mb-3"),
+                        
+                        html.Div([
+                            dbc.Label("CAP:"),
+                            dbc.Input(id="modifica-cap", type="text", value=dati_paziente.get("cap", ""), placeholder="Inserisci il CAP")
+                        ], className="mb-3"),
+                        
+                        html.Div(id="modifica-paziente-alert")
+                    ]),
+
+                    dbc.ModalFooter([
+                        dbc.Button("Salva e chiudi", id="btn-salva-modifiche-paziente", n_clicks=0, color="success"),
+                        dbc.Button("Annulla", id="btn-annulla-modifiche-paziente", n_clicks=0, color="secondary")
+                    ]),
+
+                    # elemento che mi mantiene aperto il modal per qualche secondo in modo da avere tempo di vedere l'alert di successo-modifica-dati del paziente.
+                    dcc.Interval(id="interval-update-card", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
+
+                ],
+                id="popup-modifica-dati-paziente",
+                centered=True,
+                is_open=False,
+                size="md"
             )
         ],
         style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"},
@@ -2695,7 +2755,66 @@ def crea_card_diabetologo(dati_diabetologo):
                 is_open=False,
                 size="md",  
                 centered=True          
-            )      
+            ),
+            
+            # POP-UP per modificare i dati del diabetologo
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Modifica Dati Diabetologo")),
+
+                    dbc.ModalBody([
+                        html.Div([
+                            dbc.Label("Nome:", className="small mb-1"),
+                            dbc.Input(id="modifica-nome", type="text", value=dati_diabetologo.get("nome", ""), placeholder="Inserisci il nome", size="sm")
+                        ], className="mb-1"),
+
+                        html.Div([
+                            dbc.Label("Cognome:", className="small mb-1"),
+                            dbc.Input(id="modifica-cognome", type="text", value=dati_diabetologo.get("cognome", ""), placeholder="Inserisci il cognome", size="sm")
+                        ], className="mb-1"),
+
+                        html.Div([
+                            dbc.Label("Email:", className="small mb-1"),
+                            dbc.Input(id="modifica-email", type="email", value=dati_diabetologo.get("email", ""), placeholder="Inserisci l'email", size="sm")
+                        ], className="mb-1"),
+
+                        html.Div([
+                            dbc.Label("Telefono:", className="small mb-1"),
+                            dbc.Input(id="modifica-telefono", type="tel", value=dati_diabetologo.get("telefono", ""), placeholder="Inserisci il numero di telefono", size="sm")
+                        ], className="mb-1"),
+
+                        html.Div([
+                            dbc.Label("Indirizzo:", className="small mb-1"),
+                            dbc.Input(id="modifica-indirizzo", type="text", value=dati_diabetologo.get("indirizzo", ""), placeholder="Inserisci l'indirizzo", size="sm")
+                        ], className="mb-1"),
+
+                        html.Div([
+                            dbc.Label("Città:", className="small mb-1"),
+                            dbc.Input(id="modifica-citta", type="text", value=dati_diabetologo.get("citta", ""), placeholder="Inserisci la città", size="sm")
+                        ], className="mb-1"),
+
+                        html.Div([
+                            dbc.Label("CAP:", className="small mb-1"),
+                            dbc.Input(id="modifica-cap", type="text", value=dati_diabetologo.get("cap", ""), placeholder="Inserisci il CAP", size="sm")
+                        ], className="mb-1"),
+                    ]),
+                    
+                    html.Div(id="modifica-diabetologo-alert"),
+
+                    dbc.ModalFooter([
+                        dbc.Button("Salva e chiudi", id="btn-salva-modifiche-diabetologo", n_clicks=0, color="success"),
+                        dbc.Button("Annulla", id="btn-annulla-modifiche-diabetologo", n_clicks=0, color="secondary")
+                    ]),
+
+                    # elemento che mi mantiene aperto il modal per qualche secondo in modo da avere tempo di vedere l'alert di successo-modifica-dati del paziente.
+                    dcc.Interval(id="interval-update-diabetologo", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
+
+                ],
+                id="popup-modifica-dati-diabetologo",
+                centered=True,
+                is_open=False,
+                size="md"
+            )  
         ],
         style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
     )

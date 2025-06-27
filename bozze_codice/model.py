@@ -1379,6 +1379,111 @@ def get_nomecognome(id):
     cursore.close()
     return nomecognome(nome = result[0], cognome = result[1])
 
+
+# funzione che permette la modifica dei dati del paziente nella db
+def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, email=None, 
+                             telefono=None, indirizzo=None, citta=None, cap=None):
+    """
+    Aggiorna i dati del paziente nel database.
+    I parametri sono opzionali, solo i campi forniti verranno aggiornati.
+    """
+    updates = []
+    params = []
+    
+    # si costruisce dinamicamente la query in base ai campi forniti dal form
+    if nome is not None:
+        updates.append("nome = %s")
+        params.append(nome)
+    if cognome is not None:
+        updates.append("cognome = %s")
+        params.append(cognome)
+    if email is not None:
+        updates.append("email = %s")
+        params.append(email)
+    if telefono is not None:
+        updates.append("telefono = %s")
+        params.append(telefono)
+    if indirizzo is not None:
+        updates.append("indirizzo = %s")
+        params.append(indirizzo)
+    if citta is not None:
+        updates.append("citta = %s")
+        params.append(citta)
+    if cap is not None:
+        updates.append("cap = %s")
+        params.append(cap)
+    
+    if not updates:
+        raise ValueError("Nessun dato da aggiornare")
+    
+    # ID paziente come ultimo parametro
+    params.append(id_paziente)
+    
+    query = f"""
+    UPDATE paziente
+    SET {', '.join(updates)}
+    WHERE id_paziente = %s
+    """
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        connection.commit()
+    
+    return True
+
+
+# funzione che permette la modifica dei dati del diabetologo nella db
+def modifica_dati_diabetologo_db(id_diabetologo, nome=None, cognome=None, email=None,
+                                 telefono=None, indirizzo=None, citta=None, cap=None):
+    """
+    Aggiorna i dati del diabetologo nel database.
+    I parametri sono opzionali, solo i campi forniti verranno aggiornati.
+    """
+    updates = []
+    params = []
+
+    # si costruisce dinamicamente la query in base ai campi forniti dal form
+    if nome is not None:
+        updates.append("nome = %s")
+        params.append(nome)
+    if cognome is not None:
+        updates.append("cognome = %s")
+        params.append(cognome)
+    if email is not None:
+        updates.append("email = %s")
+        params.append(email)
+    if telefono is not None:
+        updates.append("telefono = %s")
+        params.append(telefono)
+    if indirizzo is not None:
+        updates.append("indirizzo = %s")
+        params.append(indirizzo)
+    if citta is not None:
+        updates.append("citta = %s")
+        params.append(citta)
+    if cap is not None:
+        updates.append("cap = %s")
+        params.append(cap)
+
+    if not updates:
+        raise ValueError("Nessun dato da aggiornare")
+
+    params.append(id_diabetologo)
+
+    # ID diabetologo come ultimo parametro
+    query = f"""
+    UPDATE diabetologo
+    SET {', '.join(updates)}
+    WHERE id_diabetologo = %s
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        connection.commit()
+
+    return True
+
+
 if __name__ == '__main__':
     
     # Esempio: 31 dicembre 2025, ore 10:30
