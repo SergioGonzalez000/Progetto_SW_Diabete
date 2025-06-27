@@ -1573,175 +1573,203 @@ def crea_div_terapia_dropdown(terapie):
 
 # FUNZIONE CHE CREA LE INFO DI TERAPIA
 
-def crea_div_terapia_selezionata(terapia):
-    return html.Div([
+def crea_div_terapia_selezionata(terapia,is_diabetologo):
+    if is_diabetologo:
+        return html.Div([
 
-        html.Div([
-            # Div di sinistra
             html.Div([
-                # nome farmaco, dosaggio
-                html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
-                # assunzioni giornaliere
-                html.P(f"{terapia[5]} volte al giorno."),
-                # Indicazioni
-                html.P(f"{terapia[9]}"),
-                # Periodo
-                html.P(f"Dal: {terapia[6]}"),
-                html.P(f"Al: {terapia[7]}")
-            ], style={
-                'flex': 2,
-                'display': 'flex', 
-                'flexDirection': 'column', 
-                'border-radius': '15px',
-                'background-color': '#f8f9fa', 
-                'overflowY': 'auto',
-                'padding': '5px'
-                }
-            ),
-
-            # Div di destra
-            html.Div([
-                # Pulsante modifica terapia
-                dbc.Button(
-                    "Modifica", 
-                    id="apri-modal-terapia",
-                    n_clicks=0, 
-                    style={
-                        'border':'none',
-                        'border-radius': '25px',
-                        'padding': '10px 25px',
-                        'font-size':'20px',
+                # Div di sinistra
+                html.Div([
+                    # nome farmaco, dosaggio
+                    html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
+                    # assunzioni giornaliere
+                    html.P(f"{terapia[5]} volte al giorno."),
+                    # Indicazioni
+                    html.P(f"{terapia[9]}"),
+                    # Periodo
+                    html.P(f"Dal: {terapia[6]}"),
+                    html.P(f"Al: {terapia[7]}")
+                ], style={
+                    'flex': 2,
+                    'display': 'flex', 
+                    'flexDirection': 'column', 
+                    'border-radius': '15px',
+                    'background-color': '#f8f9fa', 
+                    'overflowY': 'auto',
+                    'padding': '5px'
                     }
                 ),
-            ], style={
-                'flex': 1,
-                'display': 'flex', 
-                'justifyContent': 'flex-end', 
-                'alignItems': 'flex-start'
-                }
-            )
 
-        ], style={'display': 'flex', 'flexDirection': 'row', 'height': '160px'},  className='mb-2'),
-
-        # Pulsante di aggiunta terapia:
-        dbc.Button(
-            "Nuova Terapia",
-            id='aggiungi-terapia-btn',
-            n_clicks=0,
-            style={
-                'width': '100%',
-                'border':'none',
-                'border-radius': '25px',
-                'padding': '10px 25px',
-                'font-size':'20px'                
-            },
-        ),
-
-        # POP-UP per modificare una terapia esistente
-        dbc.Modal(
-            [
-                # Header:
-                dbc.ModalHeader(dbc.ModalTitle("Modifica Terapia")),
-
-                # Body:
-                dbc.ModalBody([
-                    # Terapia attuale:
-                    html.Div([
-                        # Div nome farmaco e dosaggio:
-                        html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
-                        # Dose giornaliera + Idicazioni
-                        html.P(f"{terapia[5]} volte al giorno {terapia[9]}"),
-                        # Ultima modifica
-                        html.Small(f"Ultima modifica: {terapia[8]}", style={'text-align': 'center'})
-                    ],
-                    style={
-                        'flex': 1,
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                        'background-color': '#f8f9fa',
-                        'border-radius': '15px',
-                        'padding': '5px',
-                        'marginBottom':'15px'
-                    }),
-
-                    # Div di modifica della terapia:
-                    html.Div([
-                        html.H5("Modifica la terapia:"),
-                        # Div Farmaco e dosaggio: 
-                        html.Div([
-                            # Colonna farmaco: 
-                            html.Div([
-                                # Nome del farmaco
-                                html.P("Farmaco:", className='mb-0'),
-                                dbc.Input(id="input-farmaco", type="text", value=terapia[3], style={'border': 'none'}),
-                            ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
-                            # Colonna dosaggio:
-                            html.Div([
-                                # Dosaggio in mg
-                                html.P("Dosaggio (mg):", className='mb-0'),
-                                dbc.Input(id="input-dosaggio", type="number", value=terapia[4], style={'border': 'none'})
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                        ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
-
-                        # Assunzioni giornaliere + Indicazioni:
-                        html.Div([
-                            # Colonna farmaco: 
-                            html.Div([
-                                # Assunzioni giornaliere
-                                html.P("A. giornaliere:", className='mb-0'),
-                                dbc.Input(id="input-assunzioni", type="number", value=terapia[5], style={'border': 'none'}),
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                            # Colonna dosaggio:
-                            html.Div([
-                                # Indicazioni
-                                html.P("Indicazioni:", className='mb-0'),
-                                dbc.Input(id="input-indicazioni", value=terapia[9], style={'border': 'none'})
-                            ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
-                        ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
-
-                        # Div delle date:
-                        html.Div([
-                            # Dal:
-                            html.Div([
-                                html.P("Dal:", className='mb-0'),
-                                dbc.Input(id="input-data-inizio", type="date", value=str(terapia[6]), style={'border': 'none'}),
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                            # Al:
-                            html.Div([
-                                html.P("Al:", className='mb-0'),
-                                dbc.Input(id="input-data-fine", type="date", value=str(terapia[7]), style={'border': 'none'}),
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'})
-                        ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
-
-                        # Box per gli alert:
-                        dbc.Alert(id="modifica-terapia-output", is_open=False),
-                    ],
-                    style={
-                        'flex': 3,
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                        'background-color': '#f8f9fa',
-                        'border-radius': '15px',
-                        'padding': '5px',
-                    }),
-                    
-                ]),
-                dbc.ModalFooter([
-                    # Pulsante per salvare le modifiche
-                    dbc.Button("Salva", id="btn-salva-modifiche-terapia",n_clicks=0, color='success', style={'border': 'none', 'border-radius': '25px'}),
-                    # Pulsante per annullare e uscire
-                    dbc.Button("Annulla", id="chiudi-modal-terapia", color='warning', style={'border': 'none', 'border-radius': '25px'}),
-                    # Pulsante per eliminare 
-                    dbc.Button("Elimina", id='btn-elimina-terapia', n_clicks=0, color='danger', style={'border': 'none', 'border-radius': '25px'}),
-                ], style={'display': 'flex', 'flexDirection': 'row', 'gap': '10px'}
+                # Div di destra
+                html.Div([
+                    # Pulsante modifica terapia
+                    dbc.Button(
+                        "Modifica", 
+                        id="apri-modal-terapia",
+                        n_clicks=0, 
+                        style={
+                            'border':'none',
+                            'border-radius': '25px',
+                            'padding': '10px 25px',
+                            'font-size':'20px',
+                        }
+                    ),
+                ], style={
+                    'flex': 1,
+                    'display': 'flex', 
+                    'justifyContent': 'flex-end', 
+                    'alignItems': 'flex-start'
+                    }
                 )
-            ],
-            id="popup-modifica-terapia",
-            centered=True,
-            is_open=False
-        )
-    ],
-    style={'flex': 1})
+
+            ], style={'display': 'flex', 'flexDirection': 'row', 'height': '160px'},  className='mb-2'),
+
+            # Pulsante di aggiunta terapia:
+            dbc.Button(
+                "Nuova Terapia",
+                id='aggiungi-terapia-btn',
+                n_clicks=0,
+                style={
+                    'width': '100%',
+                    'border':'none',
+                    'border-radius': '25px',
+                    'padding': '10px 25px',
+                    'font-size':'20px'                
+                },
+            ),
+
+            # POP-UP per modificare una terapia esistente
+            dbc.Modal(
+                [
+                    # Header:
+                    dbc.ModalHeader(dbc.ModalTitle("Modifica Terapia")),
+
+                    # Body:
+                    dbc.ModalBody([
+                        # Terapia attuale:
+                        html.Div([
+                            # Div nome farmaco e dosaggio:
+                            html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
+                            # Dose giornaliera + Idicazioni
+                            html.P(f"{terapia[5]} volte al giorno {terapia[9]}"),
+                            # Ultima modifica
+                            html.Small(f"Ultima modifica: {terapia[8]}", style={'text-align': 'center'})
+                        ],
+                        style={
+                            'flex': 1,
+                            'display': 'flex',
+                            'flexDirection': 'column',
+                            'background-color': '#f8f9fa',
+                            'border-radius': '15px',
+                            'padding': '5px',
+                            'marginBottom':'15px'
+                        }),
+
+                        # Div di modifica della terapia:
+                        html.Div([
+                            html.H5("Modifica la terapia:"),
+                            # Div Farmaco e dosaggio: 
+                            html.Div([
+                                # Colonna farmaco: 
+                                html.Div([
+                                    # Nome del farmaco
+                                    html.P("Farmaco:", className='mb-0'),
+                                    dbc.Input(id="input-farmaco", type="text", value=terapia[3], style={'border': 'none'}),
+                                ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
+                                # Colonna dosaggio:
+                                html.Div([
+                                    # Dosaggio in mg
+                                    html.P("Dosaggio (mg):", className='mb-0'),
+                                    dbc.Input(id="input-dosaggio", type="number", value=terapia[4], style={'border': 'none'})
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+
+                            # Assunzioni giornaliere + Indicazioni:
+                            html.Div([
+                                # Colonna farmaco: 
+                                html.Div([
+                                    # Assunzioni giornaliere
+                                    html.P("A. giornaliere:", className='mb-0'),
+                                    dbc.Input(id="input-assunzioni", type="number", value=terapia[5], style={'border': 'none'}),
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                                # Colonna dosaggio:
+                                html.Div([
+                                    # Indicazioni
+                                    html.P("Indicazioni:", className='mb-0'),
+                                    dbc.Input(id="input-indicazioni", value=terapia[9], style={'border': 'none'})
+                                ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
+                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+
+                            # Div delle date:
+                            html.Div([
+                                # Dal:
+                                html.Div([
+                                    html.P("Dal:", className='mb-0'),
+                                    dbc.Input(id="input-data-inizio", type="date", value=str(terapia[6]), style={'border': 'none'}),
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                                # Al:
+                                html.Div([
+                                    html.P("Al:", className='mb-0'),
+                                    dbc.Input(id="input-data-fine", type="date", value=str(terapia[7]), style={'border': 'none'}),
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'})
+                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+
+                            # Box per gli alert:
+                            dbc.Alert(id="modifica-terapia-output", is_open=False),
+                        ],
+                        style={
+                            'flex': 3,
+                            'display': 'flex',
+                            'flexDirection': 'column',
+                            'background-color': '#f8f9fa',
+                            'border-radius': '15px',
+                            'padding': '5px',
+                        }),
+                        
+                    ]),
+                    dbc.ModalFooter([
+                        # Pulsante per salvare le modifiche
+                        dbc.Button("Salva", id="btn-salva-modifiche-terapia",n_clicks=0, color='success', style={'border': 'none', 'border-radius': '25px'}),
+                        # Pulsante per annullare e uscire
+                        dbc.Button("Annulla", id="chiudi-modal-terapia", color='warning', style={'border': 'none', 'border-radius': '25px'}),
+                        # Pulsante per eliminare 
+                        dbc.Button("Elimina", id='btn-elimina-terapia', n_clicks=0, color='danger', style={'border': 'none', 'border-radius': '25px'}),
+                    ], style={'display': 'flex', 'flexDirection': 'row', 'gap': '10px'}
+                    )
+                ],
+                id="popup-modifica-terapia",
+                centered=True,
+                is_open=False
+            )
+        ],
+        style={'flex': 1})
+    else:
+        return html.Div([
+
+            html.Div([
+                # Div di sinistra
+                html.Div([
+                    # nome farmaco, dosaggio
+                    html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
+                    # assunzioni giornaliere
+                    html.P(f"{terapia[5]} volte al giorno."),
+                    # Indicazioni
+                    html.P(f"{terapia[9]}"),
+                    # Periodo
+                    html.P(f"Dal: {terapia[6]}"),
+                    html.P(f"Al: {terapia[7]}")
+                ], style={
+                    'flex': 2,
+                    'display': 'flex', 
+                    'flexDirection': 'column', 
+                    'border-radius': '15px',
+                    'background-color': '#f8f9fa', 
+                    'overflowY': 'auto',
+                    'padding': '5px'
+                    }
+                ),
+            ]),
+        ])
 
             
 

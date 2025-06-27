@@ -517,16 +517,11 @@ def registra_callbacks(app):
 
         if pathname == "/doctor-patient" and scelta:
             grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati)
-            return dcc.Graph(figure=grafico)
+            return dcc.Graph(figure=grafico,  config={'responsive': True})
         else:
             return dash.no_update
 
-        if pathname == "/doctor-patient":
-            grafico = model.Diabetologo.visualizza_glicemia_paziente(id_paz)
-            return dcc.Graph(figure=grafico, config={'responsive': True})
-        else:
-            return dash.no_update
-
+        
 #*************************************************************************************************************************************
     #
     @app.callback(
@@ -740,7 +735,6 @@ def registra_callbacks(app):
         if path=="/doctor-patient":
             id_diab=current_user.get_id_diabetologo()
             terapie=model.get_terapie_paziente(id_diab,id_paz)
-            terapie=current_user.get_terapie_paziente(id_paz)
             # Se la lista delle terapie è vuota: mostra solo il pulsante "Nuova terapia"
             if not terapie:
                 return html.Div([  
@@ -796,7 +790,7 @@ def registra_callbacks(app):
         Input("url","pathname"),
         State("selected-patient-id", "data"),
     )
-    def mostra_terapia_selezionata(id_terapia, id_paz):
+    def mostra_terapia_selezionata(id_terapia,path, id_paz):
         # Se il parametro id_terapia è nullo (come ad esempio non'appena si seleziona un paziente):
         if id_terapia is None:
             return html.Div(
@@ -820,14 +814,13 @@ def registra_callbacks(app):
                 }
             )
 
-        lista_terapie = current_user.get_terapie_paziente(id_paz)
-        # Costruzione della terapia: cerca la terapia
-        # t[0] id terapia
-        terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
-        # Se non trova la terapia:
-        if terapia is None:
-            return html.Div("Terapia non trovata.")
-            return view.crea_div_terapia_selezionata(terapia,True)
+        # lista_terapie = current_user.get_terapie_paziente(id_paz)
+        # # Costruzione della terapia: cerca la terapia
+        # # t[0] id terapia
+        # terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
+        # # Se non trova la terapia:
+        # if terapia is None:
+        #     return html.Div("Terapia non trovata.")
         
         elif path == "/patient-dashboard":
             if id_terapia is None:
@@ -841,13 +834,20 @@ def registra_callbacks(app):
                 return html.Div("Terapia non trovata.")
 
             return view.crea_div_terapia_selezionata(terapia,False)
+        elif path == "/doctor-patient":
+            if id_terapia is None:
+                return html.Div("Seleziona una terapia.")
+            id_diab=current_user.get_id_diabetologo()
+            lista_terapie = model.get_terapie_paziente(id_diab,id_paz)
+            terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
+            if terapia is None:
+                return html.Div("Terapia non trovata.")
+            return view.crea_div_terapia_selezionata(terapia,True)
         else:
             return dash.no_update
         
 #*****************************************************************************************************************************       
         
-
-# ******************************************************************************************************************
     #callback per aprire il popup di modifica terapia
     @app.callback(
         Output("popup-modifica-terapia", "is_open"),
