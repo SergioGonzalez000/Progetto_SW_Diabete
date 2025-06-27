@@ -1,5 +1,4 @@
 # gestione Database remoto, gestione altra roba logica
-import datetime
 from collections import namedtuple
 import dash_bootstrap_components as dbc
 from abc import ABC,abstractmethod
