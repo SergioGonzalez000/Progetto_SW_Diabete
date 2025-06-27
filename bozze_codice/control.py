@@ -989,7 +989,7 @@ def registra_callbacks(app):
         elif n_clicks:
             return number, stile_corrente, "Informazioni mancanti", True, "danger", trigger
         else:
-            return valore, {"background-color": '#FF4C4C'}
+            return valore, {"background-color": '#FF4C4C'}, dash.no_update, dash.no_update, dash.no_update, dash.no_update
         
 
 # ******************************************************************
