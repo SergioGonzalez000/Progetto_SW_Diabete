@@ -1110,8 +1110,6 @@ def registra_callbacks(app):
                 return nuova_lista, False
         
         return dash.no_update, False
-        
-    
 #*************************************************************************************************************************
 # sacre callback      
 #callback di gestione della chat:
@@ -1135,15 +1133,17 @@ def registra_callbacks(app):
         if not ctx.triggered : return dash.no_update
         id_contatto = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])["index"]
         return id_contatto
-    
+
     @app.callback(
     [
         Output("chat-box", "children"),
-        Output("nome-contatto","children")
+        Output("nome-contatto","children"),
+        Output("input-text","value")
     ],
     [
         Input({"type": "btn-contatto", "index": dash.ALL}, "n_clicks"),  # Pulsante contatto
-        Input("send-btn", "n_clicks")  # Pulsante invio messaggio
+        Input("send-btn", "n_clicks"),  # Pulsante invio messaggio
+        Input("interval-component","n_intervals")
     ],
     [
         State("input-text", "value"),
@@ -1151,123 +1151,19 @@ def registra_callbacks(app):
     ],
     prevent_initial_call=True
     )
-    def update_chat(btn_clicks, send_clicks, messaggio, id_contatto):
+    def update_chat(btn_clicks, send_clicks, n_intervals, messaggio, id_contatto):
         triggered_id = ctx.triggered_id  # Capisci quale input ha attivato la callback
 
         # Caso 1: Click su un contatto (prima si fa un check per capire se il trigger è un dizionario)
         if isinstance(triggered_id, dict) and triggered_id["type"] == "btn-contatto":
-            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), triggered_id["index"])), model.get_nomecognome(triggered_id["index"])
+            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), triggered_id["index"])), model.get_nomecognome(triggered_id["index"]), dash.no_update
 
         # Caso 2: Click su "Invia messaggio"
         elif triggered_id == "send-btn" and messaggio:
             model.insert_messaggio(model.get_user_id(), id_contatto, messaggio)
-            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto)       
-        return dash.no_update
-    
+            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto), ""
 
-    #####################################################
-    # DA FARE:                                          #
-    # CALLBACK PER IL PULSANTE "MODIFICA DATI PAZIENTE" #
-    #####################################################
-
-    @app.callback(
-    Output("pop-admin-grafico-diabetologo", "is_open"),
-    Input("btn-graf-paz-assoc-diab", "n_clicks"),
-    State("pop-admin-grafico-diabetologo", "is_open")
-    )
-    def gestisci_popup_admin_graf_diabetologo(n_apri, is_open):
-        """Apertura e chiusura del popup dei grafici dei diabetologi."""
-        if n_apri is None:
-            return is_open
-        if n_apri:
-            return not is_open
-        return is_open
-    
-
-    @app.callback(
-    Output("contenitore-popup-graf-diabetologo", "children"),
-    Input("btn-graf-paz-assoc-diab", "n_clicks"),
-    State("store-id-diabetologo", "data"),
-    prevent_initial_call=True
-    )
-    def aggiorna_grafico_diabetologo(n_clicks, id_diabetologo):
-        """Carica il grafico dei pazienti associati ad un dato diabetologo."""
-        if not n_clicks or id_diabetologo is None:
-            return "Seleziona un diabetologo e premi il bottone per vedere il grafico."
-
-        fig = model.visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo)
-        return dcc.Graph(figure=fig, style={"borderRadius": "5px", "padding": "10px"})
-
-
-    ########
-
-    @app.callback(
-    Output("pop-admin-delete-diab", "is_open", allow_duplicate=True),
-    Input("btn-rimuovi-diab", "n_clicks"),
-    State("pop-admin-delete-diab", "is_open"),
-    prevent_initial_call=True
-    )
-    def gestisci_popup_admin_rimozione_diab(n_apri, is_open):
-        """Apertura e chiusura del popup di eliminazione dei diabetologi."""
-        if n_apri is None:
-            return is_open
-        if n_apri:
-            return not is_open
-        return is_open
-
-
-    @app.callback(
-    Output("contenitore-lista-diabetologi", "children"),
-    Output("pop-admin-delete-diab", "is_open"),
-    Input("btn-delete-diab-confirm-YES", "n_clicks"),
-    Input("btn-delete-diab-confirm-NO", "n_clicks"),
-    State("store-id-diabetologo", "data"),
-    prevent_initial_call=True
-    )
-    def rimozione_aggiornamento_lista_popup_diab(n_clicks_yes, n_clicks_no, id_diabetologo):
-        """Rimuove il diabetologo dal database e aggiorna la lista."""
-        # Click su "No"
-        if n_clicks_no:
-            return dash.no_update, False
-
-        # Click su "Sì"
-        if n_clicks_yes:
-            model.Admin.elimina_diabetologo(id_diabetologo)
-            nuova_lista = view.render_lista_diabetologi(model.get_all_diabetologi())
-            return nuova_lista, False
-
-        return dash.no_update, False
-    
-
-
-    @app.callback(
-    Output("pop-admin-lista-pazienti-ass", "is_open"),
-    Input("btn-lista-paz-assoc-diab", "n_clicks"),
-    State("pop-admin-lista-pazienti-ass", "is_open"),
-    prevent_initial_call=True
-    )
-    def toggle_modal(n_clicks, is_open):
-        if n_clicks:
-            return not is_open
-        return is_open
-    
-    @app.callback(
-    Output("contenitore-popup-lista-paz-diabetologo", "children", allow_duplicate= True),
-    Input("btn-lista-paz-assoc-diab", "n_clicks"),
-    State("store-id-diabetologo", "data"),      
-    prevent_initial_call=True
-    )
-    def mostra_lista_pazienti_assoc(n_clicks, id_diabetologo):
-        if not id_diabetologo:
-            return html.Div("Errore: ID diabetologo mancante.")
-
-        lista_pazienti = model.visualizza_pazienti_associati_singolo_diab(id_diabetologo)
-
-        return view.genera_lista_pazienti_associati(lista_pazienti)
-    
-
-    ########################################################
-    # DA FARE:                                             #
-    # CALLBACK PER IL PULSANTE "MODIFICA DATI DIABETOLOGO" #
-    ########################################################
-    
+        # Caso 3: aggiornamento periodico
+        elif n_intervals and id_contatto:
+            view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto), dash.no_update 
+        return dash.no_update, dash.no_update, dash.no_update
