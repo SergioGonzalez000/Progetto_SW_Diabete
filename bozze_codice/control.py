@@ -288,6 +288,8 @@ def registra_callbacks(app):
         if not id_richiesta:
             return None
         dati = model.get_dati_richiesta_account_by_id(id_richiesta)
+        # Si assume che per registrarsi siano stati inseriti tutti i dati necessari 
+        # dunque un controllo all'esistenza dei dati non è necessario
         return view.render_dati_richiesta(dati)
 
     # callback che aggiorna il dropdown dei pazienti
@@ -298,29 +300,45 @@ def registra_callbacks(app):
     def aggiorna_opzioni_pazienti(search_value):
         return model.get_richieste_account_pazienti()
 
-    # callback che gestisce le richiesta di inserimento dei pazienti
+#*******************************************************************************************************************
+    # CODICE CHE GESTISCE LE RICHIESTE DEI PAZIENTI/DIABETOLOGI
     @app.callback(
         [Output("alert-richiesta-paziente", "children", allow_duplicate=True),
         Output("dropdown-richieste-pazienti", "options", allow_duplicate=True)],
-        [Input("btn-accetta-paziente", "n_clicks"),
-        Input("btn-rifiuta-paziente", "n_clicks")],
-        State("dropdown-richieste-pazienti", "value"),
+        [Input({"type": "btn-accetta", "index": ALL}, "n_clicks"),
+        Input({"type": "btn-rifiuta", "index": ALL}, "n_clicks")],
         prevent_initial_call=True,
         allow_duplicate=True
     )
-    def gestisci_richiesta_paziente(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
-        if not id_richiesta:
-            return dbc.Alert("Seleziona una richiesta prima di accettare o rifiutare.", color="warning", dismissable=True), dash.no_update
+    def gestisci_richiesta_paziente(n_clicks_accetta, n_clicks_rifiuta):
+        triggered_id = ctx.triggered_id
 
-        bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
+        if not triggered_id:
+            return dash.no_update, dash.no_update
 
-        if bottone_premuto == "btn-accetta-paziente":
-            model.Admin.approva_richiesta(id_richiesta)
-            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
+        richiesta_id = triggered_id["index"]
+        tipo = triggered_id["type"]
 
-        elif bottone_premuto == "btn-rifiuta-paziente":
-            model.Admin.rifiuta_richiesta(id_richiesta)
-            alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
+        # Ricava l'indice dell'elemento che ha attivato il callback
+        if tipo == "btn-accetta":
+            idx = [{"type": "btn-accetta", "index": richiesta_id}]
+            clicks = ctx.inputs_list[0][0]["value"]
+        elif tipo == "btn-rifiuta":
+            idx = [{"type": "btn-rifiuta", "index": richiesta_id}]
+            clicks = ctx.inputs_list[1][0]["value"]
+        else:
+            return dash.no_update, dash.no_update
+
+        if clicks == 0:
+            return dash.no_update, dash.no_update
+
+        # Esegui operazione
+        if tipo == "btn-accetta":
+            model.Admin.approva_richiesta(richiesta_id)
+            alert = dbc.Alert(f"Richiesta {richiesta_id} accettata con successo.", color="success", dismissable=True)
+        else:
+            model.Admin.rifiuta_richiesta(richiesta_id)
+            alert = dbc.Alert(f"Richiesta {richiesta_id} rifiutata con successo.", color="danger", dismissable=True)
 
         options = model.get_richieste_account_pazienti()
         return alert, options
@@ -1046,7 +1064,7 @@ def registra_callbacks(app):
 
         if n_clicks and farmaco and dosaggio and valore:
             current_user.inserisci_glicemia(valore, farmaco, dosaggio, sintomi)
-            if valore < 70:
+            if valore < 80:
                 colore = "#FF4C4C"
             elif 80 <= valore <= 130:
                 colore = "#08ff46"

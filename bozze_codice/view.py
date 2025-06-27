@@ -2025,11 +2025,6 @@ def render_richieste_account():
                             html.Div(id="alert-richiesta-paziente", style={"marginTop": "10px"}),
                             
                             html.Div(id="dettagli-richiesta-paziente", style={'flex': 1, "marginTop": "10px"}),
-
-                            html.Div([
-                                dbc.Button("Accetta", id="btn-accetta-paziente", color="primary"),
-                                dbc.Button("Rifiuta", id="btn-rifiuta-paziente", color="danger"),
-                            ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
                         ],
                     )
                 ]
@@ -2087,45 +2082,102 @@ admin_request = html.Div(
 
 
 
-# funzione che prende i dati e li rende sotto forma di card piu carin e leggibile 
+# FUNZIONE CHE GENERA LA CARD DI RICHIESTA PER PAZIENTE/DIABETOLOGO
 def render_dati_richiesta(dati):
     if not dati:
         return dbc.Alert("Nessuna richiesta trovata.", color="warning")
+    
+    # Formattare la data 
+    giorno = dati["data_richiesta"].strftime("%d/%m/%Y %H:%M")
+    # data di nascita formattata
+    data_nascita = dati["data_nascita"].strftime("%d/%m/%Y")
 
-    def info(label, value):                         # funzione che genera ogni singola riga di informazione
-        return html.P([
-            html.Span(f"{label}: ", style={"fontWeight": 600}),
-            html.Span(str(value))
-        ], style={
-            "marginBottom": "0.5rem",
-            "fontSize": "1rem",
-            "lineHeight": "1.6"
-        })
+    data_card = html.Div([
+            
+            # Header Nome Cognome + tipo Account
+            html.Div([
+                # Colonna di sinistra
+                html.Div([
+                    html.H2(f"{dati['nome']} {dati['cognome']}, ({dati["sesso"]})", style={'padding': '5px', 'border-radius': '15px', 'background-color': '#f8f9fa', 'display': 'inline-block'}),
+                    html.H4(f"{dati["codice_fiscale"].upper()}", style={'color': 'gray'}),
+                    html.H5(f"Data di nascita: {data_nascita}", style={'color': 'gray'})
+                ], style={'flex': 1}),
+                # colonna di destra
+                html.Div([
+                    html.H2("PAZIENTE" if dati["paziente"] else "DIABETOLOGO", style={'padding': '5px'}),
+                    html.H5("IN ATTESA" if dati["stato_richiesta"] else f"{dati["stato_richiesta"]}", style={'color': '#08ff46'})
+                ], style={'flex': 1, "textAlign": "center"})
+            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'margin-bottom': '15px',}),
+        
+            # Dati vari anagrafici:
+            html.Div([
+                
+                # Colonna dell'indirizzo
+                html.Div([
+                    html.H4("Indirizzo:", style={'color': 'gray'}),
+                    html.H5(f"{dati["indirizzo"]}")
+                ], style={'flex': 1, "textAlign": "center"}),
+                
+                # Colonna Città
+                html.Div([
+                    html.H4("Città:", style={'color': 'gray'}),
+                    html.H5(f"{dati["citta"]}")
+                ], style={'flex': 1, "textAlign": "center"}),
+                
+                # Colonna CAP
+                html.Div([
+                    html.H4("CAP:", style={'color': 'gray'}),
+                    html.H5(f"{dati["cap"]}")
+                ], style={'flex': 1, "textAlign": "center"})
+            ], 
+            style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'padding': '10px', 'border-radius': '15px', 'background-color': '#f8f9fa',}),
 
-    return dbc.Card(
-        dbc.CardBody([
-            html.H5(f"{dati['nome']} {dati['cognome']}", className="mb-3", style={"fontSize": "1.4rem"}),
+            # Dati sui contatti:
+            html.Div([
 
-            info("Codice Fiscale", dati["codice_fiscale"]),
-            info("Data di nascita", dati["data_nascita"]),
-            info("Sesso", dati["sesso"]),
-            info("Indirizzo", dati["indirizzo"]),
-            info("Città", dati["citta"]),
-            info("CAP", dati["cap"]),
-            info("Telefono", dati["telefono"]),
-            info("Email", dati["email"]),
+                # Colonna telefono
+                html.Div([
+                    html.H4("Telefono:", style={'color': 'gray'}),
+                    html.H5(f"{dati["telefono"]}")
+                ], style={'flex': 1, "textAlign": "center"}),
 
-            html.Hr(style={"margin": "1rem 0"}),
+                # Colonna mail
+                html.Div([
+                    html.H4("Email:", style={'color': 'gray'}),
+                    html.H5(f"{dati["email"]}")
+                ], style={'flex': 1, "textAlign": "center"})
+            ],
+            style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'padding': '10px', 'border-radius': '15px', 'background-color': '#f8f9fa',}),
+        
+            # Data richiesta:
+            html.H6(f"Data richiesta: {giorno}", style={'color': 'gray', "textAlign": "center"}),
 
-            info("Tipo account", "Paziente" if dati["paziente"] else "Diabetologo"),
-            info("Data richiesta", dati["data_richiesta"]),
-            info("Stato", dati["stato_richiesta"]),
-        ]),
-        className="shadow-sm w-100 mb-2",
-        style={ "padding": "0.75rem",
-                "border": "1px solid #ced4da",       # stile del bordo della card della richiesta
-                "borderRadius": "0.25rem"}
+            html.Hr(),
+
+            #Pulsanti per accettare o rifiutare:
+            html.Div([
+                # Pulsante accetta 
+                html.Div(
+                    dbc.Button("Accetta", id={"type": "btn-accetta", "index": dati["codice_fiscale"]}, n_clicks=0, color="success", style={'width': '100%', 'padding': '15px 20px', 'border-radius': '25px', 'font-size': '20px'}),
+                    style={'flex': 1}
+                ),
+                # Pulsante rifiuta
+                html.Div(
+                    dbc.Button("Rifiuta", id={"type": "btn-rifiuta", "index": dati["codice_fiscale"]}, n_clicks=0, color="danger", style={'width': '100%', 'padding': '15px 20px', 'border-radius': '25px', 'font-size': '20px'}),
+                    style={'flex': 1}
+                ),
+                
+            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}),
+        ],
+        style={
+            'display': 'flex',
+            'flexDirection': 'column',
+            'gap': '20px'
+        }, 
+        className='card'
     )
+
+    return data_card
 
 #*****************************************************************************************************
 
