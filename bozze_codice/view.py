@@ -12,7 +12,8 @@ def getLayout():
             dcc.Location(id="url", refresh=True),
             # sidebar fissa, laterale sinistra
             sidebar,
-
+            #fil-serve per non far fallire una callback -> forse si può risolvere in un altro modo
+            dcc.Store(id="selected-patient-id",data=None),
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
@@ -540,10 +541,40 @@ registration = html.Div(
 # 2. Grafici
 # 3. Chat
 # ******************************************************************************************************************
+#popover generale che viene riutilizzato nelle altre parti della view
+def info_popover(button_id, popover_id, contenuto, title="Informazioni"):
+    return html.Div([
+        dbc.Button("i", id=button_id, color="light", style={
+            "borderRadius": "50%",
+            "width": "24px",
+            "height": "24px",
+            "padding": "0",
+            "textAlign": "center",
+            "lineHeight": "1",
+            "fontSize": "12px"
+        }),
+        dbc.Popover(
+            dbc.PopoverBody([
+                html.H6(title),
+                contenuto
+            ]),
+            target=button_id,
+            body=True,
+            trigger="click",
+            placement="right",
+            id=popover_id
+        )
+    ], style={
+        "display": "flex",
+        "alignItems": "center",
+        "gap": "5px",
+        "marginBottom": "10px"
+    })
 
 # DASHBOARD DEL PAZIENTE
 
 patient_dashboard = html.Div(
+    
     style={
         # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
         "flex": 1,
@@ -566,6 +597,7 @@ patient_dashboard = html.Div(
         # |_______|___|
         #     1     2
         # Colonna a sinistra 1 (divisa in due righe)
+        dcc.Store(id="trigger-aggiorna-grafico", data=0),
         html.Div(
             style={
                 # Occupa 2/3 della page content
@@ -595,9 +627,7 @@ patient_dashboard = html.Div(
                             children=[
                                 html.H5("Paziente: ", style={"color" : "grey"}),
                                 html.Hr(),
-
-                                # DA FARE
-
+                                html.Div(id="info-paz",),
                             ]
                         ),
 
@@ -607,9 +637,7 @@ patient_dashboard = html.Div(
                             children=[
                                 html.H5("Terapia: ", style={"color" : "grey"}),
                                 html.Hr(),
-
-                                # Tabella della terapia
-                                #html.Div(id="tabella-terapia")
+                                html.Div(id="terapie-paz"),
                             ]
                         )
                     ]
@@ -631,10 +659,8 @@ patient_dashboard = html.Div(
                             className="card",
                             children=[
                                 html.H5("Grafico:", style={"color" : "grey"}),
-                                html.Hr()
-
-                                # DA FARE
-
+                                html.Hr(),
+                                html.Div(id="andamento-giornaliero"),
                             ]
                         )
                     ]
@@ -695,6 +721,7 @@ patient_dashboard = html.Div(
                         dbc.Col(
                             # Inserimento del nome del farmaco
                             dcc.Input(
+                                id="input-farmaco-usato",
                                 placeholder="Inserisci farmaco...",
                                 type="text",
                                 className= 'input'
@@ -705,6 +732,7 @@ patient_dashboard = html.Div(
                         dbc.Col(
                             # Inserimento del dosaggio
                             dcc.Input(
+                                id="input-dosaggio-usato",
                                 placeholder="Dosaggio...",
                                 type="text",
                                 className= 'input'  
@@ -719,11 +747,14 @@ patient_dashboard = html.Div(
                 # Input Annotazione sintomi
                 # Input glicemia
                 dcc.Input(
+                    id="input-sintomi-riscontrati",
                     placeholder="Sintomi...",
                     type="text",
                     className="input mb-3"
                 ),
 
+                dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0),
+                dbc.Alert(id="inserisci-glicemia-output",is_open=False),
                 html.H6("Misurata:", style={"color": "grey"}),
                 html.P("Qua da inserire eventuale radioitem per la selezione del pre e del post pranzo")
             ]
@@ -737,19 +768,30 @@ patient_dashboard = html.Div(
 # |___|___|
 # | 2 | 4 |
 # |___|___|
+def filtro_temporale(grafico_id):
+    return dcc.RadioItems(
+        id=f"filtro-temporale{grafico_id}",
+        options=[
+            {'label': 'Tutto', 'value': 'tutto'},
+            {'label': 'Annuale', 'value': 'annuale'},
+            {'label': 'Mensile', 'value': 'mensile'},
+            {'label': 'Settimanale', 'value': 'settimanale'},
+            {'label': 'Giornaliero', 'value': 'giornaliero'}
+        ],
+        value='tutto',
+        labelStyle={'display': 'inline-block', 'margin-right': '15px'},
+        inputStyle={"margin-right": "5px"},
+        style={"textAlign": "center"}
+    )
+
 
 patient_graphs = html.Div(
     style={
-        # L'elemento attuale si adatta automaticamente a tutto lo spazio disponibile
         "flex": 1,
-        # Spazio dai margini esterni
         "padding": "40px",
-        # divide lo spazio
         "display": "flex",
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
         "flex-direction": "row",
-        # Spazio tra le colonne
-        "gap": "40px" 
+        "gap": "40px"
     },
     children=[
         # Prima colonna
@@ -758,22 +800,57 @@ patient_graphs = html.Div(
                 'flex': 1,
                 'display': 'flex',
                 'flexDirection': 'column',
-                "gap": "40px" 
+                "gap": "40px"
             },
             children=[
                 # Riquadro 1
                 html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
-                    id='first-graph'
+                    children=[
+                        html.Div(
+                            [
+                                html.H5("Andamento: ", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-2",
+                                    popover_id="popover-2",
+                                    contenuto=html.Div([
+                                        "Mostra i valori di glicemia registrati durante il periodo selezionato.",
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
+                        ),
+                        html.Div(id='first-graph'),
+                        html.Br(),
+                        filtro_temporale(1),
+                    ],                    
+
                 ),
 
                 # Riquadro 2
                 html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
-                    id='second-graph'
-                ),                
+                    children=[
+                        html.Div(
+                            [
+                                html.H5("Media:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-3",
+                                    popover_id="popover-3",
+                                    contenuto=html.Div([
+                                        "Mostra i valori medi di glicemia per fascia oraria, registrati durante il periodo selezionato.",
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
+                        ),
+                        html.Div(id='second-graph'),
+                        html.Br(),
+                        filtro_temporale(2),
+                    ]
+                ),
             ]
         ),
 
@@ -783,14 +860,31 @@ patient_graphs = html.Div(
                 'flex': 1,
                 'display': 'flex',
                 'flexDirection': 'column',
-                "gap": "40px" 
+                "gap": "40px"
             },
             children=[
                 # Riquadro 3
                 html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
-                    id='third-graph'
+                    children=[
+                        html.Div(
+                            [
+                                html.H5("Eventi glucosio basso: ", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-4",
+                                    popover_id="popover-4",
+                                    contenuto=html.Div([
+                                        "Mappa che mostra la probabilità giornaliera di avere un la glicemia bassa.",
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
+                        ),
+                        html.Div(id='third-graph'),
+                        html.Br(),
+                        filtro_temporale(3),
+                    ]
                 ),
 
                 # Riquadro 4
@@ -798,7 +892,7 @@ patient_graphs = html.Div(
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
                     id='fourth-graph'
-                ),                
+                ),
             ]
         )
     ]
@@ -866,26 +960,10 @@ doctor_dashboard = html.Div(
                         # Numero 5
                         html.Div(
                             [
-                                html.H5("Pazienti totali:", style={"color" : "grey"}),
+                                html.H5("Le tue info:", style={"color" : "grey"}),
                                 html.Hr(),
                                 # Qua va inserito il numero dei pazienti (associati)
-                                html.Div(
-                                    [
-                                        "0"
-                                    ],
-                                    style={
-                                        "height": "100%",
-                                        "width": "100%",
-                                        "display": "flex",
-                                        "align-items": "center",
-                                        "justify-content": "center",
-                                        # dimensione del numero
-                                        "font-size": "150px",
-                                        # colore per tutti i numeri
-                                        "color": "#555"
-                                    },
-                                    id="patient-number"
-                                )
+                                html.Div(id="doctor-info")
                             ],
                             className="card"
                         ),
@@ -923,66 +1001,62 @@ doctor_dashboard = html.Div(
 # PAZIENTI DIABETOLOGO
 doctor_patient = html.Div(
     style={
-        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
-        'flex' : 1,
+        'flex': 1,
         'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
         'flex-direction': 'row',
-        # Spazio dai margini esterni
         'padding': '40px',
-        # Spazio interno tra le colonne
         'gap': '40px'
     },
-
-    # Layout finale:
-    # _____________
-    # |   |       |
-    # |   |___4___|
-    # | 3 |   |   |
-    # |___|_5_|_6_|
-    #   1     2  
     children=[
-
-        # Prima colonna che occupa 1/3
+        # Prima colonna (1/3)
         html.Div(
             [
-                html.H5("I tuoi pazienti:", style={"color" : "grey"}),
+                html.H5("I tuoi pazienti:", style={"color": "grey"}),
                 html.Hr(),
-                # Box per la lista dei pazienti
-                html.Div( id="doctor-patient-queue", style={"height": "100%","width": "100%", "flex-direction": "column"})
+                html.Div(
+                    id="doctor-patient-queue",
+                    style={"height": "100%", "width": "100%", "flex-direction": "column"}
+                )
             ],
-            className= "card"
+            className="card"
         ),
 
-        # Seconda colonna che occupa 2/3
+        # Seconda colonna (2/3)
         html.Div(
-            style= {
-                # Occupa 2/3
+            style={
                 "flex": 2,
                 "display": "flex",
-                "flex-direction" : "column",
-                # spazio tra 4 e 5/6 di 40 px
-                'gap': '40px'
+                "flex-direction": "column",
+                "gap": "40px"
             },
             children=[
+                # Riga superiore (Paziente + Terapia)
                 html.Div(
-                    [
-                        # Numero 5
-                        html.Div(
-                            [   
-                                html.H5("Paziente:", style={"color" : "grey"}),
-                                html.Hr(), 
-                                html.Div( id="patient-info", style={"height": "100%","width": "100%"}),
-                                dcc.Store(id="selected-patient-id", storage_type="session")#per salvare l'id del paziente
-                            ],
-                            #style={'Height': '200px'},
-                            className="card",
-                            
-                        ),
-                        # Numero 6
+                    style={
+                        "flex": 1,
+                        "display": "flex",
+                        "flex-direction": "row",
+                        "gap": "40px"
+                    },
+                    children=[
+                        # Box Paziente
                         html.Div(
                             [
-                                html.H5("Terapia:", style={"color" : "grey"}),
+                                html.H5("Paziente:", style={"color": "grey"}),
+                                html.Hr(),
+                                html.Div(
+                                    id="patient-info",
+                                    style={"height": "100%", "width": "100%"}
+                                ),
+                                dcc.Store(id="selected-patient-id", storage_type="session")
+                            ],
+                            className="card"
+                        ),
+
+                        # Box Terapia
+                        html.Div(
+                            [
+                                html.H5("Terapia:", style={"color": "grey"}),
                                 html.Hr(),
                                 # Qua va inserita la tabella delle terapie
                                 html.Div( id="patient-therapy", style={'flex': 1, "height": "100%","width": "100%"}),
@@ -1073,31 +1147,54 @@ doctor_patient = html.Div(
                             className="card",
                             style={'height': '100%'}
                         )
-                    ],
-                    style={
-                        "flex": 1,
-                        "display": "flex",
-                        "flex-direction" : "row",
-                        # spazio tra 5 e 6 di 40 px
-                        "gap": "40px"
-                    }
+                    ]
                 ),
 
-                # Numero 4
+                # Riga inferiore (Grafico)
                 html.Div(
                     [
-                        html.H5("Andamento glicemia:", style={"color" : "grey"}),
+                        html.Div(
+                            [
+                                html.H5("Grafico:", style={"color": "grey", "margin": "0", "marginRight": "8px"}),
+                                info_popover(
+                                    button_id="popover-button-1",
+                                    popover_id="popover-1",
+                                    contenuto=html.Div([
+                                        "Mostra i valori di glicemia registrati durante il periodo selezionato.",
+                                        html.Br(),
+                                        html.H6("Media giornaliera:"),
+                                        "La media è calcolata su fasce orarie."
+                                    ])
+                                )
+                            ],
+                            style={"display": "flex", "alignItems": "auto", "gap": "8px"}
+                        ),
+
+                        dcc.Dropdown(
+                            id="dropdown-scelta-grafico",
+                            options=[
+                                {"label": "Andamento", "value": "andamento"},
+                                {"label": "Media durante il giorno", "value": "medie"}
+                            ],
+                            placeholder="Scegli una tipologia di grafico",
+                            style={"width": "100%"}
+                        ),
                         html.Hr(),
-                        # Qua va inserito il grafico dell'andamento della glicemia: settimanale di default
-                        html.Div( id="patient-graph", style={"height": "100%","width": "100%"})
+                        html.Div(
+                            id="patient-graph",
+                            style={"height": "100%", "width": "100%"}
+                        ),
+                        html.Br(),
+                        filtro_temporale("")
                     ],
                     style={"flex": 1},
-                    className="card",
-                ),
+                    className="card"
+                )
             ]
         )
     ]
 )
+
 
 #********************************************************************************************************************
 # LISTA PAZIENTI
@@ -1204,18 +1301,13 @@ def render_lista_pazienti_glicemia(pazienti):
 #fil-funzione che permette di creare una lista ordinata dalle info dei paziente 
 
 def crea_div_paziente(cfanno, info, segnalazioni):
-    codice_fiscale, eta = cfanno[0]
-    # Codice fiscale
-    str_cf = f"Codice fiscale: {codice_fiscale}"
-    # età
-    str_eta = f"Età: {eta}"
-
+    codice_fiscale, eta, nome = cfanno[0]
     # Div per quando non ci sono informazioni:
     no_info = html.Div([
             # Header:
             html.Div([
                 html.Div([
-                    html.H4(f"Nome, {eta}"),
+                    html.H4(f"{nome}, {eta}"),
                     #Codice fiscale tutto maiuscolo
                     html.H6(codice_fiscale.upper(), style={'color': 'gray'})
                 ], style={'flex': 1}),
@@ -1232,7 +1324,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                     dbc.ModalHeader(dbc.ModalTitle("Paziente")),
                     dbc.ModalBody(html.Div([
                         # Informazioni generali
-                        html.H4(f"Nome, {eta}"),
+                        html.H4(f"{nome}, {eta}"),
                         html.H6(codice_fiscale.upper(), style={'color': 'gray', 'margin-bottom': '10px'}),
 
                         # informazioni cliniche:
@@ -1329,7 +1421,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                 periodo += f" al {data_fine.strftime('%d/%m/%Y')}"
             segnalazioni_div.append(
                 html.Div([
-                    html.Strong(tipo.capitalize() + ": "), html.Span(descrizione),
+                    html.Span(tipo.capitalize() + ": "), html.Span(descrizione),
                     html.Br(), html.Small(periodo),
                 ])
             )
@@ -1341,7 +1433,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
             # Header:
             html.Div([
                 html.Div([
-                    html.H4(f"Nome, {eta}"),
+                    html.H4(f"{nome}, {eta}"),
                     #Codice fiscale tutto maiuscolo
                     html.H6(codice_fiscale.upper(), style={'color': 'gray'})
                 ], style={'flex': 1}),
@@ -1481,239 +1573,320 @@ def crea_div_terapia_dropdown(terapie):
 
 # FUNZIONE CHE CREA LE INFO DI TERAPIA
 
-def crea_div_terapia_selezionata(terapia):
-    return html.Div([
+def crea_div_terapia_selezionata(terapia,is_diabetologo):
+    if is_diabetologo:
+        return html.Div([
 
-        html.Div([
-            # Div di sinistra
             html.Div([
-                # nome farmaco, dosaggio
-                html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
-                # assunzioni giornaliere
-                html.P(f"{terapia[5]} volte al giorno."),
-                # Indicazioni
-                html.P(f"{terapia[9]}"),
-                # Periodo
-                html.P(f"Dal: {terapia[6]}"),
-                html.P(f"Al: {terapia[7]}")
-            ], style={
-                'flex': 2,
-                'display': 'flex', 
-                'flexDirection': 'column', 
-                'border-radius': '15px',
-                'background-color': '#f8f9fa', 
-                'overflowY': 'auto',
-                'padding': '5px'
-                }
-            ),
-
-            # Div di destra
-            html.Div([
-                # Pulsante modifica terapia
-                dbc.Button(
-                    "Modifica", 
-                    id="apri-modal-terapia",
-                    n_clicks=0, 
-                    style={
-                        'border':'none',
-                        'border-radius': '25px',
-                        'padding': '10px 25px',
-                        'font-size':'20px',
+                # Div di sinistra
+                html.Div([
+                    # nome farmaco, dosaggio
+                    html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
+                    # assunzioni giornaliere
+                    html.P(f"{terapia[5]} volte al giorno."),
+                    # Indicazioni
+                    html.P(f"{terapia[9]}"),
+                    # Periodo
+                    html.P(f"Dal: {terapia[6]}"),
+                    html.P(f"Al: {terapia[7]}")
+                ], style={
+                    'flex': 2,
+                    'display': 'flex', 
+                    'flexDirection': 'column', 
+                    'border-radius': '15px',
+                    'background-color': '#f8f9fa', 
+                    'overflowY': 'auto',
+                    'padding': '5px'
                     }
                 ),
-            ], style={
-                'flex': 1,
-                'display': 'flex', 
-                'justifyContent': 'flex-end', 
-                'alignItems': 'flex-start'
-                }
+
+                # Div di destra
+                html.Div([
+                    # Pulsante modifica terapia
+                    dbc.Button(
+                        "Modifica", 
+                        id="apri-modal-terapia",
+                        n_clicks=0, 
+                        style={
+                            'border':'none',
+                            'border-radius': '25px',
+                            'padding': '10px 25px',
+                            'font-size':'20px',
+                        }
+                    ),
+                ], style={
+                    'flex': 1,
+                    'display': 'flex', 
+                    'justifyContent': 'flex-end', 
+                    'alignItems': 'flex-start'
+                    }
+                )
+
+            ], style={'display': 'flex', 'flexDirection': 'row', 'height': '160px'},  className='mb-2'),
+
+            # Pulsante di aggiunta terapia:
+            dbc.Button(
+                "Nuova Terapia",
+                id='aggiungi-terapia-btn',
+                n_clicks=0,
+                style={
+                    'width': '100%',
+                    'border':'none',
+                    'border-radius': '25px',
+                    'padding': '10px 25px',
+                    'font-size':'20px'                
+                },
+            ),
+
+            # POP-UP per modificare una terapia esistente
+            dbc.Modal(
+                [
+                    # Header:
+                    dbc.ModalHeader(dbc.ModalTitle("Modifica Terapia")),
+
+                    # Body:
+                    dbc.ModalBody([
+                        # Terapia attuale:
+                        html.Div([
+                            # Div nome farmaco e dosaggio:
+                            html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
+                            # Dose giornaliera + Idicazioni
+                            html.P(f"{terapia[5]} volte al giorno {terapia[9]}"),
+                            # Ultima modifica
+                            html.Small(f"Ultima modifica: {terapia[8]}", style={'text-align': 'center'})
+                        ],
+                        style={
+                            'flex': 1,
+                            'display': 'flex',
+                            'flexDirection': 'column',
+                            'background-color': '#f8f9fa',
+                            'border-radius': '15px',
+                            'padding': '5px',
+                            'marginBottom':'15px'
+                        }),
+
+                        # Div di modifica della terapia:
+                        html.Div([
+                            html.H5("Modifica la terapia:"),
+                            # Div Farmaco e dosaggio: 
+                            html.Div([
+                                # Colonna farmaco: 
+                                html.Div([
+                                    # Nome del farmaco
+                                    html.P("Farmaco:", className='mb-0'),
+                                    dbc.Input(id="input-farmaco", type="text", value=terapia[3], style={'border': 'none'}),
+                                ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
+                                # Colonna dosaggio:
+                                html.Div([
+                                    # Dosaggio in mg
+                                    html.P("Dosaggio (mg):", className='mb-0'),
+                                    dbc.Input(id="input-dosaggio", type="number", value=terapia[4], style={'border': 'none'})
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+
+                            # Assunzioni giornaliere + Indicazioni:
+                            html.Div([
+                                # Colonna farmaco: 
+                                html.Div([
+                                    # Assunzioni giornaliere
+                                    html.P("A. giornaliere:", className='mb-0'),
+                                    dbc.Input(id="input-assunzioni", type="number", value=terapia[5], style={'border': 'none'}),
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                                # Colonna dosaggio:
+                                html.Div([
+                                    # Indicazioni
+                                    html.P("Indicazioni:", className='mb-0'),
+                                    dbc.Input(id="input-indicazioni", value=terapia[9], style={'border': 'none'})
+                                ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
+                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+
+                            # Div delle date:
+                            html.Div([
+                                # Dal:
+                                html.Div([
+                                    html.P("Dal:", className='mb-0'),
+                                    dbc.Input(id="input-data-inizio", type="date", value=str(terapia[6]), style={'border': 'none'}),
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                                # Al:
+                                html.Div([
+                                    html.P("Al:", className='mb-0'),
+                                    dbc.Input(id="input-data-fine", type="date", value=str(terapia[7]), style={'border': 'none'}),
+                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'})
+                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+
+                            # Box per gli alert:
+                            dbc.Alert(id="modifica-terapia-output", is_open=False),
+                        ],
+                        style={
+                            'flex': 3,
+                            'display': 'flex',
+                            'flexDirection': 'column',
+                            'background-color': '#f8f9fa',
+                            'border-radius': '15px',
+                            'padding': '5px',
+                        }),
+                        
+                    ]),
+                    dbc.ModalFooter([
+                        # Pulsante per salvare le modifiche
+                        dbc.Button("Salva", id="btn-salva-modifiche-terapia",n_clicks=0, color='success', style={'border': 'none', 'border-radius': '25px'}),
+                        # Pulsante per annullare e uscire
+                        dbc.Button("Annulla", id="chiudi-modal-terapia", color='warning', style={'border': 'none', 'border-radius': '25px'}),
+                        # Pulsante per eliminare 
+                        dbc.Button("Elimina", id='btn-elimina-terapia', n_clicks=0, color='danger', style={'border': 'none', 'border-radius': '25px'}),
+                    ], style={'display': 'flex', 'flexDirection': 'row', 'gap': '10px'}
+                    )
+                ],
+                id="popup-modifica-terapia",
+                centered=True,
+                is_open=False
             )
+        ],
+        style={'flex': 1})
+    else:
+        return html.Div([
 
-        ], style={'display': 'flex', 'flexDirection': 'row', 'height': '160px'},  className='mb-2'),
+            html.Div([
+                # Div di sinistra
+                html.Div([
+                    # nome farmaco, dosaggio
+                    html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
+                    # assunzioni giornaliere
+                    html.P(f"{terapia[5]} volte al giorno."),
+                    # Indicazioni
+                    html.P(f"{terapia[9]}"),
+                    # Periodo
+                    html.P(f"Dal: {terapia[6]}"),
+                    html.P(f"Al: {terapia[7]}")
+                ], style={
+                    'flex': 2,
+                    'display': 'flex', 
+                    'flexDirection': 'column', 
+                    'border-radius': '15px',
+                    'background-color': '#f8f9fa', 
+                    'overflowY': 'auto',
+                    'padding': '5px'
+                    }
+                ),
+            ]),
+        ])
 
-        # Pulsante di aggiunta terapia:
-        dbc.Button(
-            "Nuova Terapia",
-            id='aggiungi-terapia-btn',
-            n_clicks=0,
-            style={
-                'width': '100%',
-                'border':'none',
-                'border-radius': '25px',
-                'padding': '10px 25px',
-                'font-size':'20px'                
-            },
-        ),
+            
 
-        # POP-UP per modificare una terapia esistente
-        dbc.Modal(
-            [
-                # Header:
-                dbc.ModalHeader(dbc.ModalTitle("Modifica Terapia")),
+# ******************************************************************************************************************
+# Metodo che crea una card di informazioni di base del paziente: da visualizzare nella dashboard del dottore (card 4)
+def crea_div_info_base(info,flagpaziente):
+    if not info:
+            return html.Div("Nessuna informazione disponibile per questo paziente.")
+    if flagpaziente:
 
-                # Body:
-                dbc.ModalBody([
-                    # Terapia attuale:
-                    html.Div([
-                        # Div nome farmaco e dosaggio:
-                        html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
-                        # Dose giornaliera + Idicazioni
-                        html.P(f"{terapia[5]} volte al giorno {terapia[9]}"),
-                        # Ultima modifica
-                        html.Small(f"Ultima modifica: {terapia[8]}", style={'text-align': 'center'})
+        username, nome, cognome, data_nascita, sesso, media_glicemia = info[0]
+
+        return html.Div([
+            # Nome + Username
+            # 'padding': '5px 20px', 'textAlign': 'center' 
+            html.Div(
+                [
+                    html.H3(f"{nome} {cognome}", style={"display": "inline-block", "margin-right": "20px", 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'padding': '5px 10px', 'textAlign': 'center'}),
+                    html.H5(f"{username}", style={"display": "inline-block", "color": "gray"}),
+                ],
+                className="text-inline"
+            ),
+            # Data di nascita + sesso
+            html.Div([
+                html.Div([
+                    html.P(f"Data di nascita:  {data_nascita.strftime('%d/%m/%Y')}", style={'font-size': '20px'}),
+                    html.P(f"Sesso:  {'Femmina' if sesso == 'F' else 'Maschio'}", style={'font-size': '20px'})
                     ],
                     style={
                         'flex': 1,
                         'display': 'flex',
                         'flexDirection': 'column',
-                        'background-color': '#f8f9fa',
-                        'border-radius': '15px',
-                        'padding': '5px',
-                        'marginBottom':'15px'
-                    }),
+                        'padding': '10px'
+                    }
+                ),
 
-                    # Div di modifica della terapia:
+                html.Div([
+                    html.P("Glicata:", style={'font-size': '20px'}),
                     html.Div([
-                        html.H5("Modifica la terapia:"),
-                        # Div Farmaco e dosaggio: 
-                        html.Div([
-                            # Colonna farmaco: 
-                            html.Div([
-                                # Nome del farmaco
-                                html.P("Farmaco:", className='mb-0'),
-                                dbc.Input(id="input-farmaco", type="text", value=terapia[3], style={'border': 'none'}),
-                            ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
-                            # Colonna dosaggio:
-                            html.Div([
-                                # Dosaggio in mg
-                                html.P("Dosaggio (mg):", className='mb-0'),
-                                dbc.Input(id="input-dosaggio", type="number", value=terapia[4], style={'border': 'none'})
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                        ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
-
-                        # Assunzioni giornaliere + Indicazioni:
-                        html.Div([
-                            # Colonna farmaco: 
-                            html.Div([
-                                # Assunzioni giornaliere
-                                html.P("A. giornaliere:", className='mb-0'),
-                                dbc.Input(id="input-assunzioni", type="number", value=terapia[5], style={'border': 'none'}),
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                            # Colonna dosaggio:
-                            html.Div([
-                                # Indicazioni
-                                html.P("Indicazioni:", className='mb-0'),
-                                dbc.Input(id="input-indicazioni", value=terapia[9], style={'border': 'none'})
-                            ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
-                        ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
-
-                        # Div delle date:
-                        html.Div([
-                            # Dal:
-                            html.Div([
-                                html.P("Dal:", className='mb-0'),
-                                dbc.Input(id="input-data-inizio", type="date", value=str(terapia[6]), style={'border': 'none'}),
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                            # Al:
-                            html.Div([
-                                html.P("Al:", className='mb-0'),
-                                dbc.Input(id="input-data-fine", type="date", value=str(terapia[7]), style={'border': 'none'}),
-                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'})
-                        ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
-
-                        # Box per gli alert:
-                        dbc.Alert(id="modifica-terapia-output", is_open=False),
-                    ],
+                        html.P(round((float(media_glicemia)*0.0348)+1.63, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                        html.P(" mg/dL", style={'display': 'inline-block', 'color': 'gray'})
+                    ]),
+                ],
                     style={
-                        'flex': 3,
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                        'background-color': '#f8f9fa',
-                        'border-radius': '15px',
-                        'padding': '5px',
-                    }),
-                    
-                ]),
-                dbc.ModalFooter([
-                    # Pulsante per salvare le modifiche
-                    dbc.Button("Salva", id="btn-salva-modifiche-terapia",n_clicks=0, color='success', style={'border': 'none', 'border-radius': '25px'}),
-                    # Pulsante per annullare e uscire
-                    dbc.Button("Annulla", id="chiudi-modal-terapia", color='warning', style={'border': 'none', 'border-radius': '25px'}),
-                    # Pulsante per eliminare 
-                    dbc.Button("Elimina", id='btn-elimina-terapia', n_clicks=0, color='danger', style={'border': 'none', 'border-radius': '25px'}),
-                ], style={'display': 'flex', 'flexDirection': 'row', 'gap': '10px'}
+                        'flex': 1,
+                        'padding' : '10px',
+                        'flexDirection': 'column'
+                    }
                 )
-            ],
-            id="popup-modifica-terapia",
-            centered=True,
-            is_open=False
-        )
-    ],
-    style={'flex': 1})
 
-
-# ******************************************************************************************************************
-# Metodo che crea una card di informazioni di base del paziente: da visualizzare nella dashboard del dottore (card 4)
-def crea_div_info_base_paziente(info_paziente):
-    if not info_paziente:
-        return html.Div("Nessuna informazione disponibile per questo paziente.")
-
-    username, nome, cognome, data_nascita, sesso, media_glicemia = info_paziente[0]
-
-    return html.Div([
-        # Nome + Username
-        # 'padding': '5px 20px', 'textAlign': 'center' 
-        html.Div(
-            [
-                html.H3(f"{nome} {cognome}", style={"display": "inline-block", "margin-right": "20px", 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'padding': '5px 10px', 'textAlign': 'center'}),
-                html.H5(f"{username}", style={"display": "inline-block", "color": "gray"}),
-            ],
-            className="text-inline"
-        ),
-        # Data di nascita + sesso
-        html.Div([
-            html.Div([
-                html.P(f"Data di nascita:  {data_nascita.strftime('%d/%m/%Y')}", style={'font-size': '20px'}),
-                html.P(f"Sesso:  {'Femmina' if sesso == 'F' else 'Maschio'}", style={'font-size': '20px'})
                 ],
                 style={
-                    'flex': 1,
                     'display': 'flex',
-                    'flexDirection': 'column',
-                    'padding': '10px'
-                }
-            ),
-
-            html.Div([
-                html.P("Glicemia media:", style={'font-size': '20px'}),
-                html.Div([
-                    html.P(round(media_glicemia, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
-                    html.P(" mg/dL", style={'display': 'inline-block', 'color': 'gray'})
-                ]),
-            ],
-                style={
-                    'flex': 1,
-                    'padding' : '10px',
-                    'flexDirection': 'column'
+                    'gap': '20px',
                 }
             )
-
-            ],
-            style={
-                'display': 'flex',
-                'gap': '20px',
-            }
+            ], 
         )
-        ],        
-    )
+    else:
+        username, nome, cognome, data_nascita, sesso, pazienti_associati = info[0]
+
+        return html.Div([
+            # Nome + Username
+            # 'padding': '5px 20px', 'textAlign': 'center' 
+            html.Div(
+                [
+                    html.H3(f"{nome} {cognome}", style={"display": "inline-block", "margin-right": "20px", 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'padding': '5px 10px', 'textAlign': 'center'}),
+                    html.H5(f"{username}", style={"display": "inline-block", "color": "gray"}),
+                ],
+                className="text-inline"
+            ),
+            # Data di nascita + sesso
+            html.Div([
+                html.Div([
+                    html.P(f"Data di nascita:  {data_nascita.strftime('%d/%m/%Y')}", style={'font-size': '20px'}),
+                    html.P(f"Sesso:  {'Femmina' if sesso == 'F' else 'Maschio'}", style={'font-size': '20px'})
+                    ],
+                    style={
+                        'flex': 1,
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                        'padding': '10px'
+                    }
+                ),
+
+                html.Div([
+                    html.P("Pazienti associati:", style={'font-size': '20px'}),
+                    html.Div([
+                        html.P(pazienti_associati, style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                    ]),
+                ],
+                    style={
+                        'flex': 1,
+                        'padding' : '10px',
+                        'flexDirection': 'column'
+                    }
+                )
+
+                ],
+                style={
+                    'display': 'flex',
+                    'gap': '20px',
+                }
+            )
+            ], 
+        )       
+        
 
 # CHAT (= chat_content) -> Già fatta
+
 
 # ******************************************************************************************************************
 # LAYOUT DELL'ADMIN:
 # 1. Dashboard
 # 2. Richieste
 # 3. Pazienti
+# 4. Diabetologi
 # ******************************************************************************************************************
 
 # DASHBOARD ADMIN
@@ -1757,20 +1930,22 @@ admin_dashboard = html.Div(
                             style={
                                 "flex": 1,
                                 "padding": "20px",
-                                "background-color": "#ffffff", # sfondo bianco
-                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-                                "border": "2px solid #dee2e6", # bordo di 2px grigio
-                                "border-radius": "15px" # bordi arrotondati
+                                "background-color": "#ffffff",                    # sfondo bianco
+                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",     # ombra standard diciamo
+                                "border": "2px solid #dee2e6",                      # bordo di 2px grigio
+                                "border-radius": "15px"                             # bordi arrotondati
                             },
                             children=[
-                                html.H5("Glicemia media dei pazienti gestiti da ciascun diabetologo", style={"color" : "grey"}),
-                                html.Hr(),
+                                html.H4("Glicemia media dei pazienti gestiti da ciascun diabetologo", style={"color" : "black"}),
+                                html.Hr(style={"color" : "black"}),
                                 
                                 html.Div(
+
+                                    # grafico principale dell'admin, parte extra chiesta dal prof.
                                     dcc.Graph(
                                         id= "grafico-glicemia-tutti",
                                         figure= model.visualizza_media_glicemia_per_diabetologi(),
-                                        style={ "height": "66vh"},
+                                        style={ "height": "100vh", "maxHeight": "66vh"},
                                         config={
                                             "displayModeBar": False,           # mostra la barra (puoi anche usare False per nasconderla)
                                         }
@@ -1784,101 +1959,89 @@ admin_dashboard = html.Div(
                 )
             ]
         ),
-        
-        # # Colonna a destra, con le statistiche sui pazienti
-        # html.Div(
-        #     style={
-        #         "flex": 0.5, # Occupa 1/6 del page content
-        #         "padding": "30px",
-        #         "background-color": "#ffffff", # sfondo bianco
-        #         "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)", # ombra semplice
-        #         "border": "2px solid #dee2e6", # bordo di 2px grigio
-        #         "border-radius": "15px" # bordi arrotondati
-        #     },
-        #     children=[
-        #         html.H5("Statistiche: ", style={"color": "grey"}),
-        #         html.Hr(),
-        #     ]
-        # )
     ]
 )
 
-# RICHIESTE
+
+
+# RICHIESTE DI INSERIMENTO NELLA PIATTAFORMA 
+# funzione che organizza in due colonne SEPARATE le richieste: una per pazienti e una diabetologi
+def render_richieste_account():
+    style_div_interno = {
+        "flex": "1",
+        "minHeight": "1",          
+        "overflowY": "auto",
+        "padding": "20px",
+        "backgroundColor": "#ffffff",
+        "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)",
+        "border": "2px solid #dee2e6",
+        "borderRadius": "15px",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "5px",
+    }
+
+    return html.Div(
+        style={
+            "display": "flex",
+            "flexDirection": "row",
+            "flex": "1",            
+            "gap": "40px",
+            "minHeight": "1",       
+        },
+        children=[
+            html.Div(
+                style=style_div_interno,
+                children=[
+                    html.H4("Richieste Pazienti"),
+                    dcc.Dropdown(
+                        id="dropdown-richieste-pazienti",           
+                        placeholder="Seleziona una richiesta per visualizzarne i dettagli..."
+                    ),
+                    html.Div(id="dettagli-richiesta-paziente", style= {"marginTop": "10px"}),       # qui dentro viene messa la card coi dettagli del paziente. Oppure gli Alert.
+                    html.Div([
+                        dbc.Button("Accetta", id="btn-accetta-paziente", color="primary", className="me-2 mt-2"),
+                        dbc.Button("Rifiuta", id="btn-rifiuta-paziente", color="danger", className="mt-2"),
+                    ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
+                ]
+            ),
+            html.Div(
+                style=style_div_interno,
+                children=[
+                    html.H4("Richieste Diabetologi"),
+                    dcc.Dropdown(
+                        id="dropdown-richieste-diabetologi",
+                        placeholder="Seleziona una richiesta per visualizzarne i dettagli..."
+                    ),
+                    html.Div(id="dettagli-richiesta-diabetologo", style= {"marginTop": "10px"}),    # qui dentro viene messa la card coi dettagli del diabetologo.
+                    html.Div([
+                        dbc.Button("Accetta", id="btn-accetta-diabetologo", color="primary", className="me-2 mt-2"),
+                        dbc.Button("Rifiuta", id="btn-rifiuta-diabetologo", color="danger", className="mt-2"),
+                    ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
+                ]
+            )
+        ]
+    )
+
+
+# layout principale della pagina della richiesta di inserimento nella piattaforma
 admin_request = html.Div(
-    style={
-        # la doctor_dashboard si adatta automaticamente allo spazio disponibile
-        'flex' : 1,
-        'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
-        'flex-direction': 'column',
-        # Spazio dai margini esterni
-        'padding': '40px',
-        # Spazio interno tra le colonne
-        'gap': '40px'
+    style={ 
+        "flex": "1",
+        "display": "flex",
+        "flexDirection": "column",
+        "height": "100vh",
+        "boxSizing": "border-box",
+        "margin": "0",
+        "padding": "40px",
+        "gap": "20px",
     },
     children=[
-        html.Div(
-            style={
-                "padding": "20px",
-                "background-color": "#ffffff",
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                "border": "2px solid #dee2e6",
-                "border-radius": "15px",
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "20px"
-            },
-            children=[
-                html.H5("Elenco richieste", style={"color": "grey"}),
-
-                # dropdown contenente le richieste
-                dcc.Dropdown(
-                    id="dropdown-selezione-richiesta-account",
-                    options= [],  # riempito via callback. 
-                    multi=False,
-                    placeholder="Seleziona una o più richieste...",
-                    style={
-                        "fontSize": "18px"
-                    }
-                ),
-                
-                # contenitore delle informazioni nella richiesta (output)
-                html.Div(
-                    id="contenitore-informazioni-richiesta",
-                    children=["Seleziona una richiesta per vederne i dettagli"],
-                    style={
-                        "maxHeight": "320px",
-                        "overflowY": "auto",
-                        "border": "1px dashed #ccc",
-                        "padding": "20px",
-                        "textAlign": "center"
-                    }
-                ),
-
-                # bottoni per rifiutare o accettare la richiesta
-                html.Div(
-                    className="d-flex justify-content-center gap-2 mt-1",
-                    children=[
-                        dbc.Button(
-                            "Accetta richiesta",
-                            id="btn-accetta-richiesta",
-                            color="success",
-                            className="me-3",  # margin-end
-                            n_clicks=0
-                        ),
-                        dbc.Button(
-                            "Rifiuta richiesta",
-                            id="btn-rifiuta-richiesta",
-                            color="danger",
-                            n_clicks=0
-                        )
-                    ],
-                    style={"marginTop": "10px", "textAlign": "left"}
-                )
-            ]
-        )
+        render_richieste_account()
     ]
 )
+
+
 
 # funzione che prende i dati e li rende sotto forma di card piu carin e leggibile 
 def render_dati_richiesta(dati):
@@ -1950,50 +2113,64 @@ def render_dati_richiesta(dati):
                 ], width=4, style={"marginBottom": "0.25rem"}),
             ]),
 
-        ]),
+        ], style= {"maxHeight": "100vh", "maxWidth": "100vw"}),      # così si adatta alla dimensione dello schermo
+        
+        # questi sono i parametri della card esterna
         className="shadow-sm w-100",
         style={"flex": "1", "padding": "0.7rem"}
     )
 
 
+
+
+# funzione che crea l'elenco di pazienti dato un dict di pazienti.
 def render_lista_pazienti(pazienti):
     return html.Div(
         className="card",
-        style={
+        style={                                 # CONTENITORE ESTERNO
             "flex": 1,
             "display": "flex",
             "flexDirection": "column",
-            "padding": "18px",
-            "overflowY": "auto",
-            "maxHeight": "87.5vh",
             "border": "2px solid #dee2e6",
             "borderRadius": "15px",
+            "padding": "10px",
             "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+            "overflow": "hidden",               # nasconde la scrollbar esterna
+            "maxHeight": "100vh",           
         },
         children=[
-            # html.H4("Pazienti", style={"color": "grey"}),
-            # html.Hr(),
-            *[
-                dbc.Button(
-                    f"{d['nome']} {d['cognome']}",
-                    id={"type": "btn-paziente", "index": d["id_paziente"]},
-                    color="light",
-                    style={
-                        "textAlign": "left",
-                        "marginBottom": "10px",
-                        "border": "1px solid #ccc",
-                        "borderRadius": "10px",
-                        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                    },
-                    className="text-start"
-                )
-                for d in pazienti
-            ]
+            html.Div(
+                style={                         # CONTENUTO SCROLLABILE
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "padding": "5px",
+                    "paddingRight": "15px",     # spazio extra sulla destra
+                    "overflowY": "auto",
+                    "boxSizing": "border-box",
+                    "maxHeight": "82vh",        # sltezza scrollabile più piccola
+                },
+                children=[
+                    dbc.Button(
+                        f"{d['nome']} {d['cognome']}",
+                        id={"type": "btn-paziente", "index": d["id_paziente"]},
+                        color="light",
+                        style={
+                            "textAlign": "left",
+                            "marginBottom": "10px",
+                            "border": "1px solid #ccc",
+                            "borderRadius": "10px",
+                            "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+                        },
+                        className="text-start"
+                    )
+                    for d in pazienti
+                ]
+            )
         ]
     )
 
 
-# appena aggiunta
+# funzione che da il layout COMPLETO della pagina di gestione dei pazienti dell'admin.
 def layout_lista_pazienti():
     pazienti = model.get_all_pazienti()
 
@@ -2006,24 +2183,26 @@ def layout_lista_pazienti():
             "display": "flex",
             "flexDirection": "row",
             "padding": "20px",
-            "gap": "20px"
+            "gap": "40px",
         },
         children=[
-            # Colonna sinistra: elenco pazienti
-            render_lista_pazienti(pazienti),
 
-            # Colonna destra: dettagli del paziente selezionato
+            # colonna sinistra: elenco pazienti
+            html.Div(
+                id= "contenitore-lista-pazienti",
+                children= render_lista_pazienti(pazienti),
+                style={
+                    "flex": 1,
+                }    
+            ),
+            
+            # colonna destra: dettagli del paziente selezionato
             html.Div(
                 id="dettagli-paziente",
                 style={
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
-                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                    "border": "2px solid #dee2e6",
-                    "borderRadius": "15px",
-                    "padding": "30px",
-                    "overflow": "auto"
                 },
                 children=[
                     html.H5("Seleziona un paziente per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
@@ -2032,22 +2211,200 @@ def layout_lista_pazienti():
         ]
     )
 
+# funzione che crea la card dove vengono visualizzati i dettagli del paziente selezionato dalla lista
+def crea_card_paziente(dati_paziente, dati_diab):
+    """Crea e restituisce la Card dei dettagli del paziente."""
 
-# PAZIENTI ADMIN
+    header_content = html.Div([
+        html.Span(
+            f"Paziente: {dati_paziente.get('nome', '')} {dati_paziente.get('cognome', '')}",
+            style={'font-weight': 'bold', 'font-size': '1.1rem'}
+        ),
+        html.Span(
+            children=[
+                "(Diabetologo: ",
+                html.Span(
+                    f"{dati_diab.get('nome', '')} {dati_diab.get('cognome', '')}" if dati_diab else "Nessun diabetologo associato",
+                    style={'font-style': 'italic', 'color': "#5A5A5A"}
+                ),
+                ")"
+            ],
+            style={'font-size': '0.95rem', "marginLeft": "40px"}
+        ) if dati_diab else None
+    ])
+
+    dettagli = [
+        dbc.ListGroupItem([
+            html.Strong(f"{k.capitalize().replace('_', ' ')}: "),
+            html.Span(str(v))
+        ])
+        for k, v in dati_paziente.items()
+    ]
+
+    return dbc.Card(
+        [
+            dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),
+            dbc.CardBody(
+                [
+                    dbc.ListGroup(dettagli, flush=True, 
+                        style={
+                            "maxHeight": "50vh",
+                            "overflowY": "auto",
+                            "paddingBottom": "2px",
+                            "border": "1px solid #dee2e6",
+                            "borderRadius": "1px",
+                            "width": "100%"
+                        },
+                        className="w-100"
+                    ),
+
+                    html.Div(
+                    [
+                        # prima riga pulsanti
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Grafico glicemia paziente",
+                                            id="btn-graf-paziente",
+                                            color="primary",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(dbc.Button("Modifica dati paziente",
+                                            id="btn-modifica-dati-paz",
+                                            color="warning",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                        ], justify="center", className="mb-2"),
+
+                        # seconda riga pulsanti
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Rimuovi paziente",
+                                            id="btn-rimuovi-paz",
+                                            color="danger",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(),      # vuoto per mantenere forma 
+                            ], justify="center"),
+                    ],
+                    style={
+                        "marginTop": "16px",
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "justifyContent": "center",
+                        "width": "100%"},
+                    className="w-100")
+
+                ],
+                style={
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "height": "100%",
+                    "padding": "0",          # IMPORTANTE: FA SI CHE IL CONTENUTO DELLA CARD BODY (le info del paziente) SI PRENDANO IL GIUSTO SPAZIO
+                    "width": "100%",
+                }, 
+                className="w-100"
+        ),
+
+            # salva l'id del paziente, in modo da usarlo per la callback col grafico
+            dcc.Store(      
+                id= "store-id-paziente",
+                data= dati_paziente.get('id_paziente')
+            ),
+
+            # POP-UP DEL GRAFICO DEL PAZIENTE
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Grafico glicemia paziente"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-graf-paziente",
+                            children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
+                            style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-grafico-paziente",
+                is_open=False,
+                size="xl",  
+                centered=True          
+            ),
+
+            # pop-up per la rimozione del paziente selezionato
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Attenzione!"),
+                    dbc.ModalBody(
+                        html.Div([
+                            dbc.Alert(
+                                f"""L'eliminazione di un account è un operazione irreversibile. 
+                                E' sicuro/a di voler eliminare il/la paziente {dati_paziente.get('nome')} {dati_paziente.get('cognome')}?""",
+
+                                color="danger",  # rosso
+                                className="text-center",  # centra il testo orizzontalmente
+                                style={
+                                    "padding": "10px",
+                                    "fontWeight": "bold",
+                                    "fontSize": "1rem",
+                                    "borderRadius": "10px",
+                                    "margin": "10px",
+                                    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
+                                }
+                            ),
+                            dbc.Row(
+                                [
+                                    # pulsanti per la conferma o annullamento della rimozione del paziente
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Si",
+                                            id="btn-delete-paz-confirm-YES",
+                                            color="danger",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=3
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "No",
+                                            id="btn-delete-paz-confirm-NO",
+                                            color="success",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=3
+                                    )
+                                ],
+                                justify="center",
+                                className="d-flex justify-content-center mt-3"
+                            )
+                        ]),
+                        style={"padding": "10px", "color": "red"}  
+                    ),
+                ],
+                id="pop-admin-delete-patient",
+                is_open=False,
+                size="md",  
+                centered=True          
+            )
+        ],
+        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"},
+        className="w-100"
+    )
+
+
+# PAZIENTI ADMIN PRINCIPALE. riunisce tutto ciò che c'è di grafico riguardo alla pagina url "/admin-patient"
 admin_patient = html.Div(
+    id= "contenitore-admin-layout-gestione-pazienti",
     style={
         # la doctor_dashboard si adatta automaticamente allo spazio disponibile
         'flex' : 1,
 
         'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        # "row" = da sinistra a destra
         'flex-direction': 'row',
-        # Spazio dai margini esterni
+        # sazio dai margini esterni
         'padding': '20px',
-        # Spazio interno tra le colonne
-        'gap': '20px',
-
-        # "height": "100vh"
+        # spazio interno tra le colonne
+        'gap': '20px'
     },
     children=[
         layout_lista_pazienti()
@@ -2058,36 +2415,50 @@ admin_patient = html.Div(
 def render_lista_diabetologi(diabetologi):
     return html.Div(
         className="card",
-        style={
+        style={                 # CONTENITORE ESTERNO
             "flex": 1,
             "display": "flex",
             "flexDirection": "column",
-            "padding": "18px",
-            "overflowY": "auto",
-            "maxHeight": "87.5vh",
             "border": "2px solid #dee2e6",
             "borderRadius": "15px",
+            "padding": "10px",
             "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
+            "overflow": "hidden",           # nasconde scrollbar esterna
+            "maxHeight": "100vh",           
         },
         children=[
-            *[
-                dbc.Button(
-                    f"{d['nome']} {d['cognome']}",
-                    id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
-                    color="light",
-                    style={
-                        "textAlign": "left",
-                        "marginBottom": "10px",
-                        "border": "1px solid #ccc",
-                        "borderRadius": "10px",
-                        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                    },
-                    className="text-start"
-                )
-                for d in diabetologi
-            ]
+            html.Div(
+                style={         # CONTENUTO SCROLLABILE
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "padding": "5px",
+                    "paddingRight": "15px",   # spazio extra sulla destra per ospitale la scrollbar
+                    "overflowY": "auto",
+                    "boxSizing": "border-box",
+                    "maxHeight": "82vh",      # altezza scrollabile
+                },
+                children=[
+                    
+                    # bottoni che compongono l'elenco di diabetologi
+                    dbc.Button(
+                        f"{d['nome']} {d['cognome']}",
+                        id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
+                        color="light",
+                        style={
+                            "textAlign": "left",
+                            "marginBottom": "10px",
+                            "border": "1px solid #ccc",
+                            "borderRadius": "10px",
+                            "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+                        },
+                        className="text-start"
+                    )
+                    for d in diabetologi
+                ]
+            )
         ]
     )
+
 
 # renderizza in modo corretto e uguale alla pagina dei pazienti, il layout.
 def layout_lista_diabetologi():
@@ -2102,21 +2473,24 @@ def layout_lista_diabetologi():
             "display": "flex",
             "flexDirection": "row",
             "padding": "20px",
-            "gap": "20px"
+            "gap": "40px"
         },
         children=[
-            render_lista_diabetologi(diabetologi),
+
+            # elenco dei diabetologi
+            html.Div(
+                id="contenitore-lista-diabetologi",
+                children= render_lista_diabetologi(diabetologi),
+                style= {"flex": 1}
+            ),
+
+            # card a destra della lista diabetologi, con dentro i dettagli 
             html.Div(
                 id="dettagli-diabetologo",
                 style={
                     "flex": 2,
                     "display": "flex",
                     "flexDirection": "column",
-                    "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-                    "border": "2px solid #dee2e6",
-                    "borderRadius": "15px",
-                    "padding": "30px",
-                    "overflow": "auto"
                 },
                 children=[
                     html.H5("Seleziona un diabetologo per visualizzarne i dettagli", style={"color": "grey", "padding": "20px"}),
@@ -2125,17 +2499,230 @@ def layout_lista_diabetologi():
         ]
     )
 
-# DIABETOLOGI ADMIN
+# funzione che crea la card dove vengono visualizzati i dettagli del diabetologo selezionato dalla lista
+def crea_card_diabetologo(dati_diabetologo):
+    """Crea e restituisce la Card dei dettagli del diabetologo."""
+
+    # header
+    header_content = html.Span(
+        f"Diabetologo: {dati_diabetologo.get('nome', '')} {dati_diabetologo.get('cognome', '')}",
+        style={'font-weight': 'bold', 'font-size': '1.05rem', 'margin-right': '10px'}
+    )
+
+    # dettagli
+    dettagli = [
+        dbc.ListGroupItem([
+            html.Strong(f"{k.capitalize().replace('_', ' ')}: "),
+            html.Span(str(v))
+        ])
+        for k, v in dati_diabetologo.items()
+    ]
+
+    return dbc.Card(
+        [
+            dbc.CardHeader(html.H5(header_content, style={'font-size': '1.1rem'})),
+            dbc.CardBody([
+                    dbc.ListGroup(dettagli, flush=True, style={
+                        "maxHeight": "50vh",
+                        "overflowY": "auto",
+                        "paddingRight": "2px",
+                        "border": "1px solid #dee2e6",
+                        "borderRadius": "1px",
+                    }),
+
+                    html.Div([
+                        # prima riga di pulsanti
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Pazienti associati diabetologo",
+                                            id="btn-lista-paz-assoc-diab",
+                                            color="info",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(dbc.Button("Glicemia media pazienti",
+                                            id="btn-graf-paz-assoc-diab",
+                                            color="success",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                        ], justify="center", className="mb-2"),
+
+                        # seconda riga
+                        dbc.Row([
+                            dbc.Col(dbc.Button("Modifica dati diabetologo",
+                                            id="btn-modifica-dati-diab",
+                                            color="warning",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                            dbc.Col(dbc.Button("Rimuovi diabetologo",
+                                            id="btn-rimuovi-diab",
+                                            color="danger",
+                                            size="medium",
+                                            className="w-100"), width=6),
+                        ], justify="center")], 
+                        
+                        style={
+                            "marginTop": "16px",
+                            "display": "flex",
+                            "flexDirection": "column",
+                            "justifyContent": "center",
+                        }
+                    )
+            ],
+                style={"display": "flex",
+                "flexDirection": "column",
+                "height": "100%",
+                "padding": "0",          # IMPORTANTE: FA SI CHE IL CONTENUTO DELLA CARD BODY (le info del paziente) SI PRENDANO IL GIUSTO SPAZIO,
+                "paddingBottom": "0px"}),
+
+
+            # salva l'id del diabetologo, in modo da usarlo per la callback col grafico
+            dcc.Store(      
+                id= "store-id-diabetologo",
+                data= dati_diabetologo.get('id_diabetologo')
+            ),
+
+            # POP-UP DEL GRAFICO DEL DIABETOLOGO
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Glicemia media pazienti associati"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-graf-diabetologo",
+                            children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
+                            style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-grafico-diabetologo",
+                is_open=False,
+                size="xl",  
+                centered=True          
+            ),
+
+            # POP-UP per la rimozione del diabetologo selezionato
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Attenzione!"),
+                    dbc.ModalBody(
+                        html.Div([
+                            dbc.Alert(
+                                f"""L'eliminazione di un account è un operazione irreversibile. 
+                                E' sicuro/a di voler eliminare il/la diabetologo/a {dati_diabetologo.get('nome')} {dati_diabetologo.get('cognome')}?""",
+
+                                color="danger",  # rosso
+                                className="text-center",  # centra il testo orizzontalmente
+                                style={
+                                    "padding": "10px",
+                                    "fontWeight": "bold",
+                                    "fontSize": "1rem",
+                                    "borderRadius": "10px",
+                                    "margin": "10px",
+                                    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
+                                }),
+                            dbc.Row(
+                                [
+                                    # pulsanti per la conferma o annullamento della rimozione del paziente
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Si",
+                                            id="btn-delete-diab-confirm-YES",
+                                            color="danger",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=3
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "No",
+                                            id="btn-delete-diab-confirm-NO",
+                                            color="success",
+                                            size="md",
+                                            className="w-100"
+                                        ),
+                                        width=3
+                                    )
+                                ],
+                                justify="center",
+                                className="d-flex justify-content-center mt-3"
+                            )
+                        ]),
+                        style={"padding": "10px", "color": ""}          # da modificare perchè si vuole mettere il colore del "danger" tipo
+                    ),
+                ],
+                id="pop-admin-delete-diab",
+                is_open=False,
+                size="md",  
+                centered=True          
+            ),  
+
+            # popup per visualizzare la lista di pazienti associati a uno specifico diabetologo.
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(f"Pazienti associati a {dati_diabetologo.get('nome')} {dati_diabetologo.get('cognome')}"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-lista-paz-diabetologo",
+                            children=[],                                  
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-lista-pazienti-ass",
+                is_open=False,
+                size="md",  
+                centered=True          
+            )      
+        ],
+        style={"boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)", "maxHeight": "100vh"}
+    )
+
+
+# funzione che crea la lista di pazienti associati a un diabetologo visualizzato dentro il modal del pulsante "lista pazienti associati" 
+def genera_lista_pazienti_associati(lista_pazienti):
+    
+    if not lista_pazienti:
+        return dbc.Alert(
+            "Nessun paziente associato.",
+            color="danger",  # rosso
+            className="text-center",  # centra il testo orizzontalmente
+            style={
+                "padding": "20px",
+                "fontWeight": "bold",
+                "fontSize": "1.1rem",
+                "borderRadius": "10px",
+                "margin": "20px",
+                "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
+            })
+
+    return dbc.ListGroup(
+        [
+            dbc.ListGroupItem(
+                [
+                    html.Span(f"{p['nome']} {p['cognome']}", style={"fontWeight": "bold"}),
+                    html.Span(f" — username: {p['username']}", className="text-muted", style={"marginLeft": "8px"}),
+                ]
+            )
+            for p in lista_pazienti
+        ],
+        flush=True,
+        style={"margin": "0.5rem", "padding": "0px"}
+    )
+
+
+
+# DIABETOLOGI ADMIN PRINCIPALE. riunisce tutto ciò che c'è di grafico riguardo alla pagina url "/admin-doctor"
 admin_doctor = html.Div(
+    id= "contenitore-admin-layout-gestione-diabetologi",
     style={
         # la doctor_dashboard si adatta automaticamente allo spazio disponibile
         'flex' : 1,
         'display': 'flex',
-        # definisce la direzione degli elementi in un contenitore di tipo flex : "row" = da sinistra a destra
+        # "row" = da sinistra a destra
         'flex-direction': 'row',
-        # Spazio dai margini esterni
+        # spazio dai margini esterni
         'padding': '20px',
-        # Spazio interno tra le colonne
+        # spazio interno tra le colonne
         'gap': '20px'
     },
     children=[
@@ -2362,9 +2949,13 @@ chat_content = html.Div(
                         'overflowY': 'auto',
                         'padding': '20px',
                         # Nessuno sfondo inserito
-                    }
+                    }, 
                 ),
-
+                dcc.Interval(
+                    id='interval-component',
+                    interval=1000,
+                    n_intervals = 0
+                ),
                 # Contenitore dell'Input:
                 html.Div(
                     style={
@@ -2389,7 +2980,26 @@ chat_content = html.Div(
                             className='input',
                             debounce=True,
                             n_submit=0
+                        ),
+                        dbc.Button(
+                            "+", color="primary",
+                            id="send-btn",
+                            style={
+                                "display": "flex",
+                                "justifyContent": "center",
+                                "align-items": "center",
+                                "width": "55px",
+                                "height": "55px",
+                                "border-radius": "50%",
+                                "margin": "0",
+                                "padding": "0",
+                                "box-shadow": "0 4px 4px rgba(0, 0, 0, 0.5)",
+                                "fontSize": "50px",
+                                "lineHeight": "normal"
+                            },
+                            n_clicks = 0
                         )
+                    
                     ]
                 )
             ]
