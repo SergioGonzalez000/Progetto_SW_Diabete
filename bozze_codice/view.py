@@ -697,7 +697,7 @@ patient_dashboard = html.Div(
                     children=[
                         html.Div(
                             className="outer",
-                            style={"background-color" : "#08ff46"},
+                            style={"background-color" : "#FF4C4C"},
                             id="cerchio-colorato",
                             children=[
                                 html.Div(
@@ -762,11 +762,20 @@ patient_dashboard = html.Div(
                     type="text",
                     className="input mb-3"
                 ),
-
+                dcc.RadioItems(
+                    id="pre-post-pasto",
+                    options=[
+                        {'label': 'Pre pasto', 'value': 'pre'},
+                        {'label': 'Post pasto', 'value': 'post'}
+                    ],
+                    value='pre',
+                    labelStyle={'display': 'inline-block', 'margin-right': '15px'},
+                    inputStyle={"margin-right": "5px"},
+                    style={"textAlign": "center"}
+                ),
                 dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0),
                 dbc.Alert(id="inserisci-glicemia-output",is_open=False),
-                html.H6("Misurata:", style={"color": "grey"}),
-                html.P("Qua da inserire eventuale radioitem per la selezione del pre e del post pranzo")
+                
             ]
         )
     ]
@@ -899,9 +908,69 @@ patient_graphs = html.Div(
 
                 # Riquadro 4
                 html.Div(
+                    [
+                        html.Div([
+
+                            html.H6("Nuova Segnalazione:", style={"color": "grey"}),
+                            html.Br(),
+                            # Tipo segnalazione
+                            dcc.Dropdown(
+                                id="tipo-segnalazione",
+                                options=[
+                                    {"label": "Sintomo", "value": "sintomo"},
+                                    {"label": "Terapia", "value": "terapia"},
+                                    {"label": "Patologia", "value": "patologia"}
+                                ],
+                                placeholder="Tipo di segnalazione...",
+                                className="mb-3"
+                            ),
+
+                            # Descrizione
+                            dbc.Input(
+                                id="descrizione-segnalazione",
+                                placeholder="Descrizione...",
+                                style={"width": "100%", "height": "100px"},
+                                className="mb-3"
+                            ),
+
+                            # Date inizio e fine
+                            dbc.Row([
+                                dbc.Col(
+                                    dbc.Input(
+                                        id="data-inizio-segnalazione",
+                                        placeholder="Data inizio",
+                                        type="date",
+                                        className="mb-3",
+                                        style={"width": "100%"}
+                                    ),
+                                    width=6
+                                ),
+                                dbc.Col(
+                                    dbc.Input(
+                                        id="data-fine-segnalazione",
+                                        placeholder="Data fine (opzionale)",
+                                        type="date",
+                                        className="mb-3",
+                                        style={"width": "100%"}
+                                    ),
+                                    width=6
+                                ),
+                            ]),
+
+                            # Bottone di invio
+                            dbc.Button("Invia Segnalazione", id="invia-segnalazione-btn", n_clicks=0, className="mb-2"),
+
+                            # Feedback
+                            dbc.Alert(id="output-segnalazione", is_open=False)
+
+                        ],
+                        style={'flex': 1, 'height': '100%', 'width': '100%'})
+
+                    ],
                     className='card',
                     style={'flex': 1, 'height': '100%', 'width': '100%'},
-                    id='fourth-graph'
+                    id='fourth-graph',
+                    
                 ),
             ]
         )

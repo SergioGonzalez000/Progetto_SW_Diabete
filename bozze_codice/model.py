@@ -249,6 +249,13 @@ class Paziente(Persona):
         cursore.close()
         return dati
     
+    def inserisci_segnalazione(self,tipo,descrizione,data_i,data_f=None):
+        cursore=connection.cursor()
+        id=current_user.get_id_paziente()
+        cursore.execute("INSERT INTO SegnalazioniPaziente (paziente,tipo_segnalazione,descrizione,data_inizio,data_fine) VALUES (%s,%s,%s,%s,%s)",(id,tipo,descrizione,data_i,data_f))
+        connection.commit()
+        cursore.close()
+    
 
 
     
