@@ -14,6 +14,16 @@ def getLayout():
             sidebar,
             #fil-serve per non far fallire una callback -> forse si può risolvere in un altro modo
             dcc.Store(id="selected-patient-id",data=None),
+            dcc.Store(id="terapia-selezionata", data=None),
+            dcc.Dropdown(
+                id="dropdown-terapia-selezionata",
+                options=[{"label":"placeholder","value":"placeholder"}
+                         ],
+                value=None,
+                style={"display": "none"}  # o visibile ma vuoto
+            ),
+            html.Div(id="div-terapia-selezionata"),
+
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
@@ -949,7 +959,8 @@ doctor_dashboard = html.Div(
                     [
                         html.H5("Informazioni paziente:", style={"color" : "grey"}),
                         html.Hr(),
-                        html.Div( id="doctor-patient-info", style={"height": "100%","width": "100%"})
+                        html.Div( id="doctor-patient-info", style={"height": "100%","width": "100%"}),
+
                     ],
                     style={"flex": 1},
                     className="card",
@@ -1008,6 +1019,7 @@ doctor_patient = html.Div(
         'gap': '40px'
     },
     children=[
+        
         # Prima colonna (1/3)
         html.Div(
             [
@@ -1055,7 +1067,7 @@ doctor_patient = html.Div(
 
                         # Box Terapia
                         html.Div(
-                            [
+                            [   
                                 html.H5("Terapia:", style={"color": "grey"}),
                                 html.Hr(),
                                 # Qua va inserita la tabella delle terapie
@@ -1223,8 +1235,11 @@ def render_lista_pazienti_glicemia(pazienti):
 
     # Modifica il colore dei bollini in base al valore della media di glicemia.
     def colore_glicemia(media):
+        # Se la media è nulla:
+        if media == 0 or media is None:
+            return "#D0D3DD"
         # Se la media è nella norma: verde
-        if 70 <= media <= 130:
+        elif 70 <= media <= 130:
             return '#08ff46'
         # Se la media è alta: giallo
         elif 131 <= media <= 180:
@@ -1232,9 +1247,7 @@ def render_lista_pazienti_glicemia(pazienti):
         # Se la media è troppo alta o troppo bassa: rosso
         elif media > 180 or media < 70:
             return '#FF4C4C'
-        # Se la media è nulla:
-        elif media is None:
-            return "gray"
+        
 
     return html.Div(
         style={
@@ -1394,16 +1407,16 @@ def crea_div_paziente(cfanno, info, segnalazioni):
     # Se non ci sono info:
     if not info:
         return no_info
-
+    
     # Preparo set per info cliniche
     patologie_pregresse = set()
     fattori_rischio = set()
     comorbidita = set()
 
     for riga in info:
-        if riga[0]: patologie_pregresse.add(riga[0])
-        if riga[1]: fattori_rischio.add(riga[1])
-        if riga[2]: comorbidita.add(riga[2])
+        patologie_pregresse.add(riga[0]) if riga[0] else None
+        fattori_rischio.add(riga[1]) if riga[1] else None
+        comorbidita.add(riga[2]) if riga[2] else None
 
     patologie = f"Patologie pregresse: {', '.join(sorted(patologie_pregresse))}" if patologie_pregresse else ""
     fattori = f"Fattori di rischio: {', '.join(sorted(fattori_rischio))}" if fattori_rischio else ""
@@ -1481,7 +1494,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                     dbc.ModalHeader(dbc.ModalTitle("Paziente")),
                     dbc.ModalBody(html.Div([
                         # Informazioni generali
-                        html.H4(f"Nome, {eta}"),
+                        html.H4(f"{nome}, {eta}"),
                         html.H6(codice_fiscale.upper(), style={'color': 'gray', 'margin-bottom': '10px'}),
 
                         # informazioni cliniche:
@@ -1782,6 +1795,7 @@ def crea_div_info_base(info,flagpaziente):
 
         username, nome, cognome, data_nascita, sesso, media_glicemia = info[0]
 
+        glicata=0 if media_glicemia==0 else round((float(media_glicemia)*0.0348)+1.63, 2)
         return html.Div([
             # Nome + Username
             # 'padding': '5px 20px', 'textAlign': 'center' 
@@ -1809,7 +1823,7 @@ def crea_div_info_base(info,flagpaziente):
                 html.Div([
                     html.P("Glicata:", style={'font-size': '20px'}),
                     html.Div([
-                        html.P(round((float(media_glicemia)*0.0348)+1.63, 2), style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                        html.P(glicata, style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
                         html.P(" mg/dL", style={'display': 'inline-block', 'color': 'gray'})
                     ]),
                 ],
@@ -2953,7 +2967,7 @@ chat_content = html.Div(
                 ),
                 dcc.Interval(
                     id='interval-component',
-                    interval=1000,
+                    interval=2000,
                     n_intervals = 0
                 ),
                 # Contenitore dell'Input:

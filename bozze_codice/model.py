@@ -395,6 +395,7 @@ class Diabetologo(Persona):
         cursore_15.execute("""SELECT i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                 FROM infopaziente i
                                 WHERE i.paziente=%s
+                                ORDER BY i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                """,(id_paz, ))
         info=cursore_15.fetchall()
         cursore_15.close()
@@ -1120,7 +1121,23 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
 def visualizza_andamento_glicemia(dati):
 
         if not dati:
-            return go.Figure().update_layout(title="Nessun dato glicemico disponibile")
+            fig = go.Figure()
+            fig.add_annotation(
+                x=0.5, y=0.5,
+                text="Nessun dato glicemico disponibile",
+                showarrow=False,
+                font=dict(size=20),
+                xref="paper", yref="paper",
+                xanchor="center", yanchor="middle"
+            )
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            return fig
 
         valori = [r[0] for r in dati]
         date = [r[1] for r in dati]
@@ -1182,8 +1199,24 @@ def get_terapie_paziente(id_diab, id_paz):
 #grafico a barre che rappresenta le medie
 def visualizza_media_glicemica_fasce_orarie(dati):
     if not dati:
-        return go.Figure().update_layout(title="Nessun dato disponibile")
-
+            fig = go.Figure()
+            fig.add_annotation(
+                x=0.5, y=0.5,
+                text="Nessun dato glicemico disponibile",
+                showarrow=False,
+                font=dict(size=20),
+                xref="paper", yref="paper",
+                xanchor="center", yanchor="middle"
+            )
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            return fig
+    
     fasce_orarie = list(range(0, 24, 3))  # 8 fasce
     media_dict = {ora: round(valore,2) for ora, valore in dati}
 
@@ -1242,7 +1275,24 @@ def visualizza_media_glicemica_fasce_orarie(dati):
 
 
 def crea_grafico_eventi_basso_glucosio(dati):
-    # Converto i dati in DataFrame
+    if not dati:
+            fig = go.Figure()
+            fig.add_annotation(
+                x=0.5, y=0.5,
+                text="Nessun dato glicemico disponibile",
+                showarrow=False,
+                font=dict(size=20),
+                xref="paper", yref="paper",
+                xanchor="center", yanchor="middle"
+            )
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            return fig    # Converto i dati in DataFrame
     df = pd.DataFrame(dati, columns=["valore", "data_inserimento"])
     df["data_inserimento"] = pd.to_datetime(df["data_inserimento"])
     df["giorno"] = df["data_inserimento"].dt.date
