@@ -995,13 +995,13 @@ def visualizza_media_glicemia_per_diabetologi():
             y=1.02,  # poco sopra il grafico (y=0 per sotto)
             xanchor="left",
             x=0),
-        margin=dict(l=10, r=10, t=5, b=10)
+        margin=dict(l=0, r=0, t=0, b=0)
     )
     return fig
 
     # ***********************
 
-# funzione che permette di prendere il grafico un solo diabetologo
+# funzione che permette di prendere il grafico dei pazienti associati diun solo diabetologo
 def visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo):
     """Ritorna un grafico a istogramma contenente la media glicemica dei pazienti associati ad un diabetologo."""
     cursore = connection.cursor()
@@ -1010,29 +1010,19 @@ def visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo):
 
     if not r:
         fig = go.Figure()
-        fig.add_annotation(
-            text="Diabetologo non trovato",
-            xref="paper", yref="paper",
-            showarrow=False,
-            font=dict(size=18, color="red")
-        )
+        fig.update_layout(title="Diabetologo non trovato")
         return fig
 
-    # Istanzia l'oggetto Diabetologo
+    # istanzia un oggetto diabetologo, con tutti gli attributi suoi
     Diab = Diabetologo(r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12])
-    dati_pazienti = Diab.visualizza_n_c_pazienti_associati()   # <-- cambia qui
+    dati_pazienti = Diab.visualizza_n_c_pazienti_associati()   
 
     if not dati_pazienti:
         fig = go.Figure()
-        fig.add_annotation(
-            text=f"Nessun dato per {r[1]} {r[2]}",
-            xref="paper", yref="paper",
-            showarrow=False,
-            font=dict(size=18, color="red")
-        )
+        fig.update_layout(title="Nessun dato glicemico disponibile")
         return fig
 
-    # Adattato per usare la lista di dizionari
+    # usa una lista di dizionari
     nomi_pazienti = [f"{p['nome']} {p['cognome']}" for p in dati_pazienti]
     medie_glicemia = [round(p["media"], 2) for p in dati_pazienti]
 

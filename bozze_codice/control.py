@@ -300,7 +300,7 @@ def registra_callbacks(app):
 
     # callback che gestisce le richiesta di inserimento dei pazienti
     @app.callback(
-        [Output("dettagli-richiesta-paziente", "children", allow_duplicate=True),
+        [Output("alert-richiesta-paziente", "children", allow_duplicate=True),
         Output("dropdown-richieste-pazienti", "options", allow_duplicate=True)],
         [Input("btn-accetta-paziente", "n_clicks"),
         Input("btn-rifiuta-paziente", "n_clicks")],
@@ -350,7 +350,7 @@ def registra_callbacks(app):
 
     # callback che gestisce le richieste di inserimento dei pazienti
     @app.callback(
-        [Output("dettagli-richiesta-diabetologo", "children", allow_duplicate=True),
+        [Output("alert-richiesta-diabetologo", "children", allow_duplicate=True),
         Output("dropdown-richieste-diabetologi", "options", allow_duplicate=True)],
         [Input("btn-accetta-diabetologo", "n_clicks"),
         Input("btn-rifiuta-diabetologo", "n_clicks")],
@@ -1068,6 +1068,12 @@ def registra_callbacks(app):
         # DA MODIFICARE IN MODO DA POTER ADOTTARE I FILTRI PER CUI LA FUNZIONE è PREDISPOSTA
         fig = model.visualizza_andamento_glicemia(model.get_dati_glicemia_filtrati(id_paziente, "annuale", "andamento"))  
 
+        # logica se il grafico è vuoto.
+        # non volendo sovrascrivere la funzione che genera l'andamento glicemia per farlo ritornare "None" se non ci sono dati.
+        if fig.layout.title.text == "Nessun dato glicemico disponibile":
+            return dbc.Alert("Nessun dato glicemico disponibile per questo paziente.", color="danger", dismissable=False)
+
+
         return dcc.Graph(figure=fig, style={"borderRadius": "5px", "padding": "10px"})
         
 
@@ -1196,6 +1202,14 @@ def registra_callbacks(app):
             return "Seleziona un diabetologo e premi il bottone per vedere il grafico."
 
         fig = model.visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo)
+
+        # modo poco elegante di controllare se ci sono dati sensati, ma funziona
+        if fig.layout.title.text == "Diabetologo non trovato":
+            return dbc.Alert("Diabetologo non trovato.", color="danger", dismissable=False)
+        
+        if fig.layout.title.text == "Nessun dato glicemico disponibile":
+            return dbc.Alert("Nessun dato glicemico.", color="danger", dismissable=False)
+
         return dcc.Graph(figure=fig, style={"borderRadius": "5px", "padding": "10px"})
 
 
