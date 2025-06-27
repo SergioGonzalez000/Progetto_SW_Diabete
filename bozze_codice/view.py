@@ -2949,10 +2949,13 @@ chat_content = html.Div(
                         'overflowY': 'auto',
                         'padding': '20px',
                         # Nessuno sfondo inserito
-                    },
-                    
+                    }, 
                 ),
-
+                dcc.Interval(
+                    id='interval-component',
+                    interval=1000,
+                    n_intervals = 0
+                ),
                 # Contenitore dell'Input:
                 html.Div(
                     style={
