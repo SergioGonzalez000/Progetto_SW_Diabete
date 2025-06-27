@@ -1069,6 +1069,8 @@ def get_id_paziente_by_username(username):
         return result[0]  # l'ID del paziente
     return None
 
+#**********************************************************************************************************************************
+
 #funzione per filtrare il periodo del grafico, 
 #filtro_temporale è fatto in modo da combaciare con i value del radio items
 def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
@@ -1106,6 +1108,8 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     cursore.close()
 
     return dati
+
+#*************************************************************************************************************************
 #grafico linea per l'andamento
 def visualizza_andamento_glicemia(dati):
 
@@ -1162,6 +1166,8 @@ def visualizza_andamento_glicemia(dati):
         )
 
         return fig
+
+#****************************************************************************************************************
 
 def get_terapie_paziente(id_diab, id_paz):
         cursore=connection.cursor()

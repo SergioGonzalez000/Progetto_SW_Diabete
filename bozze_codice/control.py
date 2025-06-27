@@ -388,7 +388,7 @@ def registra_callbacks(app):
     )
     def mostra_dettagli_paziente(n_clicks):
         if not any(n_clicks):
-            return dash.no_update
+            return html.H5("Seleziona un paziente.", style={'color':'gray'})
 
         ctx = dash.callback_context
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -479,8 +479,29 @@ def registra_callbacks(app):
             if(a==0 and n==0 and o==0):
                 return info, html.H5("Nessun dato glicemico inserito.", style={'color': 'gray'})
             colors = ["#FF4C4C", '#FFD93B', '#08ff46'] 
-            torta = go.Figure(data=[go.Pie(labels=labels, values=values,marker=dict(colors=colors))])
-            return view.crea_div_info_base(info,False),dcc.Graph(figure=torta)
+
+            torta = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=labels,
+                        values=values,
+                        marker=dict(colors=colors),
+                        textinfo="label+percent",        # Etichette + percentuali
+                        textposition="inside",           # Dentro le fette
+                        insidetextorientation="auto",    # Orientamento automatico
+                        showlegend=False                 # Nessuna legenda
+                    )
+                ]
+            )
+
+            # Layout: margini 0, niente legenda, altezza massima 380px
+            torta.update_layout(
+                margin=dict(t=0, b=0, l=0, r=0),
+                showlegend=False,
+                height=380
+            )
+
+            return view.crea_div_info_base(info, False), dcc.Graph(figure=torta, config={'displayModeBar': False})
         else:
             return dash.no_update
         
@@ -500,7 +521,7 @@ def registra_callbacks(app):
         triggered_id = ctx.triggered_id
 
         if not triggered_id or not any(n_clicks):
-            return html.H5("Seleziona un paziente.", style={'color': 'gray'})
+            return html.H5("Seleziona un paziente.", style={'color': 'gray', 'margin-top': '10px'})
         # Se è stato cliccato un nuovo paziente
         if isinstance(triggered_id, dict) and triggered_id.get("type") == "btn-paziente":
             id_paz = triggered_id["index"]
@@ -511,15 +532,18 @@ def registra_callbacks(app):
         if not id_paz or not any(n_clicks):
             return "Nessun paziente selezionato"
         if id_paz and not scelta:
-            return "Seleziona un grafico"
+            return html.H5("Seleziona un grafico.", style={'color': 'gray', 'margin-top': '10px'})
 
         dati = model.get_dati_glicemia_filtrati(id_paz,filtro,scelta)
-
-        if pathname == "/doctor-patient" and scelta:
-            grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati)
-            return dcc.Graph(figure=grafico,  config={'responsive': True})
+        # Check dell'esistenza dei dati
+        if not dati:
+            return html.H5("Nessuna informazione disponibile.", style={'color': 'gray', 'margin-top': '10px'})
         else:
-            return dash.no_update
+            if pathname == "/doctor-patient" and scelta:
+                grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati)
+                return dcc.Graph(figure=grafico,  config={'responsive': True})
+            else:
+                return dash.no_update
 
         
 #*************************************************************************************************************************************
@@ -534,7 +558,7 @@ def registra_callbacks(app):
             id_paz = current_user.get_id_paziente()
             dati = model.get_dati_glicemia_filtrati(id_paz, "giornaliero", "andamento")
             grafico = model.visualizza_andamento_glicemia(dati)
-            return dcc.Graph(figure=grafico)
+            return dcc.Graph(figure=grafico, config={"responsive": True})
         return dash.no_update
 
 
@@ -778,8 +802,14 @@ def registra_callbacks(app):
             id_paz=current_user.get_id_paziente()
             diab= current_user.get_diabetologo()[0]
             id_diab=diab["id"]
+            
+            # Prenddo la lista delle terapie:
             terapie=model.get_terapie_paziente(id_diab,id_paz)
-            return view.crea_div_terapia_dropdown(terapie)
+            # Check sulle terapie:
+            if not terapie:
+                return html.H5("Nessuna terapia.", style={'color':'gray', 'margin-top': '10px'})
+            else:
+                return view.crea_div_terapia_dropdown(terapie)
         else:
             return dash.no_update
 #*****************************************************************************************************************************       
@@ -1116,8 +1146,8 @@ def registra_callbacks(app):
         return dash.no_update, False
         
      
-# sacre callback      
-#callback di gestione della chat:
+#**************************************************************************************************************************************************     
+# GESTIONE DELLA CHAT
     @app.callback(
             Output("lista-contatti", "children"),
             Input("url","pathname")
@@ -1127,7 +1157,8 @@ def registra_callbacks(app):
             return view.layout_lista_contatti()
         else:
             return dash.no_update
-        
+
+    # CALLBACK CHE PRENDE LA CHAT SELEZIONATA 
     @app.callback(
         Output("nome-contatto","data"),
         Input({"type": "btn-contatto","index": dash.ALL},"n_clicks"),
@@ -1139,39 +1170,63 @@ def registra_callbacks(app):
         id_contatto = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])["index"]
         return id_contatto
 
+    # CALLBACK CHE GENERA LA CHAT, IL NOME DEL CONTATTO
     @app.callback(
-    [
-        Output("chat-box", "children"),
-        Output("nome-contatto","children"),
-        Output("input-text","value")
-    ],
-    [
-        Input({"type": "btn-contatto", "index": dash.ALL}, "n_clicks"),  # Pulsante contatto
-        Input("send-btn", "n_clicks"),  # Pulsante invio messaggio
-        Input("interval-component","n_intervals")
-    ],
-    [
-        State("input-text", "value"),
-        State("nome-contatto", "data")
-    ],
-    prevent_initial_call=True
+        [
+            Output("chat-box", "children"),
+            Output("nome-contatto", "children"),
+            Output("input-text", "value")
+        ],
+        [
+            Input({"type": "btn-contatto", "index": dash.ALL}, "n_clicks"),  # Pulsante contatto
+            Input("input-text", "n_submit"),  # Invio messaggio premendo INVIO
+            Input("interval-component", "n_intervals")  # Aggiornamento automatico
+        ],
+        [
+            State("input-text", "value"),
+            State("nome-contatto", "data")
+        ],
+        prevent_initial_call=True
     )
-    def update_chat(btn_clicks, send_clicks, n_intervals, messaggio, id_contatto):
-        triggered_id = ctx.triggered_id  # Capisci quale input ha attivato la callback
+    def update_chat(btn_clicks, submit_count, n_intervals, messaggio, id_contatto):
+        triggered_id = ctx.triggered_id  # Capisce quale input ha attivato la callback
 
-        # Caso 1: Click su un contatto (prima si fa un check per capire se il trigger è un dizionario)
+        # Caso 1: Click su un contatto
         if isinstance(triggered_id, dict) and triggered_id["type"] == "btn-contatto":
-            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), triggered_id["index"])), model.get_nomecognome(triggered_id["index"]), dash.no_update
+            index = triggered_id["index"]
+            contatto = model.get_nomecognome(index)
+            nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
+            return (
+                view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), index)),
+                nome_contatto,
+                dash.no_update
+            )
 
-        # Caso 2: Click su "Invia messaggio"
-        elif triggered_id == "send-btn" and messaggio:
+        # Caso 2: INVIO premuto (submit messaggio)
+        elif triggered_id == "input-text" and messaggio and id_contatto is not None:
             model.insert_messaggio(model.get_user_id(), id_contatto, messaggio)
-            return view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto), ""
+            contatto = model.get_nomecognome(id_contatto)
+            nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
+            return (
+                view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)),
+                nome_contatto,
+                ""
+            )
 
-        # Caso 3: aggiornamento periodico
+        # Caso 3: aggiornamento automatico
         elif n_intervals and id_contatto:
-            view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)), model.get_nomecognome(id_contatto), dash.no_update 
+            contatto = model.get_nomecognome(id_contatto)
+            nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
+            return (
+                view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)),
+                nome_contatto,
+                dash.no_update
+            )
+
         return dash.no_update, dash.no_update, dash.no_update
+
+
+#***************************************************************************************************************************************************
 
     @app.callback(
     Output("pop-admin-grafico-diabetologo", "is_open"),
