@@ -723,35 +723,7 @@ patient_dashboard = html.Div(
                     n_submit=0,
                     className="input mb-3"
                 ),
-
-                # Input Farmaco:
-                html.H6("Farmaco usato:", style={"color": "grey"}),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            # Inserimento del nome del farmaco
-                            dcc.Input(
-                                id="input-farmaco-usato",
-                                placeholder="Inserisci farmaco...",
-                                type="text",
-                                className= 'input'
-                            ),
-                            width=7
-                        ),
-
-                        dbc.Col(
-                            # Inserimento del dosaggio
-                            dcc.Input(
-                                id="input-dosaggio-usato",
-                                placeholder="Dosaggio...",
-                                type="text",
-                                className= 'input'  
-                            ),
-                            width=5
-                        )
-                    ],
-                    className="mb-3"
-                ),
+                
 
                 html.H6("Sintomi riscontrati:", style={"color": "grey"}),
                 # Input Annotazione sintomi
@@ -773,9 +745,43 @@ patient_dashboard = html.Div(
                     inputStyle={"margin-right": "5px"},
                     style={"textAlign": "center"}
                 ),
-                dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0),
+                dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0,style={'border': 'none', 'border-radius': '25px'}),
                 dbc.Alert(id="inserisci-glicemia-output",is_open=False),
-                
+                html.Hr(),
+                html.Div(
+                    [
+                        html.H5("Assunzione farmaco:", style={"color": "grey"}),
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                # Inserimento del nome del farmaco
+                                    dcc.Input(
+                                        id="input-farmaco-usato",
+                                        placeholder="Inserisci farmaco...",
+                                        type="text",
+                                        className= 'input'
+                                    ),
+                                    width=7
+                                ),
+
+                                dbc.Col(
+                                    # Inserimento del dosaggio
+                                    dcc.Input(
+                                        id="input-dosaggio-usato",
+                                        placeholder="Dosaggio...",
+                                        type="text",
+                                        className= 'input'  
+                                    ),
+                                    width=5
+                                )
+                            ],
+                            className="mb-3"
+                        ),
+                    ]
+                ),
+                dbc.Button("Inserisci assunzione", id="inserisci-assfarmaco-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
+                # Feedback
+                dbc.Alert(id="output-assunzione", is_open=False),                           
             ]
         )
     ]
@@ -958,17 +964,24 @@ patient_graphs = html.Div(
                             ]),
 
                             # Bottone di invio
-                            dbc.Button("Invia Segnalazione", id="invia-segnalazione-btn", n_clicks=0, className="mb-2"),
+                            dbc.Button("Invia Segnalazione", id="invia-segnalazione-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
 
                             # Feedback
-                            dbc.Alert(id="output-segnalazione", is_open=False)
+                            dbc.Alert(id="output-segnalazione", is_open=False),
+                            
 
                         ],
                         style={'flex': 1, 'height': '100%', 'width': '100%'})
 
                     ],
                     className='card',
-                    style={'flex': 1, 'height': '100%', 'width': '100%'},
+                    style={
+                        'flex': 1,
+                        'height': '100%',
+                        'width': '100%',
+                        'display': 'flex',               
+                        'flexDirection': 'column'       
+                    },
                     id='fourth-graph',
                     
                 ),

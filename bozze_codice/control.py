@@ -1,5 +1,4 @@
 import json
-import dash.nbextension
 import dash_bootstrap_components as dbc
 from dash import MATCH, html, dcc, Input, Output, State, ALL, ctx
 from flask_login import login_user, logout_user, current_user
@@ -659,9 +658,6 @@ def registra_callbacks(app):
         
 #******************************************************************************************************************   
     #callback per modificare dati paziente
-    from dash import ctx
-    import time  # per generare timestamp
-
     @app.callback(
         Output("modifica-info-output", "children"),
         Output("modifica-info-output", "color"),
@@ -693,7 +689,7 @@ def registra_callbacks(app):
                 return "Seleziona un paziente!", "danger", True
 
             current_user.modifica_info_paziente(id_paz, patologia, fattori, comorbidita)
-            return "Modifica avvenuta con successo", "success", True
+            return "Modifica avvenuta con successo", "success", True, "/doctor-patient"
         
         return dash.no_update, dash.no_update, dash.no_update
 
@@ -1023,21 +1019,20 @@ def registra_callbacks(app):
         Output("trigger-aggiorna-grafico", "data"),
         Input("url", "pathname"),
         Input("inserisci-glicemia", "n_clicks"),
-        Input("input-farmaco-usato", "value"),
-        Input("input-dosaggio-usato", "value"),
         Input("input-sintomi-riscontrati", "value"),
+        Input("pre-post-pasto","value"),
         State("input-glicemia", "value"),
         State("number", "children"),
         State("cerchio-colorato", "style"),
         State("trigger-aggiorna-grafico", "data"),
         prevent_initial_call=True
     )
-    def aggiorna_cerchio(path, n_clicks, farmaco, dosaggio, sintomi, valore, number, stile_corrente, trigger):
+    def aggiorna_cerchio(path, n_clicks,  sintomi, flag_pasto, valore, number, stile_corrente, trigger):
         if path != "/patient-dashboard":
             return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
 
-        if n_clicks and farmaco and dosaggio and valore:
-            current_user.inserisci_glicemia(valore, farmaco, dosaggio, sintomi)
+        if n_clicks and valore:
+            current_user.inserisci_glicemia(valore, sintomi, flag_pasto)
             if valore < 70:
                 colore = "#FF4C4C"
             elif 80 <= valore <= 130:
@@ -1053,7 +1048,31 @@ def registra_callbacks(app):
         else:
             return valore, {"background-color": '#FF4C4C'}, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
-#callback che inserisce i grafici al paziente
+    #callback che inserisce l'assunzione di farmaco
+    @app.callback(
+        Output("output-assunzione","children"),
+        Output("output-assunzione", "is_open"),
+        Output("output-assunzione", "color"),
+        Input("input-farmaco-usato","value"),
+        Input("input-dosaggio-usato","value"),
+        Input("inserisci-assfarmaco-btn","n_clicks"),
+        Input("url","pathname")
+    )
+    def inserisci_assunzione_farmaco(farmaco,dosaggio,n_clicks,path):
+        if path=="/patient-dashboard":
+            if farmaco and dosaggio and n_clicks>0:
+                current_user.inserisci_assunzione_farmaco(farmaco,dosaggio)
+                return "Inserimento avvenuto correttamente", True, "success"
+            elif (not farmaco or not dosaggio) and n_clicks>0:
+                n_clicks=n_clicks-1
+                return "Informazioni mancanti", True, "danger"
+            elif (not farmaco or not dosaggio) and n_clicks==0:
+                return dash.no_update
+            else:
+                return dash.no_update
+        else:
+            return dash.no_update
+    #callback che inserisce i grafici al paziente
 
 
     @app.callback(
