@@ -677,7 +677,7 @@ patient_dashboard = html.Div(
         # 6: Colonna a destra 
         html.Div(
             className="card",
-            style={'height': '100vh'},
+            style={'height': '100%'},
             children=[
                 html.H5("Glicemia:", style={"color": "grey"}),
                 html.Hr(),
@@ -1182,6 +1182,7 @@ doctor_patient = html.Div(
                             placeholder="Scegli una tipologia di grafico",
                             style={"width": "100%"}
                         ),
+                        # Contenitore del grafico
                         html.Div(
                             id="patient-graph",
                             style={"height": "100%", "width": "100%"}
@@ -1718,6 +1719,9 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
 
                             # Box per gli alert:
                             dbc.Alert(id="modifica-terapia-output", is_open=False),
+
+                            # Modal di eliminazione terapia:
+                            
                         ],
                         style={
                             'flex': 3,
@@ -1782,7 +1786,7 @@ def crea_div_info_base(info,flagpaziente):
             return html.Div("Nessuna informazione disponibile per questo paziente.")
     if flagpaziente:
 
-        username, nome, cognome, data_nascita, sesso, media_glicemia = info[0]
+        username, nome, cognome, data_nascita, sesso, media_glicemia = info
 
         return html.Div([
             # Nome + Username
@@ -1929,16 +1933,9 @@ admin_dashboard = html.Div(
                     children=[
                         # 5: Card del grafico
                         html.Div(
-                            style={
-                                "flex": 1,
-                                "padding": "20px",
-                                "background-color": "#ffffff",                    # sfondo bianco
-                                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",     # ombra standard diciamo
-                                "border": "2px solid #dee2e6",                      # bordo di 2px grigio
-                                "border-radius": "15px"                             # bordi arrotondati
-                            },
+                            className='card',
                             children=[
-                                html.H5("Glicemia media dei pazienti gestiti da ciascun diabetologo", style={"color" : "grey"}),
+                                html.H5("Glicemia media dei pazienti gestiti da ciascun diabetologo:", style={"color" : "grey"}),
                                 html.Hr(style= {"margin-top": "18px"}),
                                 
                                 html.Div(
@@ -1955,7 +1952,10 @@ admin_dashboard = html.Div(
 
                                     # stile del Div dov'è contenuto il grafico
                                     style={"overflowX": "auto",     # racchiuso tutto in un div, in modo che se i diabetologi sono tanti, vengano visualizzati tramite scrollbar orizzontale
-                                           "maxHeight": "100%"
+                                           "height": "100%",
+                                           'justify-content': 'center',
+                                           'align-items':'center',
+                                           'margin-top': '40px'
                                     }        
                                 ),
                                 
