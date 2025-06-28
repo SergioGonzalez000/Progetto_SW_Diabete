@@ -172,12 +172,21 @@ class Paziente(Persona):
         cursore.close()
         return id
     
-    def inserisci_glicemia(self, valore, farmaco, dose, sintomi=None ):
+    def inserisci_glicemia(self, valore, flag_pasto, sintomi=None ):
         cursore_8=connection.cursor()
         cursore_8.execute("""INSERT INTO Glicemia 
-                    (paziente, farmaco, dosaggio, sintomo, valore) 
-                    VALUES (%s, %s, %s, %s, %s)""", 
-                    (self.get_id_paziente(), farmaco, dose, sintomi, valore))
+                    (paziente, pasto, sintomo, valore) 
+                    VALUES (%s, %s, %s, %s)""", 
+                    (self.get_id_paziente(), flag_pasto, sintomi, valore))
+        connection.commit()
+        cursore_8.close()
+
+    def inserisci_assunzione_farmaco(self, farmaco, dosaggio):
+        cursore_8=connection.cursor()
+        cursore_8.execute("""INSERT INTO AssunzioniFarmaco 
+                    (paziente, farmaco, dosaggio) 
+                    VALUES (%s, %s, %s)""", 
+                    (self.get_id_paziente(), farmaco, dosaggio))
         connection.commit()
         cursore_8.close()
 
@@ -248,6 +257,13 @@ class Paziente(Persona):
 
         cursore.close()
         return dati
+    
+    def inserisci_segnalazione(self,tipo,descrizione,data_i,data_f=None):
+        cursore=connection.cursor()
+        id=current_user.get_id_paziente()
+        cursore.execute("INSERT INTO SegnalazioniPaziente (paziente,tipo_segnalazione,descrizione,data_inizio,data_fine) VALUES (%s,%s,%s,%s,%s)",(id,tipo,descrizione,data_i,data_f))
+        connection.commit()
+        cursore.close()
     
 
 
@@ -395,6 +411,7 @@ class Diabetologo(Persona):
         cursore_15.execute("""SELECT i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                 FROM infopaziente i
                                 WHERE i.paziente=%s
+                                ORDER BY i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                """,(id_paz, ))
         info=cursore_15.fetchall()
         cursore_15.close()
@@ -1085,7 +1102,7 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     cursore = connection.cursor()
     if filtro_grafico == "andamento":
         query_base = """
-            SELECT valore, data_inserimento
+            SELECT valore, data_inserimento, sintomo
             FROM Glicemia
             WHERE paziente = %s
         """
@@ -1116,14 +1133,37 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     cursore.close()
 
     return dati
+
+def formatta_sintomo(s):
+    return f"Sintomi: {s}" if s else ""
 #grafico linea per l'andamento
 def visualizza_andamento_glicemia(dati):
 
         if not dati:
-            return go.Figure().update_layout(title="Nessun dato glicemico disponibile")
+            fig = go.Figure()
+            fig.add_annotation(
+                x=0.5, y=0.5,
+                text="Nessun dato glicemico disponibile",
+                showarrow=False,
+                font=dict(size=20),
+                xref="paper", yref="paper",
+                xanchor="center", yanchor="middle"
+            )
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            return fig
 
         valori = [r[0] for r in dati]
         date = [r[1] for r in dati]
+        sintomi= [r[2] for r in dati]
+        
+
+        sintomi_formattati = [formatta_sintomo(s) for s in sintomi]
 
         fig = go.Figure()
 
@@ -1136,7 +1176,8 @@ def visualizza_andamento_glicemia(dati):
             line=dict(color='blue', width=3),
             marker=dict(size=6),
             name='Glicemia',
-            hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<extra></extra>'
+            customdata=[[s] for s in sintomi_formattati],
+            hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<br>%{customdata[0]}<extra></extra>'
         ))
 
         # Linee soglia glicemica
@@ -1182,8 +1223,24 @@ def get_terapie_paziente(id_diab, id_paz):
 #grafico a barre che rappresenta le medie
 def visualizza_media_glicemica_fasce_orarie(dati):
     if not dati:
-        return go.Figure().update_layout(title="Nessun dato disponibile")
-
+            fig = go.Figure()
+            fig.add_annotation(
+                x=0.5, y=0.5,
+                text="Nessun dato glicemico disponibile",
+                showarrow=False,
+                font=dict(size=20),
+                xref="paper", yref="paper",
+                xanchor="center", yanchor="middle"
+            )
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            return fig
+    
     fasce_orarie = list(range(0, 24, 3))  # 8 fasce
     media_dict = {ora: round(valore,2) for ora, valore in dati}
 
@@ -1242,7 +1299,24 @@ def visualizza_media_glicemica_fasce_orarie(dati):
 
 
 def crea_grafico_eventi_basso_glucosio(dati):
-    # Converto i dati in DataFrame
+    if not dati:
+            fig = go.Figure()
+            fig.add_annotation(
+                x=0.5, y=0.5,
+                text="Nessun dato glicemico disponibile",
+                showarrow=False,
+                font=dict(size=20),
+                xref="paper", yref="paper",
+                xanchor="center", yanchor="middle"
+            )
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            return fig    # Converto i dati in DataFrame
     df = pd.DataFrame(dati, columns=["valore", "data_inserimento"])
     df["data_inserimento"] = pd.to_datetime(df["data_inserimento"])
     df["giorno"] = df["data_inserimento"].dt.date
