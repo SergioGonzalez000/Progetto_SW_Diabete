@@ -2098,14 +2098,14 @@ def render_dati_richiesta(dati):
             html.Div([
                 # Colonna di sinistra
                 html.Div([
-                    html.H2(f"{dati['nome']} {dati['cognome']}, ({dati["sesso"]})", style={'padding': '5px', 'border-radius': '15px', 'background-color': '#f8f9fa', 'display': 'inline-block'}),
-                    html.H4(f"{dati["codice_fiscale"].upper()}", style={'color': 'gray'}),
+                    html.H2(f"{dati['nome']} {dati['cognome']}, ({dati['sesso']})", style={'padding': '5px', 'border-radius': '15px', 'background-color': '#f8f9fa', 'display': 'inline-block'}),
+                    html.H4(f"{dati['codice_fiscale'].upper()}", style={'color': 'gray'}),
                     html.H5(f"Data di nascita: {data_nascita}", style={'color': 'gray'})
                 ], style={'flex': 1}),
                 # colonna di destra
                 html.Div([
-                    html.H2("PAZIENTE" if dati["paziente"] else "DIABETOLOGO", style={'padding': '5px'}),
-                    html.H5("IN ATTESA" if dati["stato_richiesta"] else f"{dati["stato_richiesta"]}", style={'color': '#08ff46'})
+                    html.H2("PAZIENTE" if dati['paziente'] else "DIABETOLOGO", style={'padding': '5px'}),
+                    html.H5("IN ATTESA" if dati['stato_richiesta'] else f"{dati['stato_richiesta']}", style={'color': '#08ff46'})
                 ], style={'flex': 1, "textAlign": "center"})
             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'margin-bottom': '15px',}),
         
@@ -2115,19 +2115,19 @@ def render_dati_richiesta(dati):
                 # Colonna dell'indirizzo
                 html.Div([
                     html.H4("Indirizzo:", style={'color': 'gray'}),
-                    html.H5(f"{dati["indirizzo"]}")
+                    html.H5(f"{dati['indirizzo']}")
                 ], style={'flex': 1, "textAlign": "center"}),
                 
                 # Colonna Città
                 html.Div([
                     html.H4("Città:", style={'color': 'gray'}),
-                    html.H5(f"{dati["citta"]}")
+                    html.H5(f"{dati['citta']}")
                 ], style={'flex': 1, "textAlign": "center"}),
                 
                 # Colonna CAP
                 html.Div([
                     html.H4("CAP:", style={'color': 'gray'}),
-                    html.H5(f"{dati["cap"]}")
+                    html.H5(f"{dati['cap']}")
                 ], style={'flex': 1, "textAlign": "center"})
             ], 
             style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'padding': '10px', 'border-radius': '15px', 'background-color': '#f8f9fa',}),
@@ -2138,13 +2138,13 @@ def render_dati_richiesta(dati):
                 # Colonna telefono
                 html.Div([
                     html.H4("Telefono:", style={'color': 'gray'}),
-                    html.H5(f"{dati["telefono"]}")
+                    html.H5(f"{dati['telefono']}")
                 ], style={'flex': 1, "textAlign": "center"}),
 
                 # Colonna mail
                 html.Div([
                     html.H4("Email:", style={'color': 'gray'}),
-                    html.H5(f"{dati["email"]}")
+                    html.H5(f"{dati['email']}")
                 ], style={'flex': 1, "textAlign": "center"})
             ],
             style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'padding': '10px', 'border-radius': '15px', 'background-color': '#f8f9fa',}),
