@@ -2314,13 +2314,14 @@ def crea_card_paziente(dati_paziente, dati_diab):
             dbc.Modal(
                 [
                     dbc.ModalHeader("Grafico glicemia paziente"),
-                    dbc.ModalBody(
+                    dbc.ModalBody([
                         html.Div(
                             id="contenitore-popup-graf-paziente",
                             children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
                             style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
                         ),
-                        style={"padding": "2px"}  
+                        filtro_temporale(""),
+                        ], style={"padding": "2px", 'margin-bottom': '15px'}  
                     ),
                 ],
                 id="pop-admin-grafico-paziente",
@@ -2952,7 +2953,7 @@ chat_content = html.Div(
                 ),
                 dcc.Interval(
                     id='interval-component',
-                    interval=1000,
+                    interval=5000,
                     n_intervals = 0
                 ),
                 # Contenitore dell'Input:

@@ -412,11 +412,6 @@ class Diabetologo(Persona):
         risultati = cursore.fetchall()
         cursore.close()
         return risultati
-                              
-
-
-
-
     
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -1225,7 +1220,7 @@ def visualizza_media_glicemica_fasce_orarie(dati):
     for v in valori:
         if v is None:
             colori.append("#f8f9fa")
-        elif v < 70:
+        elif v < 80:
             colori.append("#FF4C4C")
         # Normoglicemia
         elif 80 <= v <= 130:
@@ -1341,18 +1336,7 @@ def get_info_base_paziente(id_diab, id_paz):
         print(f"Errore in get_info_base_paziente: {e}")
         raise
 
-# def get_info_base_paziente(id_diab,id_paz):
-#     cursore = connection.cursor()
-#     cursore.execute("""SELECT username, nome, cognome,data_nascita,sesso, COALESCE(AVG(g.valore), 0) AS media
-#                             FROM paziente p
-#                             LEFT JOIN Glicemia g on p.id_paziente=g.paziente
-#                             WHERE p.diabetologo_associato = %s and p.id_paziente=%s
-#                             GROUP BY p.id_paziente
-#                             """,(id_diab,id_paz))
-#     result = cursore.fetchall()
-#     cursore.close()
-#     return result
-
+#*************************************************************************************************************************
 
 def get_info_base_diabetologo(id_diab):
     cursore = connection.cursor()
@@ -1366,7 +1350,8 @@ def get_info_base_diabetologo(id_diab):
     cursore.close()
     return result
 
-#if __name__ == '__main__':
+#*************************************************************************************************************************
+# Restituisce la tupla (contenuto, orario, giorno, is_mittente, is_diabetologo) per i messaggi
 def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
 
     Messaggio = namedtuple('Messaggio', ['contenuto', 'orario', 'giorno','d_is_mittente', 'user_is_diabetologo'])
@@ -1391,6 +1376,7 @@ def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
             user_is_diabetologo = (id_user == r[3])) #se l'user è diabetologo restituisce true, altrimenti false. serve per capire se caricare le colonne a sx o dx
         for r in result
     ]
+#*************************************************************************************************************************
 #funzione che inserisci i messaggi nella base di dati. 
 def insert_messaggio(id_user, id_interlocutore, contenuto):
 
@@ -1421,6 +1407,8 @@ def insert_messaggio(id_user, id_interlocutore, contenuto):
     cursore.close()
     return
 
+#*************************************************************************************************************************
+# Restituisce la tupla (nome, cognome) per il contatto della chat
 def get_nomecognome(id):
     nomecognome = namedtuple('nomecognome',['nome','cognome'])
     cursore = connection.cursor()
@@ -1438,11 +1426,6 @@ def get_nomecognome(id):
     result = cursore.fetchone()
     cursore.close()
     return nomecognome(nome = result[0], cognome = result[1])
-
-if __name__ == '__main__':
-    
-    # Esempio: 31 dicembre 2025, ore 10:30
-    Paziente.inserisci_glicemia(39,90,'insulina',10,'fame')
     
 #*************************************************************************************************************************************
 # METODI DI UTILITY:

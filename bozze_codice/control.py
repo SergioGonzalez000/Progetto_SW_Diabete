@@ -1009,6 +1009,8 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
+        # controllo del path
+        #
         if n_apri or n_chiudi:
             return not is_open
         return is_open
@@ -1026,8 +1028,8 @@ def registra_callbacks(app):
         Input("input-nuovo-farmaco", "value"),
         Input("input-nuovo-dosaggio", "value"),
         Input("input-nuovo-assunzioni", "value"),
-        Input("input-nuovo-data-inizio", "date"),
-        Input("input-nuovo-data-fine", "date"),
+        Input("input-nuovo-data-inizio", "value"),
+        Input("input-nuovo-data-fine", "value"),
         Input("input-nuovo-indicazioni", "value"),
         State("selected-patient-id", "data"),
         prevent_initial_call=True
@@ -1232,7 +1234,9 @@ def registra_callbacks(app):
     )
     def seleziona_chat(n_clicks):
         ctx = dash.callback_context
-        if not ctx.triggered : return dash.no_update
+        # Controllo se è stato premuto qualcosa
+        if not ctx.triggered: 
+            return dash.no_update
         id_contatto = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])["index"]
         return id_contatto
 
@@ -1316,6 +1320,7 @@ def registra_callbacks(app):
     )
     def aggiorna_grafico_diabetologo(n_clicks, id_diabetologo):
         """Carica il grafico dei pazienti associati ad un dato diabetologo."""
+
         if not n_clicks or id_diabetologo is None:
             return "Seleziona un diabetologo e premi il bottone per vedere il grafico."
 
