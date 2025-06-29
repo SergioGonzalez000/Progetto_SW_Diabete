@@ -310,18 +310,6 @@ class Diabetologo(Persona):
 
         return pazienti
 
-# ******************************************************************************************************************
-   
-    def get_numero_pazienti_associati(self):
-        cursore=connection.cursor()
-        cursore.execute("""
-            SELECT COUNT(*) 
-            FROM Paziente p 
-            WHERE p.diabetologo_associato = %s
-        """, (self.get_id_diabetologo(),))
-        numero = cursore.fetchone()[0]
-        cursore.close()
-        return numero
     
 # ******************************************************************************************************************
 
@@ -376,7 +364,7 @@ class Diabetologo(Persona):
 
     def aggiorna_terapia_paziente():
         pass
-
+#**********************************************************************************************************************************
     # Funzione che permetta al medico di visualizzare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
@@ -408,11 +396,6 @@ class Diabetologo(Persona):
         risultati = cursore.fetchall()
         cursore.close()
         return risultati
-                              
-
-
-
-
     
 class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
@@ -504,6 +487,60 @@ class Admin(Persona):
         connection.commit()
         
         cursore_4.close()
+
+    def approva_richiesta_cf(codice_fiscale):
+        cursore = connection.cursor()
+
+        # Recupera la richiesta tramite codice fiscale
+        cursore.execute("SELECT * FROM RichiesteAccount WHERE codice_fiscale = %s", (codice_fiscale,))
+        richiesta = cursore.fetchone()
+
+        if richiesta is None:
+            cursore.close()
+            raise ValueError(f"Nessuna richiesta trovata per il codice fiscale {codice_fiscale}.")
+
+        id_richiesta, nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, flag_paziente, _, _, password = richiesta
+
+        tipo = "paziente" if flag_paziente else "diabetologo"
+        username = Admin.genera_username(id_richiesta)
+        persona = PersonaFactory.crea_persona(
+            tipo, nome, cognome, data_nascita, sesso, codice_fiscale,
+            indirizzo, citta, cap, telefono, email, username, password
+        )
+
+        if flag_paziente:
+            Admin.inserisci_paziente(persona)
+            Admin.associa_a_diabetologo(persona)
+        else:
+            Admin.inserisci_diabetologo(persona)
+
+        cursore.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta = %s WHERE codice_fiscale = %s",
+            ('approvata', codice_fiscale)
+        )
+        connection.commit()
+        cursore.close()
+
+    
+    def rifiuta_richiesta_cf(codice_fiscale):
+        cursore = connection.cursor()
+
+        cursore.execute("SELECT * FROM RichiesteAccount WHERE codice_fiscale = %s", (codice_fiscale,))
+        richiesta = cursore.fetchone()
+
+        if richiesta is None:
+            cursore.close()
+            raise ValueError(f"Nessuna richiesta trovata per il codice fiscale {codice_fiscale}.")
+
+        cursore.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta = %s WHERE codice_fiscale = %s",
+            ('rifiutata', codice_fiscale)
+        )
+        connection.commit()
+        cursore.close()
+
+
+
 
     def rifiuta_richiesta(id_richiesta):
         """cambia lo stato della richiesta da << in_attesa >> a << rifiutata >>"""
@@ -980,19 +1017,48 @@ def visualizza_media_glicemia_per_diabetologi():
             font=dict(size=18, color="red")
         )
         return fig
+    
+    fig = go.Figure(data=[
+        go.Bar(
+            x=nomi,
+            y=medie,
+            marker=dict(
+                color=medie,
+                colorscale='Blues',  # scala di colore che associa a valori più alti tonalità più scure
+                line=dict(color='darkblue', width=1)  # bordo delle barre
+            ),
+            hovertemplate='%{x}<br>Glicemia media: %{y} mg/dL<extra></extra>'
+        )
+    ])
 
-    fig = go.Figure(data=[go.Bar(x=nomi, y=medie, marker_color="royalblue")])
     fig.update_layout(
+        title=dict(
+            text="Media glicemia per diabetologo",
+            x=0.5,
+            xanchor='center',
+            font=dict(size=20, color='darkblue')
+        ),
         xaxis_title="Diabetologo",
-        yaxis_title="glicemia (mg/dL)",
+        yaxis_title="Glicemia (mg/dL)",
+        xaxis=dict(
+            tickangle=-45,
+            tickfont=dict(size=15)
+        ),
+        yaxis=dict(
+            tickfont=dict(size=15)
+        ),
+        plot_bgcolor='rgba(245, 245, 245, 1)',
+        paper_bgcolor='white',
         legend=dict(
-            orientation="h",  # orizzontale
+            orientation="h",
             yanchor="bottom",
-            y=1.02,  # poco sopra il grafico (y=0 per sotto)
+            y=1.02,
             xanchor="left",
-            x=0),
-        margin=dict(l=0, r=0, t=0, b=0)
+            x=0
+        ),
+        margin=dict(l=40, r=40, t=60, b=20)
     )
+
     return fig
 
     # ***********************
@@ -1065,6 +1131,8 @@ def get_id_paziente_by_username(username):
         return result[0]  # l'ID del paziente
     return None
 
+#**********************************************************************************************************************************
+
 #funzione per filtrare il periodo del grafico, 
 #filtro_temporale è fatto in modo da combaciare con i value del radio items
 def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
@@ -1103,29 +1171,16 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
 
     return dati
 
+#*************************************************************************************************************************
+
 def formatta_sintomo(s):
     return f"Sintomi: {s}" if s else ""
 #grafico linea per l'andamento
 def visualizza_andamento_glicemia(dati):
 
         if not dati:
-            fig = go.Figure()
-            fig.add_annotation(
-                x=0.5, y=0.5,
-                text="Nessun dato glicemico disponibile",
-                showarrow=False,
-                font=dict(size=20),
-                xref="paper", yref="paper",
-                xanchor="center", yanchor="middle"
-            )
-            fig.update_layout(
-                xaxis=dict(visible=False),
-                yaxis=dict(visible=False),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                margin=dict(l=0, r=0, t=0, b=0)
-            )
-            return fig
+            # Eccezione per assenza di dati
+            raise ValueError("Nessun dato glicemico disponibile.")
 
         valori = [r[0] for r in dati]
         date = [r[1] for r in dati]
@@ -1183,6 +1238,8 @@ def visualizza_andamento_glicemia(dati):
 
         return fig
 
+#****************************************************************************************************************
+
 def get_terapie_paziente(id_diab, id_paz):
         cursore=connection.cursor()
         cursore.execute("SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s",(id_paz,id_diab))
@@ -1191,25 +1248,10 @@ def get_terapie_paziente(id_diab, id_paz):
 
 #grafico a barre che rappresenta le medie
 def visualizza_media_glicemica_fasce_orarie(dati):
+    # Eccezione per dati nulli
     if not dati:
-            fig = go.Figure()
-            fig.add_annotation(
-                x=0.5, y=0.5,
-                text="Nessun dato glicemico disponibile",
-                showarrow=False,
-                font=dict(size=20),
-                xref="paper", yref="paper",
-                xanchor="center", yanchor="middle"
-            )
-            fig.update_layout(
-                xaxis=dict(visible=False),
-                yaxis=dict(visible=False),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                margin=dict(l=0, r=0, t=0, b=0)
-            )
-            return fig
-    
+        raise ValueError("Nessun dato glicemico inserito.")
+
     fasce_orarie = list(range(0, 24, 3))  # 8 fasce
     media_dict = {ora: round(valore,2) for ora, valore in dati}
 
@@ -1224,7 +1266,7 @@ def visualizza_media_glicemica_fasce_orarie(dati):
     for v in valori:
         if v is None:
             colori.append("#f8f9fa")
-        elif v < 70:
+        elif v < 80:
             colori.append("#FF4C4C")
         # Normoglicemia
         elif 80 <= v <= 130:
@@ -1283,10 +1325,7 @@ def get_eventi_basso_glucosio(id_paz):
         return dati
 
 def crea_calendario_ipoglicemia_con_pallini(dati, anno, mese, soglia=70):
-    import plotly.graph_objects as go
-    import calendar
-    import pandas as pd
-
+    
     # Creo DataFrame con colonne corrette
     df = pd.DataFrame(dati, columns=["valore", "data_inserimento"])
     df["data_inserimento"] = pd.to_datetime(df["data_inserimento"])
@@ -1363,18 +1402,32 @@ def crea_calendario_ipoglicemia_con_pallini(dati, anno, mese, soglia=70):
     return fig
 
 
-def get_info_base_paziente(id_diab,id_paz):
-    cursore = connection.cursor()
-    cursore.execute("""SELECT username, nome, cognome,data_nascita,sesso, COALESCE(AVG(g.valore), 0) AS media
-                            FROM paziente p
-                            LEFT JOIN Glicemia g on p.id_paziente=g.paziente
-                            WHERE p.diabetologo_associato = %s and p.id_paziente=%s
-                            GROUP BY p.id_paziente
-                            """,(id_diab,id_paz))
-    result = cursore.fetchall()
-    cursore.close()
-    return result
+# METODO DI RECUPERO INFORMAZIONI DI BASE DI UN PAZIENTE
+# Se la query fallisce lancia un'eccezione
+def get_info_base_paziente(id_diab, id_paz):
+    try:
+        with connection.cursor() as cursore:
+            cursore.execute("""
+                SELECT 
+                    username, 
+                    nome, 
+                    cognome, 
+                    data_nascita, 
+                    sesso, 
+                    COALESCE(AVG(g.valore), 0) AS media
+                FROM paziente p
+                LEFT JOIN Glicemia g ON p.id_paziente = g.paziente
+                WHERE p.diabetologo_associato = %s AND p.id_paziente = %s
+                GROUP BY p.id_paziente
+            """, (id_diab, id_paz))
+            
+            result = cursore.fetchone()
+            return result  # Restituisce solo una riga, come ha più senso in questo contesto
+    except Exception as e:
+        print(f"Errore in get_info_base_paziente: {e}")
+        raise
 
+#*************************************************************************************************************************
 
 def get_info_base_diabetologo(id_diab):
     cursore = connection.cursor()
@@ -1388,7 +1441,8 @@ def get_info_base_diabetologo(id_diab):
     cursore.close()
     return result
 
-#if __name__ == '__main__':
+#*************************************************************************************************************************
+# Restituisce la tupla (contenuto, orario, giorno, is_mittente, is_diabetologo) per i messaggi
 def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
 
     Messaggio = namedtuple('Messaggio', ['contenuto', 'orario', 'giorno','d_is_mittente', 'user_is_diabetologo'])
@@ -1413,6 +1467,7 @@ def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
             user_is_diabetologo = (id_user == r[3])) #se l'user è diabetologo restituisce true, altrimenti false. serve per capire se caricare le colonne a sx o dx
         for r in result
     ]
+#*************************************************************************************************************************
 #funzione che inserisci i messaggi nella base di dati. 
 def insert_messaggio(id_user, id_interlocutore, contenuto):
 
@@ -1443,6 +1498,8 @@ def insert_messaggio(id_user, id_interlocutore, contenuto):
     cursore.close()
     return
 
+#*************************************************************************************************************************
+# Restituisce la tupla (nome, cognome) per il contatto della chat
 def get_nomecognome(id):
     nomecognome = namedtuple('nomecognome',['nome','cognome'])
     cursore = connection.cursor()
@@ -1461,8 +1518,132 @@ def get_nomecognome(id):
     cursore.close()
     return nomecognome(nome = result[0], cognome = result[1])
 
-if __name__ == '__main__':
+
+# funzione che permette la modifica dei dati del paziente nella db
+# funzione che permette la modifica dei dati del paziente nella db
+def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, data_nascita=None, 
+                               sesso=None, indirizzo=None, citta=None, cap=None):
+    """
+    Aggiorna solo i dati modificabili del paziente nel database.
+    I parametri sono opzionali: solo i campi forniti verranno aggiornati.
+    """
+    updates = []
+    params = []
+
+    # Costruzione dinamica della query
+    if nome is not None:
+        updates.append("nome = %s")
+        params.append(nome)
+    if cognome is not None:
+        updates.append("cognome = %s")
+        params.append(cognome)
+    if data_nascita is not None:
+        updates.append("data_nascita = %s")
+        params.append(data_nascita)
+    if sesso is not None:
+        updates.append("sesso = %s")
+        params.append(sesso)
+    if indirizzo is not None:
+        updates.append("indirizzo = %s")
+        params.append(indirizzo)
+    if citta is not None:
+        updates.append("citta = %s")
+        params.append(citta)
+    if cap is not None:
+        updates.append("cap = %s")
+        params.append(cap)
+
+    if not updates:
+        raise ValueError("Nessun dato da aggiornare")
+
+    # ID paziente come ultimo parametro per il WHERE
+    params.append(id_paziente)
+
+    query = f"""
+    UPDATE paziente
+    SET {', '.join(updates)}
+    WHERE id_paziente = %s
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        connection.commit()
+
+    return True
+
+
+
+# funzione che permette la modifica dei dati del diabetologo nella db
+def modifica_dati_diabetologo_db(id_diabetologo, nome=None, cognome=None, email=None,
+                                 telefono=None, indirizzo=None, citta=None, cap=None):
+    """
+    Aggiorna i dati del diabetologo nel database.
+    I parametri possono essere stringhe vuote o None. Solo i campi non vuoti saranno aggiornati.
+    """
+    updates = []
+    params = []
+
+    # Usa solo i campi che non sono stringa vuota o None
+    if nome:
+        updates.append("nome = %s")
+        params.append(nome)
+    if cognome:
+        updates.append("cognome = %s")
+        params.append(cognome)
+    if email:
+        updates.append("email = %s")
+        params.append(email)
+    if telefono:
+        updates.append("telefono = %s")
+        params.append(telefono)
+    if indirizzo:
+        updates.append("indirizzo = %s")
+        params.append(indirizzo)
+    if citta:
+        updates.append("citta = %s")
+        params.append(citta)
+    if cap:
+        updates.append("cap = %s")
+        params.append(cap)
+
+    if not updates:
+        raise ValueError("Nessun dato da aggiornare")
+
+    # ID diabetologo come ultimo parametro
+    params.append(id_diabetologo)
+
+    query = f"""
+    UPDATE diabetologo
+    SET {', '.join(updates)}
+    WHERE id_diabetologo = %s
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        connection.commit()
+
+    return True
+
+
     
-    # Esempio: 31 dicembre 2025, ore 10:30
-    Paziente.inserisci_glicemia(39,90,'insulina',10,'fame')
+#*************************************************************************************************************************************
+# METODI DI UTILITY:
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except (TypeError, ValueError):
+        return False
     
+# Dato un id del diabetologo estrae il numero di pazienti associati
+def get_numero_pazienti_associati_by_id(id_diabetologo):
+    cursore = connection.cursor()
+    cursore.execute("""
+        SELECT COUNT(*) 
+        FROM Paziente 
+        WHERE diabetologo_associato = %s
+    """, (id_diabetologo,))
+    numero = cursore.fetchone()[0]
+    cursore.close()
+    return numero
