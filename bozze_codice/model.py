@@ -315,18 +315,6 @@ class Diabetologo(Persona):
 
         return pazienti
 
-# ******************************************************************************************************************
-   
-    def get_numero_pazienti_associati(self):
-        cursore=connection.cursor()
-        cursore.execute("""
-            SELECT COUNT(*) 
-            FROM Paziente p 
-            WHERE p.diabetologo_associato = %s
-        """, (self.get_id_diabetologo(),))
-        numero = cursore.fetchone()[0]
-        cursore.close()
-        return numero
     
 # ******************************************************************************************************************
 
@@ -1436,3 +1424,15 @@ def is_number(s):
         return True
     except (TypeError, ValueError):
         return False
+    
+# Dato un id del diabetologo estrae il numero di pazienti associati
+def get_numero_pazienti_associati_by_id(id_diabetologo):
+    cursore = connection.cursor()
+    cursore.execute("""
+        SELECT COUNT(*) 
+        FROM Paziente 
+        WHERE diabetologo_associato = %s
+    """, (id_diabetologo,))
+    numero = cursore.fetchone()[0]
+    cursore.close()
+    return numero
