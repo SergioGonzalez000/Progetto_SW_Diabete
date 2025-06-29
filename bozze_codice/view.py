@@ -2047,12 +2047,7 @@ def render_richieste_account():
 
                             html.Div(id="alert-richiesta-diabetologo", style={"marginTop": "10px"}),
 
-                            html.Div(id="dettagli-richiesta-diabetologo", style={'flex': 1,"marginTop": "10px"}),
-
-                            html.Div([
-                                dbc.Button("Accetta", id="btn-accetta-diabetologo", color="primary"),
-                                dbc.Button("Rifiuta", id="btn-rifiuta-diabetologo", color="danger"),
-                            ], style={"display": "flex", "justifyContent": "center", "gap": "10px", "paddingTop": "10px"}),
+                            html.Div(id="dettagli-richiesta-diabetologo", style={'flex': 1,"marginTop": "10px"})
                         ]
                     )
                 ]
@@ -2158,16 +2153,22 @@ def render_dati_richiesta(dati):
             html.Div([
                 # Pulsante accetta 
                 html.Div(
-                    dbc.Button("Accetta", id={"type": "btn-accetta", "index": dati["codice_fiscale"]}, n_clicks=0, color="success", style={'width': '100%', 'padding': '15px 20px', 'border-radius': '25px', 'font-size': '20px'}),
+                    dbc.Button("Accetta", id={"type": "btn-accetta-richiesta", "codice_fiscale": dati["codice_fiscale"]}, n_clicks=0, color="success", style={'width': '100%', 'padding': '15px 20px', 'border-radius': '25px', 'font-size': '20px'}),
                     style={'flex': 1}
                 ),
                 # Pulsante rifiuta
                 html.Div(
-                    dbc.Button("Rifiuta", id={"type": "btn-rifiuta", "index": dati["codice_fiscale"]}, n_clicks=0, color="danger", style={'width': '100%', 'padding': '15px 20px', 'border-radius': '25px', 'font-size': '20px'}),
+                    dbc.Button("Rifiuta", id={"type": "btn-rifiuta-richiesta", "codice_fiscale": dati["codice_fiscale"]}, n_clicks=0, color="danger", style={'width': '100%', 'padding': '15px 20px', 'border-radius': '25px', 'font-size': '20px'}),
                     style={'flex': 1}
                 ),
                 
             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}),
+
+            html.Div(
+                id={"type": "alert-richiesta", "codice_fiscale": dati["codice_fiscale"]},
+                children=[],  # inizialmente vuoto
+                style={'marginTop': '20px'}
+            ),
         ],
         style={
             'display': 'flex',
@@ -2365,19 +2366,123 @@ def crea_card_paziente(dati_paziente, dati_diab):
                 centered=True          
             ),
 
-        # Footer con pulsanti
-        html.Hr(),
-        html.Div([
-            # Mostra la glicemia del paziente:
-            dbc.Button("Glicemia", id="btn-graf-paziente", color="success", style={'flex': 1, 'border-radius': '25px', 'font-size': '20px'}),
+            
+            # POP-UP per modificare i dati del paziente
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Modifica Dati Paziente")),
+                    dbc.ModalBody(
+                        html.Div([
+                            html.Div([
+                                html.H5("Anagrafica:", className="mb-3"),
 
-            # Modifica il profilo:
-            dbc.Button("Modifica", id="btn-modifica-dati-paz", color="warning", style={'flex': 1, 'border-radius': '25px', 'font-size': '20px'}),
+                                dbc.Label("Nome"),
+                                dbc.Input(
+                                    id="modifica-nome",
+                                    type="text",
+                                    value=dati_paziente.get("nome", ""),
+                                    placeholder="Inserisci il nome",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
 
-            # Elimina paziente
-            dbc.Button("Elimina", id="btn-rimuovi-paz", color="danger", style={'flex': 1, 'border-radius': '25px', 'font-size': '20px'})
+                                dbc.Label("Cognome", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-cognome",
+                                    type="text",
+                                    value=dati_paziente.get("cognome", ""),
+                                    placeholder="Inserisci il cognome",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
 
-        ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'})
+                                dbc.Label("Data di nascita", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-data-nascita",
+                                    type="date",
+                                    value=dati_paziente.get("data_nascita", ""),
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Sesso (M/F)", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-sesso",
+                                    type="text",
+                                    maxLength=1,
+                                    value=dati_paziente.get("sesso", ""),
+                                    placeholder="M o F",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Indirizzo", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-indirizzo",
+                                    type="text",
+                                    value=dati_paziente.get("indirizzo", ""),
+                                    placeholder="Inserisci l'indirizzo",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Città", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-citta",
+                                    type="text",
+                                    value=dati_paziente.get("citta", ""),
+                                    placeholder="Inserisci la città",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("CAP", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-cap",
+                                    type="text",
+                                    value=dati_paziente.get("cap", ""),
+                                    placeholder="Inserisci il CAP",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+                            ],
+                            style={
+                                'flex': 1,
+                                'flexDirection': 'column',
+                                'display': 'flex',
+                                'gap': '10px',
+                                'background-color': '#f8f9fa',
+                                'border-radius': '15px',
+                                'padding': '10px',
+                                'margin-bottom': '10px'
+                            }),
+
+                            dbc.Alert("Modifiche effettuate con successo!", id="modifica-paziente-alert", is_open=False, dismissable=True)
+                        ])
+                    ),
+                    dbc.ModalFooter([
+                        dbc.Button("Annulla", id="btn-annulla-modifiche-paziente",
+                                style={'background-color': 'red', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                        dbc.Button("Salva", id="btn-salva-modifiche-paziente", n_clicks=0,
+                                style={'background-color': 'green', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                    ],
+                    style={'display': 'flex', 'justify-content': 'flex-end', 'gap': '10px'}),
+                    dcc.Interval(id="interval-update-card", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
+                ],
+                id="popup-modifica-dati-paziente",
+                centered=True,
+                is_open=False,
+                size="lg"
+            ),
+
+        
+
+            # Footer con pulsanti
+            html.Hr(),
+            html.Div([
+                # Mostra la glicemia del paziente:
+                dbc.Button("Glicemia", id="btn-graf-paziente", color="success", style={'flex': 1, 'border-radius': '25px', 'font-size': '20px'}),
+
+                # Modifica il profilo:
+                dbc.Button("Modifica", id="btn-modifica-dati-paz", color="warning", style={'flex': 1, 'border-radius': '25px', 'font-size': '20px'}),
+
+                # Elimina paziente
+                dbc.Button("Elimina", id="btn-rimuovi-paz", color="danger", style={'flex': 1, 'border-radius': '25px', 'font-size': '20px'})
+
+            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'})
 
 
     ], className='card', style={'display': 'flex', 'flexDirection': 'column', 'gap': '20px'})
@@ -2671,6 +2776,125 @@ def crea_card_diabetologo(dati_diabetologo):
                 is_open=False,
                 size="md",  
                 centered=True          
+            ),
+
+            # popup per visualizzare la lista di pazienti associati a uno specifico diabetologo.
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(f"Pazienti associati a {dati_diabetologo.get('nome')} {dati_diabetologo.get('cognome')}"),
+                    dbc.ModalBody(
+                        html.Div(
+                            id="contenitore-popup-lista-paz-diabetologo",
+                            children=[],                                  
+                        ),
+                        style={"padding": "2px"}  
+                    ),
+                ],
+                id="pop-admin-lista-pazienti-ass",
+                is_open=False,
+                size="md",  
+                centered=True          
+            ),
+            
+            # POP-UP per modificare i dati del diabetologo
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(dbc.ModalTitle("Modifica Dati Diabetologo")),
+                    dbc.ModalBody(
+                        html.Div([
+                            html.Div([
+                                html.H5("Anagrafica:", className="mb-3"),
+
+                                dbc.Label("Nome"),
+                                dbc.Input(
+                                    id="modifica-nome-diabetologo",
+                                    type="text",
+                                    value=dati_diabetologo.get("nome", ""),
+                                    placeholder="Inserisci il nome",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Cognome", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-cognome-diabetologo",
+                                    type="text",
+                                    value=dati_diabetologo.get("cognome", ""),
+                                    placeholder="Inserisci il cognome",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Email", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-email-diabetologo",
+                                    type="email",
+                                    value=dati_diabetologo.get("email", ""),
+                                    placeholder="Inserisci l'email",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Telefono", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-telefono-diabetologo",
+                                    type="tel",
+                                    value=dati_diabetologo.get("telefono", ""),
+                                    placeholder="Inserisci il numero di telefono",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Indirizzo", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-indirizzo-diabetologo",
+                                    type="text",
+                                    value=dati_diabetologo.get("indirizzo", ""),
+                                    placeholder="Inserisci l'indirizzo",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("Città", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-citta-diabetologo",
+                                    type="text",
+                                    value=dati_diabetologo.get("citta", ""),
+                                    placeholder="Inserisci la città",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+
+                                dbc.Label("CAP", className="mt-3"),
+                                dbc.Input(
+                                    id="modifica-cap-diabetologo",
+                                    type="text",
+                                    value=dati_diabetologo.get("cap", ""),
+                                    placeholder="Inserisci il CAP",
+                                    style={"border": "none", "border-radius": "15px"},
+                                ),
+                            ],
+                            style={
+                                'flex': 1,
+                                'flexDirection': 'column',
+                                'display': 'flex',
+                                'gap': '10px',
+                                'background-color': '#f8f9fa',
+                                'border-radius': '15px',
+                                'padding': '10px',
+                                'margin-bottom': '10px'
+                            }),
+
+                            dbc.Alert("Modifiche effettuate con successo!", id="modifica-diabetologo-alert", is_open=False, dismissable=True)
+                        ])
+                    ),
+                    dbc.ModalFooter([
+                        dbc.Button("Annulla", id="btn-annulla-modifiche-diabetologo",
+                                style={'background-color': 'red', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                        dbc.Button("Salva", id="btn-salva-modifiche-diabetologo", n_clicks=0,
+                                style={'background-color': 'green', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                    ],
+                    style={'display': 'flex', 'justify-content': 'flex-end', 'gap': '10px'}),
+                    dcc.Interval(id="interval-update-diabetologo", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
+                ],
+                id="popup-modifica-dati-diabetologo",
+                centered=True,
+                is_open=False,
+                size="md"
             ),
 
 

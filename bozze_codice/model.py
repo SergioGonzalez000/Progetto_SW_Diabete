@@ -492,6 +492,60 @@ class Admin(Persona):
         
         cursore_4.close()
 
+    def approva_richiesta_cf(codice_fiscale):
+        cursore = connection.cursor()
+
+        # Recupera la richiesta tramite codice fiscale
+        cursore.execute("SELECT * FROM RichiesteAccount WHERE codice_fiscale = %s", (codice_fiscale,))
+        richiesta = cursore.fetchone()
+
+        if richiesta is None:
+            cursore.close()
+            raise ValueError(f"Nessuna richiesta trovata per il codice fiscale {codice_fiscale}.")
+
+        id_richiesta, nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, flag_paziente, _, _, password = richiesta
+
+        tipo = "paziente" if flag_paziente else "diabetologo"
+        username = Admin.genera_username(id_richiesta)
+        persona = PersonaFactory.crea_persona(
+            tipo, nome, cognome, data_nascita, sesso, codice_fiscale,
+            indirizzo, citta, cap, telefono, email, username, password
+        )
+
+        if flag_paziente:
+            Admin.inserisci_paziente(persona)
+            Admin.associa_a_diabetologo(persona)
+        else:
+            Admin.inserisci_diabetologo(persona)
+
+        cursore.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta = %s WHERE codice_fiscale = %s",
+            ('approvata', codice_fiscale)
+        )
+        connection.commit()
+        cursore.close()
+
+    
+    def rifiuta_richiesta_cf(codice_fiscale):
+        cursore = connection.cursor()
+
+        cursore.execute("SELECT * FROM RichiesteAccount WHERE codice_fiscale = %s", (codice_fiscale,))
+        richiesta = cursore.fetchone()
+
+        if richiesta is None:
+            cursore.close()
+            raise ValueError(f"Nessuna richiesta trovata per il codice fiscale {codice_fiscale}.")
+
+        cursore.execute(
+            "UPDATE RichiesteAccount SET stato_richiesta = %s WHERE codice_fiscale = %s",
+            ('rifiutata', codice_fiscale)
+        )
+        connection.commit()
+        cursore.close()
+
+
+
+
     def rifiuta_richiesta(id_richiesta):
         """cambia lo stato della richiesta da << in_attesa >> a << rifiutata >>"""
 
@@ -1414,6 +1468,114 @@ def get_nomecognome(id):
     result = cursore.fetchone()
     cursore.close()
     return nomecognome(nome = result[0], cognome = result[1])
+
+
+# funzione che permette la modifica dei dati del paziente nella db
+# funzione che permette la modifica dei dati del paziente nella db
+def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, data_nascita=None, 
+                               sesso=None, indirizzo=None, citta=None, cap=None):
+    """
+    Aggiorna solo i dati modificabili del paziente nel database.
+    I parametri sono opzionali: solo i campi forniti verranno aggiornati.
+    """
+    updates = []
+    params = []
+
+    # Costruzione dinamica della query
+    if nome is not None:
+        updates.append("nome = %s")
+        params.append(nome)
+    if cognome is not None:
+        updates.append("cognome = %s")
+        params.append(cognome)
+    if data_nascita is not None:
+        updates.append("data_nascita = %s")
+        params.append(data_nascita)
+    if sesso is not None:
+        updates.append("sesso = %s")
+        params.append(sesso)
+    if indirizzo is not None:
+        updates.append("indirizzo = %s")
+        params.append(indirizzo)
+    if citta is not None:
+        updates.append("citta = %s")
+        params.append(citta)
+    if cap is not None:
+        updates.append("cap = %s")
+        params.append(cap)
+
+    if not updates:
+        raise ValueError("Nessun dato da aggiornare")
+
+    # ID paziente come ultimo parametro per il WHERE
+    params.append(id_paziente)
+
+    query = f"""
+    UPDATE paziente
+    SET {', '.join(updates)}
+    WHERE id_paziente = %s
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        connection.commit()
+
+    return True
+
+
+
+# funzione che permette la modifica dei dati del diabetologo nella db
+def modifica_dati_diabetologo_db(id_diabetologo, nome=None, cognome=None, email=None,
+                                 telefono=None, indirizzo=None, citta=None, cap=None):
+    """
+    Aggiorna i dati del diabetologo nel database.
+    I parametri possono essere stringhe vuote o None. Solo i campi non vuoti saranno aggiornati.
+    """
+    updates = []
+    params = []
+
+    # Usa solo i campi che non sono stringa vuota o None
+    if nome:
+        updates.append("nome = %s")
+        params.append(nome)
+    if cognome:
+        updates.append("cognome = %s")
+        params.append(cognome)
+    if email:
+        updates.append("email = %s")
+        params.append(email)
+    if telefono:
+        updates.append("telefono = %s")
+        params.append(telefono)
+    if indirizzo:
+        updates.append("indirizzo = %s")
+        params.append(indirizzo)
+    if citta:
+        updates.append("citta = %s")
+        params.append(citta)
+    if cap:
+        updates.append("cap = %s")
+        params.append(cap)
+
+    if not updates:
+        raise ValueError("Nessun dato da aggiornare")
+
+    # ID diabetologo come ultimo parametro
+    params.append(id_diabetologo)
+
+    query = f"""
+    UPDATE diabetologo
+    SET {', '.join(updates)}
+    WHERE id_diabetologo = %s
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        connection.commit()
+
+    return True
+
+
     
 #*************************************************************************************************************************************
 # METODI DI UTILITY:

@@ -1,7 +1,7 @@
 import json
 import dash.nbextension
 import dash_bootstrap_components as dbc
-from dash import MATCH, html, dcc, Input, Output, State, ALL, ctx
+from dash import MATCH, callback_context, html, dcc, Input, Output, State, ALL, ctx
 from flask_login import login_user, logout_user, current_user
 from werkzeug.security import check_password_hash 
 from datetime import date
@@ -302,48 +302,7 @@ def registra_callbacks(app):
 
 #*******************************************************************************************************************
     # CODICE CHE GESTISCE LE RICHIESTE DEI PAZIENTI/DIABETOLOGI
-    @app.callback(
-        [Output("alert-richiesta-paziente", "children", allow_duplicate=True),
-        Output("dropdown-richieste-pazienti", "options", allow_duplicate=True)],
-        [Input({"type": "btn-accetta", "index": ALL}, "n_clicks"),
-        Input({"type": "btn-rifiuta", "index": ALL}, "n_clicks")],
-        prevent_initial_call=True,
-        allow_duplicate=True
-    )
-    def gestisci_richiesta_paziente(n_clicks_accetta, n_clicks_rifiuta):
-        triggered_id = ctx.triggered_id
-
-        if not triggered_id:
-            return dash.no_update, dash.no_update
-
-        richiesta_id = triggered_id["index"]
-        tipo = triggered_id["type"]
-
-        # Ricava l'indice dell'elemento che ha attivato il callback
-        if tipo == "btn-accetta":
-            idx = [{"type": "btn-accetta", "index": richiesta_id}]
-            clicks = ctx.inputs_list[0][0]["value"]
-        elif tipo == "btn-rifiuta":
-            idx = [{"type": "btn-rifiuta", "index": richiesta_id}]
-            clicks = ctx.inputs_list[1][0]["value"]
-        else:
-            return dash.no_update, dash.no_update
-
-        if clicks == 0:
-            return dash.no_update, dash.no_update
-
-        # Esegui operazione
-        if tipo == "btn-accetta":
-            model.Admin.approva_richiesta(richiesta_id)
-            alert = dbc.Alert(f"Richiesta {richiesta_id} accettata con successo.", color="success", dismissable=True)
-        else:
-            model.Admin.rifiuta_richiesta(richiesta_id)
-            alert = dbc.Alert(f"Richiesta {richiesta_id} rifiutata con successo.", color="danger", dismissable=True)
-
-        options = model.get_richieste_account_pazienti()
-        return alert, options
-
-
+ 
     # CALLBACKS PER L'ELENCO DIABETOLOGI
     # callback che carica i dettagli di un diabetologo scelto nel dropdown
     @app.callback(
@@ -365,35 +324,43 @@ def registra_callbacks(app):
     def aggiorna_opzioni_diabetologi(search_value):
         return model.get_richieste_account_diabetologi()
 
-
-    # callback che gestisce le richieste di inserimento dei pazienti
+    # callback che gestisce l'accettazione/rifiuto richiesta di inserimento. Versione aggiustata 28/06/25
     @app.callback(
-        [Output("alert-richiesta-diabetologo", "children", allow_duplicate=True),
-        Output("dropdown-richieste-diabetologi", "options", allow_duplicate=True)],
-        [Input("btn-accetta-diabetologo", "n_clicks"),
-        Input("btn-rifiuta-diabetologo", "n_clicks")],
-        State("dropdown-richieste-diabetologi", "value"),
-        prevent_initial_call=True,
-        allow_duplicate=True
+        Output({"type": "alert-richiesta", "codice_fiscale": ALL}, "children"),
+        [
+            Input({"type": "btn-accetta-richiesta", "codice_fiscale": ALL}, "n_clicks"),
+            Input({"type": "btn-rifiuta-richiesta", "codice_fiscale": ALL}, "n_clicks")
+        ],
+        prevent_initial_call=True
     )
-    def gestisci_richiesta_diabetologo(n_clicks_accetta, n_clicks_rifiuta, id_richiesta):
-        if not id_richiesta:
-            return dbc.Alert("Seleziona una richiesta prima di accettare o rifiutare.", color="warning", dismissable=True), dash.no_update
+    def gestisci_richieste(n_clicks_accetta, n_clicks_rifiuta):
+        triggered = ctx.triggered_id
+        if not triggered:
+            return dash.no_update
 
-        bottone_premuto = ctx.triggered[0]["prop_id"].split(".")[0]
+        codice_fiscale = triggered["codice_fiscale"]
+        tipo = triggered["type"]
 
-        if bottone_premuto == "btn-accetta-diabetologo":
-            model.Admin.approva_richiesta(id_richiesta)
-            alert = dbc.Alert(f"Richiesta {id_richiesta} accettata con successo.", color="success", dismissable=True)
+        if tipo == "btn-accetta-richiesta":
+            model.Admin.approva_richiesta_cf(codice_fiscale)
+            messaggio = dbc.Alert("Richiesta approvata con successo!", color="success", dismissable=True)
+        elif tipo == "btn-rifiuta-richiesta":
+            model.Admin.rifiuta_richiesta_cf(codice_fiscale)
+            messaggio = dbc.Alert("Richiesta rifiutata.", color="danger", dismissable=True)
+        else:
+            messaggio = None
 
-        elif bottone_premuto == "btn-rifiuta-diabetologo":
-            model.Admin.rifiuta_richiesta(id_richiesta)
-            alert = dbc.Alert(f"Richiesta {id_richiesta} rifiutata con successo.", color="danger", dismissable=True)
+        # Ritorna un messaggio solo per il componente con il codice fiscale corrispondente
+        return [
+            messaggio if codice_fiscale == output["id"]["codice_fiscale"] else dash.no_update
+            for output in ctx.outputs_list
+        ]
 
-        options = model.get_richieste_account_diabetologi()
-        return alert, options
 
-    
+
+
+
+# ******************************************************************************************************************
 # ******************************************************************************************************************
     # CALLBACKS PER LA GESTIONE DEGLI ELENCHI DI PAZIENTI E DIABETOLOGI DELL'ADMIN
 
@@ -1292,11 +1259,90 @@ def registra_callbacks(app):
                 nome_contatto,
                 dash.no_update
             )
+        
+    # CALLBACK PER IL MODAL E PULSANTE CHE MODIFICA DATI PAZIENTE
 
         return dash.no_update, dash.no_update, dash.no_update
 
 
 #***************************************************************************************************************************************************
+
+    @app.callback(
+    Output("popup-modifica-dati-paziente", "is_open"),
+    [Input("btn-modifica-dati-paz", "n_clicks"),
+     Input("btn-annulla-modifiche-paziente", "n_clicks")],  
+    [State("popup-modifica-dati-paziente", "is_open")],
+    prevent_initial_call=True
+    )
+    def toggle_popup_modifica_paziente(apri, annulla, is_open):
+        
+        # apre modal se click sul "Modifica Dati Paziente"
+        if ctx.triggered_id == "btn-modifica-dati-paz":
+            return True
+        # chiude il modal
+        elif ctx.triggered_id == "btn-annulla-modifiche-paziente":
+            return False
+        return is_open
+
+
+    @app.callback(
+    Output("modifica-paziente-alert", "is_open"),
+    Output("interval-update-card", "disabled", allow_duplicate=True),
+    Input("btn-salva-modifiche-paziente", "n_clicks"),
+    Input("btn-annulla-modifiche-paziente", "n_clicks"),
+    State("modifica-nome", "value"),
+    State("modifica-cognome", "value"),
+    State("modifica-data-nascita", "value"),
+    State("modifica-sesso", "value"),
+    State("modifica-indirizzo", "value"),
+    State("modifica-citta", "value"),
+    State("modifica-cap", "value"),
+    State("store-id-paziente", "data"),
+    prevent_initial_call=True
+    )
+    def modifica_dati_paziente(salva_clicks, annulla_clicks, nome, cognome, data_nascita, sesso, indirizzo, citta, cap, id_paziente):
+        trigger_id = ctx.triggered_id
+
+        if trigger_id == "btn-annulla-modifiche-paziente":
+            raise dash.exceptions.PreventUpdate
+
+        try:
+            # Esegui la modifica nel DB
+            model.modifica_dati_paziente_db(
+                id_paziente=id_paziente,
+                nome=nome,
+                cognome=cognome,
+                data_nascita=data_nascita,
+                sesso=sesso,
+                indirizzo=indirizzo,
+                citta=citta,
+                cap=cap
+            )
+
+            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
+
+        except Exception as e:
+            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+
+    
+
+    @app.callback(
+    Output("dettagli-paziente", "children",allow_duplicate=True),
+    Output("interval-update-card", "disabled", allow_duplicate=True),
+    Input("interval-update-card", "n_intervals"),
+    State("store-id-paziente", "data"),
+    prevent_initial_call=True
+    )
+    def aggiorna_card_dopo_delay(n_intervals, id_paziente):
+        if n_intervals == 0:
+            raise dash.exceptions.PreventUpdate
+
+        dati_paziente = model.get_dettagli_paziente(id_paziente)
+        dati_diabetologo = model.get_dettagli_diabetologo(dati_paziente.get("diabetologo_associato"))
+        
+        return view.crea_card_paziente(dati_paziente, dati_diabetologo), True
+
+
 
     @app.callback(
     Output("pop-admin-grafico-diabetologo", "is_open"),
@@ -1403,8 +1449,78 @@ def registra_callbacks(app):
         return view.genera_lista_pazienti_associati(lista_pazienti)
     
 
-    ########################################################
-    # DA FARE:                                             #
-    # CALLBACK PER IL PULSANTE "MODIFICA DATI DIABETOLOGO" #
-    ########################################################
+    # CALLBACK PER IL MODAL E PULSANTE CHE MODIFICA DATI DIABETOLOGO
     
+    @app.callback(
+    Output("popup-modifica-dati-diabetologo", "is_open"),
+    Input("btn-modifica-dati-diab", "n_clicks"),
+    Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
+    State("popup-modifica-dati-diabetologo", "is_open"),
+    prevent_initial_call=True
+    )
+    def toggle_popup_modifica_diabetologo(apri, annulla, is_open):
+        trigger_id = ctx.triggered_id
+        if trigger_id == "btn-modifica-dati-diab":
+            return True
+        elif trigger_id == "btn-annulla-modifiche-diabetologo":
+            return False
+        return is_open
+
+
+    @app.callback(
+    Output("modifica-diabetologo-alert", "is_open"),
+    Output("interval-update-diabetologo", "disabled"),
+    Input("btn-salva-modifiche-diabetologo", "n_clicks"),
+    Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
+    State("modifica-nome-diabetologo", "value"),
+    State("modifica-cognome-diabetologo", "value"),
+    State("modifica-email-diabetologo", "value"),
+    State("modifica-telefono-diabetologo", "value"),
+    State("modifica-indirizzo-diabetologo", "value"),
+    State("modifica-citta-diabetologo", "value"),
+    State("modifica-cap-diabetologo", "value"),
+    State("store-id-diabetologo", "data"),
+    prevent_initial_call=True
+    )
+    def modifica_dati_diabetologo(
+        salva_clicks, annulla_clicks,
+        nome, cognome, email, telefono, indirizzo, citta, cap,
+        id_diabetologo
+    ):
+        trigger_id = ctx.triggered_id
+
+        if trigger_id == "btn-annulla-modifiche-diabetologo":
+            raise dash.exceptions.PreventUpdate
+
+        try:
+            model.modifica_dati_diabetologo_db(
+                id_diabetologo=id_diabetologo,
+                nome=nome,
+                cognome=cognome,
+                email=email,
+                telefono=telefono,
+                indirizzo=indirizzo,
+                citta=citta,
+                cap=cap
+            )
+
+            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
+
+        except Exception as e:
+            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+
+
+    @app.callback(
+    Output("dettagli-diabetologo", "children", allow_duplicate=True),
+    Output("interval-update-diabetologo", "disabled", allow_duplicate=True),
+    Input("interval-update-diabetologo", "n_intervals"),
+    State("store-id-diabetologo", "data"),
+    prevent_initial_call=True
+    )
+    def aggiorna_card_diabetologo_dopo_delay(n_intervals, id_diabetologo):
+        if n_intervals == 0:
+            raise dash.exceptions.PreventUpdate
+
+        dati_diabetologo = model.get_dettagli_diabetologo(id_diabetologo)
+        return view.crea_card_diabetologo(dati_diabetologo), True
+        
