@@ -512,10 +512,12 @@ def registra_callbacks(app):
         if id_paz and not scelta:
             return "Seleziona un grafico"
 
-        dati = model.get_dati_glicemia_filtrati(id_paz,filtro,scelta)
-
+        dati = model.get_eventi_basso_glucosio(id_paz) if scelta=="basso" else model.get_dati_glicemia_filtrati(id_paz,filtro,scelta) 
+        oggi = date.today()
+        mese = oggi.month     # restituisce un intero, es. 6 per giugno
+        anno = oggi.year
         if pathname == "/doctor-patient" and scelta:
-            grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati)
+            grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati) if scelta == "medie" else model.crea_calendario_ipoglicemia_con_pallini(dati, anno, mese)
             return dcc.Graph(figure=grafico)
         else:
             return dash.no_update
@@ -689,7 +691,7 @@ def registra_callbacks(app):
                 return "Seleziona un paziente!", "danger", True
 
             current_user.modifica_info_paziente(id_paz, patologia, fattori, comorbidita)
-            return "Modifica avvenuta con successo", "success", True, "/doctor-patient"
+            return "Modifica avvenuta con successo", "success", True
         
         return dash.no_update, dash.no_update, dash.no_update
 
@@ -1082,21 +1084,22 @@ def registra_callbacks(app):
         Input("url","pathname"),
         Input('filtro-temporale1', 'value'),
         Input('filtro-temporale2', 'value'),
-        Input('filtro-temporale3', 'value'),
+        [Input("selezione-mese", "value"),
+        Input("selezione-anno", "value")],
         prevent_initial_call=True
     )
-    def aggiorna_grafici(path, filtro1, filtro2, filtro3):
+    def aggiorna_grafici(path, filtro1, filtro2, mese, anno):
         id_paz=current_user.get_id_paziente()
         if not id_paz:
             raise dash.exceptions.PreventUpdate
         if path=="/grafici":
             dati1=model.get_dati_glicemia_filtrati(id_paz,filtro1,"andamento")
             dati2=model.get_dati_glicemia_filtrati(id_paz,filtro2,"medie")
-            dati3=current_user.get_eventi_basso_glucosio(filtro3)
+            dati3=model.get_eventi_basso_glucosio(current_user.get_id_paziente())
             # Funzioni che generano grafici
             fig1 = model.visualizza_andamento_glicemia(dati1)
             fig2 = model.visualizza_media_glicemica_fasce_orarie(dati2)
-            fig3 = model.crea_grafico_eventi_basso_glucosio(dati3)
+            fig3 = model.crea_calendario_ipoglicemia_con_pallini(dati3, anno, mese)
 
             return dcc.Graph(figure=fig1), dcc.Graph(figure=fig2), dcc.Graph(figure=fig3)
         else:

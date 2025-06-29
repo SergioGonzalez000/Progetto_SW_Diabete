@@ -1,3 +1,4 @@
+import datetime
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 import model
@@ -22,7 +23,6 @@ def getLayout():
                 value=None,
                 style={"display": "none"}  # o visibile ma vuoto
             ),
-            html.Div(id="div-terapia-selezionata"),
 
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
@@ -808,6 +808,37 @@ def filtro_temporale(grafico_id):
         inputStyle={"margin-right": "5px"},
         style={"textAlign": "center"}
     )
+def filtro_calendario():
+    return dbc.Row([
+                            dbc.Col([
+                                html.Label("Seleziona mese"),
+                                dcc.Dropdown(
+                                    id="selezione-mese",
+                                    options=[
+                                        {"label": nome, "value": num}
+                                        for num, nome in enumerate(
+                                            ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+                                            "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"], 1
+                                        )
+                                    ],
+                                    value=datetime.datetime.now().month,
+                                    clearable=False
+                                )
+                            ], width=6),
+                            dbc.Col([
+                                html.Label("Seleziona anno"),
+                                dcc.Dropdown(
+                                    id="selezione-anno",
+                                    options=[
+                                        {"label": str(anno), "value": anno}
+                                        for anno in range(2020, datetime.datetime.now().year + 1)
+                                    ],
+                                    value=datetime.datetime.now().year,
+                                    clearable=False
+                                )
+                            ], width=6),
+                        ], className="mt-3"),
+
 
 
 patient_graphs = html.Div(
@@ -900,7 +931,7 @@ patient_graphs = html.Div(
                                     button_id="popover-button-4",
                                     popover_id="popover-4",
                                     contenuto=html.Div([
-                                        "Mappa che mostra la probabilità giornaliera di avere un la glicemia bassa.",
+                                        "Calendario degli eventi di glicemia bassa.",
                                     ])
                                 )
                             ],
@@ -908,7 +939,7 @@ patient_graphs = html.Div(
                         ),
                         html.Div(id='third-graph'),
                         html.Br(),
-                        filtro_temporale(3),
+                        filtro_calendario()
                     ]
                 ),
 
@@ -968,8 +999,6 @@ patient_graphs = html.Div(
 
                             # Feedback
                             dbc.Alert(id="output-segnalazione", is_open=False),
-                            
-
                         ],
                         style={'flex': 1, 'height': '100%', 'width': '100%'})
 
@@ -1268,7 +1297,8 @@ doctor_patient = html.Div(
                             id="dropdown-scelta-grafico",
                             options=[
                                 {"label": "Andamento", "value": "andamento"},
-                                {"label": "Media durante il giorno", "value": "medie"}
+                                {"label": "Media durante il giorno", "value": "medie"},
+                                {"label": "Eventi glucosio basso", "value": "basso"}
                             ],
                             placeholder="Scegli una tipologia di grafico",
                             style={"width": "100%"}
