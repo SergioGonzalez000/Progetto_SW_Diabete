@@ -11,6 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
+import calendar
 
 connection = psycopg2.connect(
     host='aws-0-eu-central-2.pooler.supabase.com',
@@ -172,12 +173,21 @@ class Paziente(Persona):
         cursore.close()
         return id
     
-    def inserisci_glicemia(self, valore, farmaco, dose, sintomi=None ):
+    def inserisci_glicemia(self, valore, flag_pasto, sintomi=None ):
         cursore_8=connection.cursor()
         cursore_8.execute("""INSERT INTO Glicemia 
-                    (paziente, farmaco, dosaggio, sintomo, valore) 
-                    VALUES (%s, %s, %s, %s, %s)""", 
-                    (self.get_id_paziente(), farmaco, dose, sintomi, valore))
+                    (paziente, pasto, sintomo, valore) 
+                    VALUES (%s, %s, %s, %s)""", 
+                    (self.get_id_paziente(), flag_pasto, sintomi, valore))
+        connection.commit()
+        cursore_8.close()
+
+    def inserisci_assunzione_farmaco(self, farmaco, dosaggio):
+        cursore_8=connection.cursor()
+        cursore_8.execute("""INSERT INTO AssunzioniFarmaco 
+                    (paziente, farmaco, dosaggio) 
+                    VALUES (%s, %s, %s)""", 
+                    (self.get_id_paziente(), farmaco, dosaggio))
         connection.commit()
         cursore_8.close()
 
@@ -225,29 +235,14 @@ class Paziente(Persona):
         
         return id
     
-    def get_eventi_basso_glucosio(self,filtro_temporale):
-        cursore = connection.cursor()
-        
-        query_base="""SELECT valore, data_inserimento
-                    FROM Glicemia 
-                    WHERE paziente = %s AND valore < 60"""
-        parametri = [self.get_id_paziente()]
-        if filtro_temporale == "giornaliero":
-            query_base += " AND data_inserimento >= NOW()::date"
-        elif filtro_temporale == "settimanale":
-            query_base += " AND data_inserimento >= NOW() - INTERVAL '7 days'"
-        elif filtro_temporale == "mensile":
-            query_base += " AND data_inserimento >= NOW() - INTERVAL '1 month'"
-        elif filtro_temporale == "annuale":
-            query_base += " AND data_inserimento >= NOW() - INTERVAL '1 year'"
-        # se "tutto", nessun filtro aggiunto
-
-        query_base += " ORDER BY data_inserimento"
-        cursore.execute(query_base,parametri)
-        dati=cursore.fetchall()
-
+    
+    
+    def inserisci_segnalazione(self,tipo,descrizione,data_i,data_f=None):
+        cursore=connection.cursor()
+        id=current_user.get_id_paziente()
+        cursore.execute("INSERT INTO SegnalazioniPaziente (paziente,tipo_segnalazione,descrizione,data_inizio,data_fine) VALUES (%s,%s,%s,%s,%s)",(id,tipo,descrizione,data_i,data_f))
+        connection.commit()
         cursore.close()
-        return dati
     
 
 
@@ -383,6 +378,7 @@ class Diabetologo(Persona):
         cursore_15.execute("""SELECT i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                 FROM infopaziente i
                                 WHERE i.paziente=%s
+                                ORDER BY i.patologie_pregresse, i.fattori_rischio, i.comorbidita
                                """,(id_paz, ))
         info=cursore_15.fetchall()
         cursore_15.close()
@@ -1143,7 +1139,7 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     cursore = connection.cursor()
     if filtro_grafico == "andamento":
         query_base = """
-            SELECT valore, data_inserimento
+            SELECT valore, data_inserimento, sintomo
             FROM Glicemia
             WHERE paziente = %s
         """
@@ -1176,6 +1172,9 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     return dati
 
 #*************************************************************************************************************************
+
+def formatta_sintomo(s):
+    return f"Sintomi: {s}" if s else ""
 #grafico linea per l'andamento
 def visualizza_andamento_glicemia(dati):
 
@@ -1185,6 +1184,10 @@ def visualizza_andamento_glicemia(dati):
 
         valori = [r[0] for r in dati]
         date = [r[1] for r in dati]
+        sintomi= [r[2] for r in dati]
+        
+
+        sintomi_formattati = [formatta_sintomo(s) for s in sintomi]
 
         fig = go.Figure()
 
@@ -1197,7 +1200,8 @@ def visualizza_andamento_glicemia(dati):
             line=dict(color='blue', width=3),
             marker=dict(size=6),
             name='Glicemia',
-            hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<extra></extra>'
+            customdata=[[s] for s in sintomi_formattati],
+            hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<br>%{customdata[0]}<extra></extra>'
         ))
 
         # Linee soglia glicemica
@@ -1302,54 +1306,99 @@ def visualizza_media_glicemica_fasce_orarie(dati):
 
     return fig
 
+def get_eventi_basso_glucosio(id_paz):
+        cursore = connection.cursor()
+        
+        query_base="""SELECT valore, data_inserimento
+                    FROM Glicemia 
+                    WHERE paziente = %s AND valore < 60"""
+        parametri = [id_paz]
+        
+        query_base += " AND data_inserimento >= NOW() - INTERVAL '1 year'"
+        # se "tutto", nessun filtro aggiunto
 
+        query_base += " ORDER BY data_inserimento"
+        cursore.execute(query_base,parametri)
+        dati=cursore.fetchall()
 
+        cursore.close()
+        return dati
 
-def crea_grafico_eventi_basso_glucosio(dati):
-    # Converto i dati in DataFrame
+def crea_calendario_ipoglicemia_con_pallini(dati, anno, mese, soglia=70):
+    
+    # Creo DataFrame con colonne corrette
     df = pd.DataFrame(dati, columns=["valore", "data_inserimento"])
     df["data_inserimento"] = pd.to_datetime(df["data_inserimento"])
-    df["giorno"] = df["data_inserimento"].dt.date
+    df["giorno"] = df["data_inserimento"].dt.day
+    df["mese"] = df["data_inserimento"].dt.month
+    df["anno"] = df["data_inserimento"].dt.year
 
-    # Raggruppa per giorno
-    eventi = df.groupby("giorno").size().reset_index(name="frequenza")
-    eventi["settimana"] = pd.to_datetime(eventi["giorno"]).dt.isocalendar().week
-    eventi["anno"] = pd.to_datetime(eventi["giorno"]).dt.isocalendar().year
-    eventi["giorno_settimana"] = pd.to_datetime(eventi["giorno"]).dt.day_name()
+    # Seleziono solo eventi sotto soglia e nel mese/anno richiesti
+    eventi = df[(df["valore"] < soglia) & (df["mese"] == mese) & (df["anno"] == anno)]
 
-    # Ordinamento corretto dei giorni
-    giorni_ordine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    eventi["giorno_settimana"] = pd.Categorical(eventi["giorno_settimana"], categories=giorni_ordine, ordered=True)
+    giorni_evento = eventi["giorno"].tolist()
+    valori_evento = eventi["valore"].tolist()
 
-    # --- Completa tutti i giorni e settimane mancanti ---
-    settimane = eventi["settimana"].unique()
-    anni = eventi["anno"].unique()
-    idx = pd.MultiIndex.from_product([anni, settimane, giorni_ordine], names=["anno", "settimana", "giorno_settimana"])
-    eventi_full = eventi.set_index(["anno", "settimana", "giorno_settimana"]).reindex(idx, fill_value=0).reset_index()
+    cal = calendar.Calendar(firstweekday=0)
+    settimane = list(cal.monthdayscalendar(anno, mese))
 
-    # Plot heatmap
-    fig = px.density_heatmap(
-        eventi_full,
-        x="settimana",
-        y="giorno_settimana",
-        z="frequenza",
-        color_continuous_scale="Reds",
-        labels={"settimana": "Settimana", "giorno_settimana": "Giorno", "frequenza": "Eventi"},
+    fig = go.Figure()
+
+    giorni_settimana = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
+    # Etichette giorni
+    for i, giorno in enumerate(giorni_settimana):
+        fig.add_trace(go.Scatter(
+            x=[i], y=[0],
+            text=[giorno],
+            mode="text",
+            showlegend=False,
+            textfont=dict(size=14, color="black")
+        ))
+
+    # Pallini e numeri giorni
+    for settimana_idx, settimana in enumerate(settimane):
+        for giorno_idx, giorno in enumerate(settimana):
+            if giorno == 0:
+                continue
+            x = giorno_idx
+            y = -settimana_idx - 1
+
+            if giorno in giorni_evento:
+                # Prendo il valore glicemico per quel giorno
+                idx = giorni_evento.index(giorno)
+                valore = valori_evento[idx]
+                hover_text = f"Glucosio: {valore} mg/dL"
+                mode = "markers+text"
+                marker_color = "rgba(255,0,0,0.65)"
+                marker_size = 30
+            else:
+                hover_text = f"Giorno {giorno}"
+                mode = "text"
+                marker_color = "rgba(0,0,0,0)"
+                marker_size = 0
+
+            fig.add_trace(go.Scatter(
+                x=[x], y=[y],
+                text=[str(giorno)],
+                mode=mode,
+                marker=dict(
+                    color=marker_color,
+                    size=marker_size
+                ),
+                hoverinfo="text",
+                hovertext=hover_text,
+                textfont=dict(size=14),
+                showlegend=False
+            ))
+
+    fig.update_layout(
+        xaxis=dict(range=[-0.5, 6.5], showgrid=False, showticklabels=False),
+        yaxis=dict(visible=False),
+        height=350,
+        margin=dict(l=20, r=20, t=40, b=20),
+        plot_bgcolor="white"
     )
 
-    fig.update_layout(height=400,
-        yaxis_title="Giorno della settimana",
-        xaxis_title="Settimana dell'anno",
-        margin=dict(t=10, b=10, l=10, r=10),
-        legend=dict(
-                x=0.01, # posizione orizzontale
-                y=0.99, # posizione verticale
-                xanchor='left', # a sinistra
-                yanchor='top', # in alto
-                bgcolor='rgba(255,255,255,0.3)', # sfondo semi trasparente di colore bianco
-                borderwidth=0 # senza bordo
-        )
-    )
     return fig
 
 
