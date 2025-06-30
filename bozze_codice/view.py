@@ -23,7 +23,6 @@ def getLayout():
                 value=None,
                 style={"display": "none"}  # o visibile ma vuoto
             ),
-
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
@@ -1310,7 +1309,10 @@ doctor_patient = html.Div(
                             style={"height": "100%", "width": "100%"}
                         ),
                         html.Br(),
-                        filtro_temporale("")
+                        html.Div([
+                            html.Div(id="contenitore-filtro-temporale", children=filtro_temporale(""), style={"display": "none"}),
+                            html.Div(id="contenitore-filtro-calendario", children=filtro_calendario(), style={"display": "none"}),
+                        ]),
                     ],
                     style={"flex": 1},
                     className="card"

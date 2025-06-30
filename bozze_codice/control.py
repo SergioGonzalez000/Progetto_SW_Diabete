@@ -490,18 +490,33 @@ def registra_callbacks(app):
             return dash.no_update
         
 # ******************************************************************************************************************
+    @app.callback(
+        Output("contenitore-filtro-temporale", "style"),
+        Output("contenitore-filtro-calendario", "style"),
+        Input("dropdown-scelta-grafico", "value"),
+    )
+    def mostra_filtro_in_base_a_scelta(scelta):
+        if scelta == "basso":
+            return {"display": "none"}, {"display": "block"}
+        elif scelta in ["andamento", "medie"]:  # o qualsiasi altra logica
+            return {"display": "block"}, {"display": "none"}
+        else:
+            return {"display": "none"}, {"display": "none"}
+
     #callback che mostra i grafici del paziente al diabetologo con il dropdown
 
     @app.callback(
         Output("patient-graph", "children"),
         Input("url", "pathname"),
         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
-        Input("filtro-temporale", "value"),
         Input("dropdown-scelta-grafico","value"),
         State("selected-patient-id", "data"),
+        Input("filtro-temporale", "value"),
+        Input("selezione-mese", "value"),
+        Input("selezione-anno", "value"),
         prevent_initial_call=True
     )
-    def visualizza_andamento_glicemia(pathname, n_clicks, filtro, scelta, stored_id_paz):
+    def visualizza_andamento_glicemia(pathname, n_clicks, scelta, stored_id_paz, filtro, mese, anno):
         triggered_id = ctx.triggered_id
 
         if not triggered_id or not any(n_clicks):
@@ -519,18 +534,22 @@ def registra_callbacks(app):
         
         if id_paz and not scelta:
             return html.H5("Seleziona un grafico.", style={'color': 'gray', 'margin-top': '10px'})
-
-        dati = model.get_eventi_basso_glucosio(id_paz) if scelta=="basso" else model.get_dati_glicemia_filtrati(id_paz,filtro,scelta) 
-        oggi = date.today()
-        mese = oggi.month     # restituisce un intero, es. 6 per giugno
-        anno = oggi.year
+        if scelta == "basso":
+            if not mese or not anno:
+                return html.H5("Completa la selezione del mese e dell'anno.", style={'color': 'gray'})
+            dati = model.get_eventi_basso_glucosio(id_paz)
+        else:
+            if not filtro:
+                return html.H5("Seleziona un filtro temporale.", style={'color': 'gray'})
+            dati = model.get_dati_glicemia_filtrati(id_paz, filtro, scelta)
+        
         if pathname == "/doctor-patient" and scelta:
             # TRY CATHC per la costruzione del grafico
             try:
                 grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati) if scelta == "medie" else model.crea_calendario_ipoglicemia_con_pallini(dati, anno, mese)
                 return dcc.Graph(figure=grafico,  config={'responsive': True})
             except ValueError as e:
-                html.H5("Nessun dato glicemico inserito.", style={'color': 'gray'})
+                return html.H5("Nessun dato glicemico inserito.", style={'color': 'gray'})
         else:
             return dash.no_update
 

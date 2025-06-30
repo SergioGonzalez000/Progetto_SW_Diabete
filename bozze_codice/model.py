@@ -1324,7 +1324,7 @@ def get_eventi_basso_glucosio(id_paz):
         cursore.close()
         return dati
 
-def crea_calendario_ipoglicemia_con_pallini(dati, anno, mese, soglia=70):
+def crea_calendario_ipoglicemia_con_pallini(dati, anno, mese, soglia=60):
     
     # Creo DataFrame con colonne corrette
     df = pd.DataFrame(dati, columns=["valore", "data_inserimento"])
