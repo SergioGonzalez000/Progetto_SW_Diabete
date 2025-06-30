@@ -13,16 +13,17 @@ from plotly.subplots import make_subplots
 import pandas as pd
 import calendar
 from contextlib import contextmanager
+# Eseguito una sola volta all'avvio
+conn = psycopg2.connect(
+    host='aws-0-eu-central-2.pooler.supabase.com',
+    dbname='postgres',
+    user='postgres.dozqdfylbqeriitzoblm',
+    password='IOtRbsJmgylEH5Pl',
+    port='5432'
+)
 
 @contextmanager
 def get_cursor():
-    conn = psycopg2.connect(
-        host='aws-0-eu-central-2.pooler.supabase.com',
-        dbname='postgres',
-        user='postgres.dozqdfylbqeriitzoblm',
-        password='IOtRbsJmgylEH5Pl',
-        port='5432'
-    )
     cursore = conn.cursor()
     try:
         yield cursore
@@ -32,7 +33,7 @@ def get_cursor():
         raise
     finally:
         cursore.close()
-        conn.close()
+
 
 
 # connection = psycopg2.connect(
