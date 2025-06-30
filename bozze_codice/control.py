@@ -109,13 +109,15 @@ def registra_callbacks(app):
             
             if user=='P':
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,True,pw)
-                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
-                id_richiesta=model.cur.fetchone()
+                with model.get_cursor() as cursore:
+                    cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                    id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
             else:
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,False,pw)
-                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
-                id_richiesta=model.cur.fetchone()
+                with model.get_cursor() as cursore:
+                    cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                    id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
         else:
             return None,None,None,None
@@ -434,19 +436,19 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def mostra_dati_dashboard(pathname):
-        cur=model.connection.cursor()
         if pathname=="/doctor-dashboard":
             id=current_user.get_id_diabetologo()
             # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
             labels = ['Fuori dal limite','Alta','Normale']
-            cur.execute("""
-                SELECT AVG(g.valore)
-                FROM Paziente p
-                JOIN Glicemia g on p.id_paziente=g.paziente
-                WHERE p.diabetologo_associato=%s
-                GROUP BY id_paziente
-            """, (id,))
-            media_glicemie = cur.fetchall()
+            with model.get_cursor() as cursore:
+                cursore.execute("""
+                    SELECT AVG(g.valore)
+                    FROM Paziente p
+                    JOIN Glicemia g on p.id_paziente=g.paziente
+                    WHERE p.diabetologo_associato=%s
+                    GROUP BY id_paziente
+                """, (id,))
+                media_glicemie = cursore.fetchall()
 
             a = n = o = 0
             for media in media_glicemie:
@@ -965,10 +967,10 @@ def registra_callbacks(app):
         Input("input-indicazioni", "value"),
         #Input("conferma-elimina-terapia", "n_clicks"),
         State("selected-patient-id", "data"),
-        State("dropdown-terapia-selezionata", "data"),
+        State("dropdown-terapia-selezionata", "value"),
         prevent_initial_call=True
     )
-    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
+    def modifica_terapia(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
         #if trigger_id == "conferma-elimina-terapia" and conferma > 0:
@@ -1213,8 +1215,8 @@ def registra_callbacks(app):
         Input("invia-segnalazione-btn", "n_clicks"),
         State("tipo-segnalazione", "value"),
         State("descrizione-segnalazione", "value"),
-        State("data-inizio-segnalazione", "date"),
-        State("data-fine-segnalazione", "date"),
+        State("data-inizio-segnalazione", "value"),
+        State("data-fine-segnalazione", "value"),
         prevent_initial_call=True
     )
     def salva_segnalazione(n_clicks, tipo, descrizione, data_i, data_f):
