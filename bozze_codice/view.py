@@ -939,7 +939,7 @@ patient_graphs = html.Div(
                         ),
                         html.Div(id='third-graph', children=[]),
                         html.Br(),
-                        filtro_calendario()
+                        html.Div(filtro_calendario())
                     ]
                 ),
 

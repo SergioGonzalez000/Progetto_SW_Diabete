@@ -1167,7 +1167,7 @@ def registra_callbacks(app):
         Output('first-graph', 'children'),
         Output('second-graph', 'children'),
         Output('third-graph', 'children'),
-        Input("url","pathname"),
+        Input("url", "pathname"),
         Input('filtro-temporale1', 'value'),
         Input('filtro-temporale2', 'value'),
         Input("selezione-mese", "value"),
@@ -1175,21 +1175,35 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def aggiorna_grafici(path, filtro1, filtro2, mese, anno):
-        id_paz=current_user.get_id_paziente()
-        if not id_paz:
+        id_paz = current_user.get_id_paziente()
+        if not id_paz or path != "/grafici":
             raise dash.exceptions.PreventUpdate
-        if path=="/grafici":
-            dati1=model.get_dati_glicemia_filtrati(id_paz,filtro1,"andamento")
-            dati2=model.get_dati_glicemia_filtrati(id_paz,filtro2,"medie")
-            dati3=model.get_eventi_basso_glucosio(current_user.get_id_paziente())
-            # Funzioni che generano grafici
-            fig1 = model.visualizza_andamento_glicemia(dati1)
-            fig2 = model.visualizza_media_glicemica_fasce_orarie(dati2)
-            fig3 = model.crea_calendario_ipoglicemia_con_pallini(dati3, anno, mese)
 
-            return dcc.Graph(figure=fig1), dcc.Graph(figure=fig2), dcc.Graph(figure=fig3)
-        else:
-            return dash.no_update, dash.no_update, dash.no_update
+        grafico1, grafico2, grafico3 = None, None, None
+
+        try:
+            dati1 = model.get_dati_glicemia_filtrati(id_paz, filtro1, "andamento")
+            fig1 = model.visualizza_andamento_glicemia(dati1)
+            grafico1 = dcc.Graph(figure=fig1)
+        except ValueError as e:
+            grafico1 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        try:
+            dati2 = model.get_dati_glicemia_filtrati(id_paz, filtro2, "medie")
+            fig2 = model.visualizza_media_glicemica_fasce_orarie(dati2)
+            grafico2 = dcc.Graph(figure=fig2)
+        except ValueError as e:
+            grafico2 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        try:
+            dati3 = model.get_eventi_basso_glucosio(id_paz)
+            fig3 = model.crea_calendario_ipoglicemia_con_pallini(dati3, anno, mese)
+            grafico3 = dcc.Graph(figure=fig3)
+        except ValueError as e:
+            grafico3 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        return grafico1, grafico2, grafico3
+
 
     #callback del paziente che gli permette di inserire segnalazioni
     @app.callback(
