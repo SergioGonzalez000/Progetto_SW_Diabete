@@ -186,8 +186,8 @@ class Paziente(Persona):
     def get_id_paziente(self):
         with get_cursor() as cursore:
             cursore.execute("SELECT id_paziente FROM Paziente WHERE codice_fiscale = %s", (self.cf,))
-            res=cursore.fetchone()[0]
-        return res
+            res=cursore.fetchone()
+        return res[0] 
     
     def inserisci_glicemia(self, valore, flag_pasto, sintomi=None ):
         with get_cursor() as cursore:
@@ -206,7 +206,7 @@ class Paziente(Persona):
     def inserisci_segnalazione(self, tipo_segnalazione, descrizione, data_inizio, data_fine=None):
         if tipo_segnalazione not in ('sintomo', 'patologia', 'terapia'):
             raise ValueError("Tipo segnalazione non valido. Deve essere 'sintomo', 'patologia' o 'terapia'.")
-
+        print(tipo_segnalazione)
         with get_cursor() as cursore:
             query = """
                 INSERT INTO SegnalazioniPaziente (paziente, tipo_segnalazione, descrizione, data_inizio, data_fine)
@@ -237,7 +237,7 @@ class Paziente(Persona):
     
     def inserisci_segnalazione(self,tipo,descrizione,data_i,data_f=None):
         with get_cursor() as cursore:
-            id=current_user.get_id_paziente()
+            id=self.get_id_paziente()
             cursore.execute("INSERT INTO SegnalazioniPaziente (paziente,tipo_segnalazione,descrizione,data_inizio,data_fine) VALUES (%s,%s,%s,%s,%s)",(id,tipo,descrizione,data_i,data_f))
     
 
@@ -371,6 +371,12 @@ class Admin(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
+    def get_id_admin(self):
+        with get_cursor() as cursore:
+            cursore.execute("SELECT id_admin FROM Admin WHERE codice_fiscale = %s", (self.cf,))
+            res=cursore.fetchone()
+        return res[0]
+    
     def genera_username(id_richiesta):
         
         with get_cursor() as cursore:
@@ -701,6 +707,8 @@ def get_user_id():
         id = current_user.get_id_diabetologo()  
     elif isinstance(current_user, Paziente):
         id = current_user.get_id_paziente() # Ottieni il diabetologo
+    else:
+        id=current_user.get_id_admin()
     return id
 
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
@@ -1411,13 +1419,9 @@ def insert_messaggio(id_user, id_interlocutore, contenuto):
         #messaggio(id_diabetologo,id_paziente,contenuto,orario,d_is_mittente)
         #se è il diabetologo lo metto per primo
         if id_user == id_diabetologo:
-            cursore.execute("""
-                Insert into messaggio values (%s,%s,%s,current_timestamp,%s)
-            """,(id_user,id_interlocutore,contenuto,True))
+            cursore.execute("""Insert into messaggio values (%s,%s,%s,current_timestamp,%s)""",(id_user,id_interlocutore,contenuto,True))
         else: #id_interlocutore == id_diabetologo:
-            cursore.execute("""
-                Insert into messaggio values (%s,%s,%s,current_timestamp,%s)
-            """,(id_interlocutore,id_user,contenuto,False))
+            cursore.execute("""Insert into messaggio values (%s,%s,%s,current_timestamp,%s)""",(id_interlocutore,id_user,contenuto,False))
         
 
 #*************************************************************************************************************************
