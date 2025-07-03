@@ -811,7 +811,6 @@ def registra_callbacks(app):
             if not terapie:
                 return html.Div([  
                     html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom':'80px'}),
-
                     dbc.Button(
                         "Nuova Terapia",
                         id='aggiungi-terapia-btn',
@@ -880,7 +879,7 @@ def registra_callbacks(app):
     def mostra_terapia_selezionata(id_terapia, path, id_paz):
         # Se il parametro id_terapia è nullo (come ad esempio non'appena si seleziona un paziente):
         if id_terapia is None:
-            if path=="/doctor-dashboard":
+            if path=="/doctor-patient":
                 return html.Div(
                     dbc.Button(
                         "Nuova Terapia",
@@ -901,16 +900,6 @@ def registra_callbacks(app):
                         'height': '100%'
                     }
                 )
-            else:
-                return html.Div()
-
-        # lista_terapie = current_user.get_terapie_paziente(id_paz)
-        # # Costruzione della terapia: cerca la terapia
-        # # t[0] id terapia
-        # terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
-        # # Se non trova la terapia:
-        # if terapia is None:
-        #     return html.Div("Terapia non trovata.")
         
         elif path == "/patient-dashboard":
             if id_terapia is None:
@@ -965,20 +954,19 @@ def registra_callbacks(app):
         Input("input-data-inizio", "value"),
         Input("input-data-fine", "value"),
         Input("input-indicazioni", "value"),
-        #Input("conferma-elimina-terapia", "n_clicks"),
+        Input("conferma-elimina-terapia", "n_clicks"),
         State("selected-patient-id", "data"),
         State("dropdown-terapia-selezionata", "value"),
         prevent_initial_call=True
     )
-    def modifica_terapia(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
+    def modifica_terapia(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, conferma, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
-        #if trigger_id == "conferma-elimina-terapia" and conferma > 0:
+        if trigger_id == "conferma-elimina-terapia" and conferma > 0:
             # Azione di eliminazione terapia
-            #model.cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
-            #model.connection.commit()
-            #model.cur.close()
-            #return "Terapia eliminata correttamente", "success", True
+            with model.get_cursor() as cur:
+                cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
+            return "Terapia eliminata con successo!", "success", True
 
         if trigger_id == "btn-salva-modifiche-terapia":
             # Gestione modifica terapia
@@ -1016,8 +1004,6 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
-        # controllo del path
-        #
         if n_apri or n_chiudi:
             return not is_open
         return is_open
@@ -1163,7 +1149,6 @@ def registra_callbacks(app):
     #callback che inserisce i grafici al paziente
 
 #************************************************************************************************************************************
-
 
     @app.callback(
         Output('first-graph', 'children'),

@@ -134,8 +134,7 @@ sidebar = html.Div(
         "padding": "2rem 1rem",
         # colore sfondo:
         "backgroundColor" : "white",
-        "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-        "border": 'none',
+        "border": "2px solid #dee2e6",
         # Arrotonda gli angoli
         "border-radius": "15px",
         # Questo elemento diventa un contenitore "flessibile"
@@ -786,6 +785,7 @@ patient_dashboard = html.Div(
 # |___|___|
 # | 2 | 4 |
 # |___|___|
+
 def filtro_temporale(grafico_id):
     return dcc.RadioItems(
         id=f"filtro-temporale{grafico_id}",
@@ -801,6 +801,7 @@ def filtro_temporale(grafico_id):
         inputStyle={"margin-right": "5px"},
         style={"textAlign": "center"}
     )
+
 def filtro_calendario():
     return dbc.Row([
                             dbc.Col([
@@ -930,8 +931,7 @@ patient_graphs = html.Div(
                             ],
                             style={"display": "flex", "alignItems": "auto", "gap": "8px"}
                         ),
-                        html.Div(id='third-graph', children=[]),
-                        html.Br(),
+                        html.Div(id='third-graph'),
                         html.Div(filtro_calendario())
                     ]
                 ),
@@ -1772,9 +1772,9 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             # Div nome farmaco e dosaggio:
                             html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
                             # Dose giornaliera + Idicazioni
-                            html.P(f"{terapia[5]} volte al giorno {terapia[9]}"),
+                            html.P(f"{terapia[5]} volte al giorno {'' if terapia[9] is None else terapia[9]}"),
                             # Ultima modifica
-                            html.Small(f"Ultima modifica: {terapia[8]}", style={'text-align': 'center'})
+                            html.Small(f"Ultima modifica: {terapia[8].strftime("%d/%m/%Y")} - {terapia[8].strftime("%H:%M")}", style={'text-align': 'center'})
                         ],
                         style={
                             'flex': 1,
@@ -1839,6 +1839,18 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             dbc.Alert(id="modifica-terapia-output", is_open=False),
 
                             # Modal di eliminazione terapia:
+                            dbc.Modal([
+                                dbc.ModalHeader("Attenzione!", style={'color': 'gray', 'font-size': '20px'}),
+                                dbc.ModalBody("Eliminare la terapia è un'operazione irreversibile. Continuare?", style={'font-size': '18px'}),
+                                dbc.ModalFooter([
+                                    dbc.Button("No", id="declina-elimina-terapia", color="success", style={'border-radius': '25px', 'padding': '5px 15px'}),
+                                    dbc.Button("Sì", id="conferma-elimina-terapia", n_clicks=0,color="danger", style={'border-radius': '25px', 'padding': '5px 15px'})
+                                ])
+                            ],
+                                id="popup-elimina-terapia",
+                                centered=True,
+                                is_open=False
+                            )
                             
                         ],
                         style={
@@ -2745,7 +2757,7 @@ def crea_card_diabetologo(dati_diabetologo):
             # Numero pazienti associati
             html.Div([
                 html.H4("Pazienti associati:", style={'color': 'gray'}),
-                html.H2(model.get_numero_pazienti_associati_by_id(dati_diabetologo['id_diabetologo']))
+                html.H3(model.get_numero_pazienti_associati_by_id(dati_diabetologo['id_diabetologo']))
             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justify-content': 'center'})
         
         ], style={'display': 'flex', 'flexDirection': 'row'}),
@@ -3117,7 +3129,7 @@ def layout_lista_messaggi(messaggi):
         if giorno != data_precedente:
             #card che segna la data
             day_header = dbc.Card(
-                children = giorno,
+                children = giorno.strftime("%d-%m-%Y"),
                 style={
                     'maxHeight': 'fit-content',
                     'width': 'fit-content',
@@ -3252,7 +3264,6 @@ chat_content = html.Div(
                 "display": "flex",
                 # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
                 "flexDirection": "column",
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
                 "border": "2px solid #dee2e6",
                 # Arrotonda gli angoli
                 "border-radius": "15px",
