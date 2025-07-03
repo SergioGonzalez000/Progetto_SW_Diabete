@@ -733,6 +733,7 @@ def registra_callbacks(app):
         Output("modifica-info-output", "children"),
         Output("modifica-info-output", "color"),
         Output("modifica-info-output", "is_open"),
+        Output("interval-salva-info-paziente", "disabled",  allow_duplicate=True),
         Input("url", "pathname"),
         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         Input("salva-modifiche-btn", "n_clicks"),
@@ -750,19 +751,34 @@ def registra_callbacks(app):
         comorbidita = comorbidita or None
 
         if fattori is None and patologia is None and comorbidita is None and modifybtn > 0:
-            return "Informazioni mancanti", "danger", True
+            return "Informazioni mancanti", "danger", True, True
 
         if trigger_id != "salva-modifiche-btn":
             raise dash.exceptions.PreventUpdate
 
         if path == "/doctor-patient" and modifybtn > 0:
             if not any(n_clicks):
-                return "Seleziona un paziente!", "danger", True
+                return "Seleziona un paziente!", "danger", True, True
 
             current_user.modifica_info_paziente(id_paz, patologia, fattori, comorbidita)
-            return "Modifica avvenuta con successo", "success", True
+            return "Modifica avvenuta con successo", "success", True, False
         
-        return dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+
+    # callback di chiusura e aggiornamento dei dati appena modificati.
+    @app.callback(
+    Output("popup-modifica-info", "is_open", allow_duplicate=True),
+    Output("interval-salva-info-paziente", "disabled", allow_duplicate=True),
+    Input("interval-salva-info-paziente", "n_intervals"),
+    prevent_initial_call=True
+    )
+    def chiudi_modal_info_paziente(n_intervals):
+        if n_intervals == 0:
+            raise dash.exceptions.PreventUpdate
+
+        return False, True  # chiude il modal, disattiva interval
+    
 
     
 # ******************************************************************************************************************
@@ -1417,7 +1433,7 @@ def registra_callbacks(app):
 
     @app.callback(
     Output("modifica-paziente-alert", "is_open"),
-    Output("interval-update-card", "disabled", allow_duplicate=True),
+    Output("interval-update-card-paz", "disabled", allow_duplicate=True),
     Input("btn-salva-modifiche-paziente", "n_clicks"),
     Input("btn-annulla-modifiche-paziente", "n_clicks"),
     State("modifica-nome", "value"),
@@ -1458,12 +1474,12 @@ def registra_callbacks(app):
 
     @app.callback(
     Output("dettagli-paziente", "children",allow_duplicate=True),
-    Output("interval-update-card", "disabled", allow_duplicate=True),
-    Input("interval-update-card", "n_intervals"),
+    Output("interval-update-card-paz", "disabled", allow_duplicate=True),
+    Input("interval-update-card-paz", "n_intervals"),
     State("store-id-paziente", "data"),
     prevent_initial_call=True
     )
-    def aggiorna_card_dopo_delay(n_intervals, id_paziente):
+    def aggiorna_card_paziente_dopo_delay(n_intervals, id_paziente):
         if n_intervals == 0:
             raise dash.exceptions.PreventUpdate
 

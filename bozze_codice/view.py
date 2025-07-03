@@ -1643,11 +1643,15 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                             'background-color': '#f8f9fa', 
                             'border-radius': '15px', 
                             'padding': '5px',
-                            'margin-bottom': '10px'
+                            'margin-bottom': '10px',
                         }),
 
                         # Alert per gli inserimenti:
-                        dbc.Alert(id="modifica-info-output", is_open=False),
+                        dbc.Alert(id="modifica-info-output", is_open=False), 
+
+                        # se è stata salvata con successo la modifica ai dati paziente, fa aspettare 1.5 sec, dopodichè chiude da
+                        # solo il modal. 
+                        dcc.Interval(id="interval-salva-info-paziente", interval=1500, n_intervals=0, max_intervals=1, disabled=True),
                         
                     ])),
                     # Footer del modal:
@@ -2579,7 +2583,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                                 style={'background-color': 'green', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
                     ],
                     style={'display': 'flex', 'justify-content': 'flex-end', 'gap': '10px'}),
-                    dcc.Interval(id="interval-update-card", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
+                    dcc.Interval(id="interval-update-card-paz", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
                 ],
                 id="popup-modifica-dati-paziente",
                 centered=True,
@@ -2587,7 +2591,6 @@ def crea_card_paziente(dati_paziente, dati_diab):
                 size="lg"
             ),
 
-        
 
             # Footer con pulsanti
             html.Hr(),
