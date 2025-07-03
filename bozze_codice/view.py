@@ -16,14 +16,6 @@ def getLayout():
             #fil-serve per non far fallire una callback -> forse si può risolvere in un altro modo
             dcc.Store(id="selected-patient-id",data=None),
             dcc.Store(id="terapia-selezionata", data=None),
-            dcc.Dropdown(
-                id="dropdown-terapia-selezionata",
-                options=[{"label":"placeholder","value":"placeholder"}
-                         ],
-                value=None,
-                style={"display": "none"}  # o visibile ma vuoto
-            ),
-
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
@@ -747,7 +739,7 @@ patient_dashboard = html.Div(
                     style={"textAlign": "center"}
                 ),
                 dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0,style={'border': 'none', 'border-radius': '25px'}),
-                dbc.Alert(id="inserisci-glicemia-output",is_open=False),
+                dbc.Alert(id="inserisci-glicemia-output",is_open=False,duration=5000),
                 html.Hr(),
                 html.Div(
                     [
@@ -782,7 +774,7 @@ patient_dashboard = html.Div(
                 ),
                 dbc.Button("Inserisci assunzione", id="inserisci-assfarmaco-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
                 # Feedback
-                dbc.Alert(id="output-assunzione", is_open=False),                           
+                dbc.Alert(id="output-assunzione", is_open=False,duration=5000),                           
             ]
         )
     ]
@@ -940,7 +932,7 @@ patient_graphs = html.Div(
                         ),
                         html.Div(id='third-graph', children=[]),
                         html.Br(),
-                        filtro_calendario()
+                        html.Div(filtro_calendario())
                     ]
                 ),
 
@@ -999,7 +991,7 @@ patient_graphs = html.Div(
                             dbc.Button("Invia Segnalazione", id="invia-segnalazione-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
 
                             # Feedback
-                            dbc.Alert(id="output-segnalazione", is_open=False),
+                            dbc.Alert(id="output-segnalazione", is_open=False, duration=5000),
                         ],
                         style={'flex': 1, 'height': '100%', 'width': '100%'})
 
@@ -1310,7 +1302,10 @@ doctor_patient = html.Div(
                             style={"height": "100%", "width": "100%"}
                         ),
                         html.Br(),
-                        filtro_temporale("")
+                        html.Div([
+                            html.Div(id="contenitore-filtro-temporale", children=filtro_temporale(""), style={"display": "none"}),
+                            html.Div(id="contenitore-filtro-calendario", children=filtro_calendario(), style={"display": "none"}),
+                        ]),
                     ],
                     style={"flex": 1},
                     className="card"

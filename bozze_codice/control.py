@@ -109,13 +109,15 @@ def registra_callbacks(app):
             
             if user=='P':
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,True,pw)
-                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
-                id_richiesta=model.cur.fetchone()
+                with model.get_cursor() as cursore:
+                    cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                    id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
             else:
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,False,pw)
-                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
-                id_richiesta=model.cur.fetchone()
+                with model.get_cursor() as cursore:
+                    cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                    id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
         else:
             return None,None,None,None
@@ -434,19 +436,19 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def mostra_dati_dashboard(pathname):
-        cur=model.connection.cursor()
         if pathname=="/doctor-dashboard":
             id=current_user.get_id_diabetologo()
             # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
             labels = ['Fuori dal limite','Alta','Normale']
-            cur.execute("""
-                SELECT AVG(g.valore)
-                FROM Paziente p
-                JOIN Glicemia g on p.id_paziente=g.paziente
-                WHERE p.diabetologo_associato=%s
-                GROUP BY id_paziente
-            """, (id,))
-            media_glicemie = cur.fetchall()
+            with model.get_cursor() as cursore:
+                cursore.execute("""
+                    SELECT AVG(g.valore)
+                    FROM Paziente p
+                    JOIN Glicemia g on p.id_paziente=g.paziente
+                    WHERE p.diabetologo_associato=%s
+                    GROUP BY id_paziente
+                """, (id,))
+                media_glicemie = cursore.fetchall()
 
             a = n = o = 0
             for media in media_glicemie:
@@ -490,18 +492,33 @@ def registra_callbacks(app):
             return dash.no_update
         
 # ******************************************************************************************************************
+    @app.callback(
+        Output("contenitore-filtro-temporale", "style"),
+        Output("contenitore-filtro-calendario", "style"),
+        Input("dropdown-scelta-grafico", "value"),
+    )
+    def mostra_filtro_in_base_a_scelta(scelta):
+        if scelta == "basso":
+            return {"display": "none"}, {"display": "block"}
+        elif scelta in ["andamento", "medie"]:  # o qualsiasi altra logica
+            return {"display": "block"}, {"display": "none"}
+        else:
+            return {"display": "none"}, {"display": "none"}
+
     #callback che mostra i grafici del paziente al diabetologo con il dropdown
 
     @app.callback(
         Output("patient-graph", "children"),
         Input("url", "pathname"),
         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
-        Input("filtro-temporale", "value"),
         Input("dropdown-scelta-grafico","value"),
         State("selected-patient-id", "data"),
+        Input("filtro-temporale", "value"),
+        Input("selezione-mese", "value"),
+        Input("selezione-anno", "value"),
         prevent_initial_call=True
     )
-    def visualizza_andamento_glicemia(pathname, n_clicks, filtro, scelta, stored_id_paz):
+    def visualizza_andamento_glicemia(pathname, n_clicks, scelta, stored_id_paz, filtro, mese, anno):
         triggered_id = ctx.triggered_id
 
         if not triggered_id or not any(n_clicks):
@@ -519,18 +536,22 @@ def registra_callbacks(app):
         
         if id_paz and not scelta:
             return html.H5("Seleziona un grafico.", style={'color': 'gray', 'margin-top': '10px'})
-
-        dati = model.get_eventi_basso_glucosio(id_paz) if scelta=="basso" else model.get_dati_glicemia_filtrati(id_paz,filtro,scelta) 
-        oggi = date.today()
-        mese = oggi.month     # restituisce un intero, es. 6 per giugno
-        anno = oggi.year
+        if scelta == "basso":
+            if not mese or not anno:
+                return html.H5("Completa la selezione del mese e dell'anno.", style={'color': 'gray'})
+            dati = model.get_eventi_basso_glucosio(id_paz)
+        else:
+            if not filtro:
+                return html.H5("Seleziona un filtro temporale.", style={'color': 'gray'})
+            dati = model.get_dati_glicemia_filtrati(id_paz, filtro, scelta)
+        
         if pathname == "/doctor-patient" and scelta:
             # TRY CATHC per la costruzione del grafico
             try:
                 grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati) if scelta == "medie" else model.crea_calendario_ipoglicemia_con_pallini(dati, anno, mese)
                 return dcc.Graph(figure=grafico,  config={'responsive': True})
             except ValueError as e:
-                html.H5("Nessun dato glicemico inserito.", style={'color': 'gray'})
+                return html.H5("Nessun dato glicemico inserito.", style={'color': 'gray'})
         else:
             return dash.no_update
 
@@ -946,10 +967,10 @@ def registra_callbacks(app):
         Input("input-indicazioni", "value"),
         #Input("conferma-elimina-terapia", "n_clicks"),
         State("selected-patient-id", "data"),
-        State("dropdown-terapia-selezionata", "data"),
+        State("dropdown-terapia-selezionata", "value"),
         prevent_initial_call=True
     )
-    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
+    def modifica_terapia(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
         #if trigger_id == "conferma-elimina-terapia" and conferma > 0:
@@ -1148,7 +1169,7 @@ def registra_callbacks(app):
         Output('first-graph', 'children'),
         Output('second-graph', 'children'),
         Output('third-graph', 'children'),
-        Input("url","pathname"),
+        Input("url", "pathname"),
         Input('filtro-temporale1', 'value'),
         Input('filtro-temporale2', 'value'),
         Input("selezione-mese", "value"),
@@ -1156,21 +1177,35 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def aggiorna_grafici(path, filtro1, filtro2, mese, anno):
-        id_paz=current_user.get_id_paziente()
-        if not id_paz:
+        id_paz = current_user.get_id_paziente()
+        if not id_paz or path != "/grafici":
             raise dash.exceptions.PreventUpdate
-        if path=="/grafici":
-            dati1=model.get_dati_glicemia_filtrati(id_paz,filtro1,"andamento")
-            dati2=model.get_dati_glicemia_filtrati(id_paz,filtro2,"medie")
-            dati3=model.get_eventi_basso_glucosio(current_user.get_id_paziente())
-            # Funzioni che generano grafici
-            fig1 = model.visualizza_andamento_glicemia(dati1)
-            fig2 = model.visualizza_media_glicemica_fasce_orarie(dati2)
-            fig3 = model.crea_calendario_ipoglicemia_con_pallini(dati3, anno, mese)
 
-            return dcc.Graph(figure=fig1), dcc.Graph(figure=fig2), dcc.Graph(figure=fig3)
-        else:
-            return dash.no_update, dash.no_update, dash.no_update
+        grafico1, grafico2, grafico3 = None, None, None
+
+        try:
+            dati1 = model.get_dati_glicemia_filtrati(id_paz, filtro1, "andamento")
+            fig1 = model.visualizza_andamento_glicemia(dati1)
+            grafico1 = dcc.Graph(figure=fig1)
+        except ValueError as e:
+            grafico1 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        try:
+            dati2 = model.get_dati_glicemia_filtrati(id_paz, filtro2, "medie")
+            fig2 = model.visualizza_media_glicemica_fasce_orarie(dati2)
+            grafico2 = dcc.Graph(figure=fig2)
+        except ValueError as e:
+            grafico2 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        try:
+            dati3 = model.get_eventi_basso_glucosio(id_paz)
+            fig3 = model.crea_calendario_ipoglicemia_con_pallini(dati3, anno, mese)
+            grafico3 = dcc.Graph(figure=fig3)
+        except ValueError as e:
+            grafico3 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        return grafico1, grafico2, grafico3
+
 
     #callback del paziente che gli permette di inserire segnalazioni
     @app.callback(
@@ -1180,8 +1215,8 @@ def registra_callbacks(app):
         Input("invia-segnalazione-btn", "n_clicks"),
         State("tipo-segnalazione", "value"),
         State("descrizione-segnalazione", "value"),
-        State("data-inizio-segnalazione", "date"),
-        State("data-fine-segnalazione", "date"),
+        State("data-inizio-segnalazione", "value"),
+        State("data-fine-segnalazione", "value"),
         prevent_initial_call=True
     )
     def salva_segnalazione(n_clicks, tipo, descrizione, data_i, data_f):
