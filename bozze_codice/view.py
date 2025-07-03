@@ -2337,7 +2337,7 @@ def layout_lista_pazienti():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, id="contenitore-lista-pazienti", style={"overflowY": "auto", "height": "80vh"})  
+    return html.Div(lista_pulsanti, id="contenitore-lista-pazienti", style={"overflowY": "auto", 'height': '80vh'})  
 
 #*****************************************************************************************************
 
@@ -2641,7 +2641,7 @@ admin_patient = html.Div(
             html.H4("Pazienti:", style={'color': 'gray'}),
             html.Hr(),
             # Genera la lista dei pazienti
-            layout_lista_pazienti()
+            html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
         ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
         # Info dei pazienti:
         html.Div([
@@ -2654,60 +2654,6 @@ admin_patient = html.Div(
 )
 
 #************************************************************************************************************************************************************
-
-# funzione per il layout dell'elenco diabetologi
-def render_lista_diabetologi(diabetologi):
-    return html.Div(
-        className="card",
-        style={                 # CONTENITORE ESTERNO
-            "flex": 1,
-            "display": "flex",
-            "flexDirection": "column",
-            "border": "2px solid #dee2e6",
-            "borderRadius": "15px",
-            "padding": "10px",
-            "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-            "overflow": "hidden",           # nasconde scrollbar esterna
-            "maxHeight": "100vh",           
-        },
-        children=[
-            # titolo della lista dibetologi. Ho allineato il tutto con i precedenti titoli e con la linietta sotto "MyAPP"
-            html.H5("Lista Diabetologi", style={"color": "grey", "padding": "10px", "paddingBottom" :"8px"}),
-            html.Hr(style= {"margin-top": "2px", "width": "93.5%", "alignSelf": "center"}),
-            
-            html.Div(
-                style={         # CONTENUTO SCROLLABILE
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "padding": "5px",
-                    "paddingRight": "5px",   # spazio extra sulla destra per ospitale la scrollbar
-                    "overflowY": "auto",
-                    "boxSizing": "border-box",
-                    "maxHeight": "83vh",                        # IMPORTANTE: L'ALTEZZA DELLA LISTA DI BOTTONI PAZIENTE è DEFINITA QUI. QUESTO PARAMETRO è BUONO PER IL MIO PC (14 POLLICI)
-                },
-                children=[
-                    
-                    # bottoni che compongono l'elenco di diabetologi
-                    dbc.Button(
-                        f"{d['nome']} {d['cognome']}",
-                        id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
-                        color="light",
-                        style={
-                            "textAlign": "left",
-                            "marginBottom": "10px",
-                            "border": "1px solid #ccc",
-                            "borderRadius": "10px",
-                            "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                        },
-                        className="text-start"
-                    )
-                    for d in diabetologi
-                ]
-            )
-        ]
-    )
-
-
 # renderizza in modo corretto e uguale alla pagina dei pazienti, il layout.
 # Funzione che restituisce la lista dei pazienti per la pagina di ADMIN
 def layout_lista_diabetologi():
@@ -2733,7 +2679,7 @@ def layout_lista_diabetologi():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, id="contenitore-lista-diabetologi", style={"overflowY": "auto", "height": "80vh"})
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", "height": "80vh"})
 
 
 # funzione che crea la card dove vengono visualizzati i dettagli del diabetologo selezionato dalla lista
@@ -3101,7 +3047,8 @@ admin_doctor = html.Div(
             html.H4("Diabetologi:", style={'color': 'gray'}),
             html.Hr(),
             # Genera la lista dei diabetologi
-            layout_lista_diabetologi()
+            html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
+            
         ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
         # Info dei pazienti:
         html.Div([
