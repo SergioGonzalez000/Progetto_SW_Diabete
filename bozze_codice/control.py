@@ -1276,7 +1276,7 @@ def registra_callbacks(app):
 
     # callback dei pulsanti dentro il popup per confermare o meno la cancellazione di un paziente
     @app.callback(
-    Output("contenitore-lista-pazienti", "children"),
+    Output("lista-pazienti-admin", "children"),
     Output("pop-admin-delete-patient", "is_open"),
     Input("btn-delete-paz-confirm-YES", "n_clicks"),
     Input("btn-delete-paz-confirm-NO", "n_clicks"),
@@ -1293,7 +1293,7 @@ def registra_callbacks(app):
         # click sul pulsante "Sì"
         if n_clicks_yes:
                 model.Admin.elimina_paziente(id_paziente)                           # elimina dal DB
-                nuova_lista = view.render_lista_pazienti(model.get_all_pazienti())  # aggiorna la lista in modo da togliere l'eliminato. N.B. Manca togliere l'eliminato anche dalla card a destra!
+                nuova_lista = view.layout_lista_pazienti()  # aggiorna la lista in modo da togliere l'eliminato. N.B. Manca togliere l'eliminato anche dalla card a destra!
                 return nuova_lista, False
         
         return dash.no_update, False
@@ -1402,10 +1402,11 @@ def registra_callbacks(app):
             return False
         return is_open
 
-
+    # CALLBACK che modifica i dati di un paziente nella pagina Pazienti di admin
     @app.callback(
     Output("modifica-paziente-alert", "is_open"),
     Output("interval-update-card", "disabled", allow_duplicate=True),
+    Output("lista-pazienti-admin", "children", allow_duplicate=True), # Aggiorna la lista del paziente nel caso in cui sia stato modificato il nome
     Input("btn-salva-modifiche-paziente", "n_clicks"),
     Input("btn-annulla-modifiche-paziente", "n_clicks"),
     State("modifica-nome", "value"),
@@ -1437,10 +1438,10 @@ def registra_callbacks(app):
                 cap=cap
             )
 
-            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
+            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False, view.layout_lista_pazienti()
 
         except Exception as e:
-            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True, dash.no_update
 
     
 
@@ -1518,7 +1519,7 @@ def registra_callbacks(app):
 
 
     @app.callback(
-    Output("contenitore-lista-diabetologi", "children"),
+    Output("lista-diabetologi-admin", "children"),
     Output("pop-admin-delete-diab", "is_open"),
     Input("btn-delete-diab-confirm-YES", "n_clicks"),
     Input("btn-delete-diab-confirm-NO", "n_clicks"),
@@ -1534,7 +1535,7 @@ def registra_callbacks(app):
         # Click su "Sì"
         if n_clicks_yes:
             model.Admin.elimina_diabetologo(id_diabetologo)
-            nuova_lista = view.render_lista_diabetologi(model.get_all_diabetologi())
+            nuova_lista = view.layout_lista_diabetologi()
             return nuova_lista, False
 
         return dash.no_update, False
@@ -1588,6 +1589,7 @@ def registra_callbacks(app):
     @app.callback(
     Output("modifica-diabetologo-alert", "is_open"),
     Output("interval-update-diabetologo", "disabled"),
+    Output("lista-diabetologi-admin", "children", allow_duplicate=True),
     Input("btn-salva-modifiche-diabetologo", "n_clicks"),
     Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
     State("modifica-nome-diabetologo", "value"),
@@ -1622,10 +1624,10 @@ def registra_callbacks(app):
                 cap=cap
             )
 
-            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
+            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False, view.layout_lista_diabetologi()
 
         except Exception as e:
-            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True, dash.no_update
 
 
     @app.callback(
