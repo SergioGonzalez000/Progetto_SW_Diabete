@@ -1293,24 +1293,27 @@ def registra_callbacks(app):
     # callback di gestione del grafico, con il giusto id_paziente. è attivata dallo stesso pulsante di 
     # quella sopra (forse si posssono unire?)
     @app.callback(
-        Output("contenitore-popup-graf-paziente", "children"),
-        Input("btn-graf-paziente", "n_clicks"),
-        State("store-id-paziente", "data"),
-        prevent_initial_call= True
+    Output("contenitore-popup-graf-paziente", "children"),
+    Input("btn-graf-paziente", "n_clicks"),
+    Input("filtro-temporale", "value"),  # aggiunto filtro come input
+    State("store-id-paziente", "data"),
+    prevent_initial_call=True
     )
-    def aggiorna_grafico_paziente(n_clicks, id_paziente):
+    def aggiorna_grafico_con_filtro(n_clicks, filtro, id_paziente):
         if not n_clicks or id_paziente is None:
-            return "Seleziona un paziente e premi il bottone per vedere il grafico."
+            return "Seleziona un paziente"
 
-        # DA MODIFICARE IN MODO DA POTER ADOTTARE I FILTRI PER CUI LA FUNZIONE è PREDISPOSTA
+        if not filtro:
+            filtro = "tutto"  # default
 
-        # TRY CATCH PER IL GRAFICO:
         try:
-            fig = model.visualizza_andamento_glicemia(model.get_dati_glicemia_filtrati(id_paziente, "annuale", "andamento"))
+            dati = model.get_dati_glicemia_filtrati(id_paziente, filtro, "andamento")
+            fig = model.visualizza_andamento_glicemia(dati)
             return dcc.Graph(figure=fig, style={"borderRadius": "5px", "padding": "10px"})
-        except ValueError as e:
-            return dbc.Alert("Nessun dato glicemico disponibile per questo paziente.", color="danger", dismissable=False)
         
+        except ValueError:
+            return dbc.Alert("Nessun dato disponibile", color="danger")
+            
 
     # SECONDO PULSANTE ADMIN-PAZIENTE
     # "Rimuovi paziente". questa callback gestisce l'apertura e la chiusura del popup

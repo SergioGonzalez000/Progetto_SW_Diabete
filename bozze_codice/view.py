@@ -2445,7 +2445,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                             children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
                             style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
                         ),
-                        filtro_temporale(""),
+                        filtro_temporale("")
                         ], style={"padding": "2px", 'margin-bottom': '15px'}  
                     ),
                 ],
