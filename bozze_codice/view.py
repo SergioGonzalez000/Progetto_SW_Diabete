@@ -1265,6 +1265,28 @@ doctor_patient = html.Div(
                         )
                     ]
                 ),
+                
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader(dbc.ModalTitle(id="modal-title")),
+                        dbc.ModalBody([
+                            html.H4(id="modal-nome-eta"),
+                            html.H6(id="modal-codice-fiscale", style={'color': 'gray'}),
+                            dbc.Textarea(id="input-patologie", value="", style={"width": "100%", "height": "80px"}),
+                            dbc.Input(id="input-rischio", type="text", value=""),
+                            dbc.Input(id="input-comorb", type="text", value=""),
+                            dbc.Alert(id="modifica-info-output", is_open=False),
+                            dcc.Interval(id="interval-salva-info-paziente", interval=1500, n_intervals=0, max_intervals=1, disabled=True),
+                        ]),
+                        dbc.ModalFooter([
+                            dbc.Button("Annulla", id="close-modifica-infopaz", style={'background-color':'red'}),
+                            dbc.Button("Salva", id="salva-modifiche-btn", n_clicks=0, style={'background-color':'green'}),
+                        ]),
+                    ],
+                    id="modal-modifiche-btn",
+                    centered=True,
+                    is_open=False
+                ),
 
                 # Riga inferiore (Grafico)
                 html.Div(
