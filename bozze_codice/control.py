@@ -655,7 +655,7 @@ def registra_callbacks(app):
 # ******************************************************************************************************************
     
     @app.callback(
-        Output("patient-info", "children"),
+        Output("patient-info", "children",allow_duplicate=True),
         Input("url", "pathname"),
         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         prevent_initial_call=True
@@ -730,55 +730,81 @@ def registra_callbacks(app):
 #******************************************************************************************************************   
     #callback per modificare dati paziente
     @app.callback(
-        Output("modifica-info-output", "children"),
-        Output("modifica-info-output", "color"),
-        Output("modifica-info-output", "is_open"),
-        Output("interval-salva-info-paziente", "disabled",  allow_duplicate=True),
-        Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
-        Input("salva-modifiche-btn", "n_clicks"),
-        Input("input-rischio", "value"),
-        Input("input-patologie", "value"),
-        Input("input-comorb", "value"),
-        State("selected-patient-id", "data"),
-        prevent_initial_call=True
+    Output("modifica-info-output", "children"),
+    Output("modifica-info-output", "color"),
+    Output("modifica-info-output", "is_open"),
+    Output("interval-salva-info-paziente", "disabled", allow_duplicate=True),
+    Output("aggiorna-info-paziente", "data", allow_duplicate=True),
+    Input("url", "pathname"),
+    Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+    Input("salva-modifiche-btn", "n_clicks"),
+    Input("input-rischio", "value"),
+    Input("input-patologie", "value"),
+    Input("input-comorb", "value"),
+    State("selected-patient-id", "data"),
+    prevent_initial_call=True
     )
-    def modifica_info_paziente(path, n_clicks, modifybtn, fattori, patologia, comorbidita, id_paz):
+    def modifica_info_paziente_nel_diabetologo(path, n_clicks, modifybtn, fattori, patologia, comorbidita, id_paz):
         trigger_id = ctx.triggered_id
 
-        fattori = fattori or None
-        patologia = patologia or None
-        comorbidita = comorbidita or None
-
-        if fattori is None and patologia is None and comorbidita is None and modifybtn > 0:
-            return "Informazioni mancanti", "danger", True, True
+        # in caso i componenti non siano nel layout
+        fattori = fattori if fattori is not None else None
+        patologia = patologia if patologia is not None else None
+        comorbidita = comorbidita if comorbidita is not None else None
 
         if trigger_id != "salva-modifiche-btn":
             raise dash.exceptions.PreventUpdate
 
+        if fattori is None and patologia is None and comorbidita is None:
+            return "Informazioni mancanti", "danger", True, True, dash.no_update
+
         if path == "/doctor-patient" and modifybtn > 0:
             if not any(n_clicks):
-                return "Seleziona un paziente!", "danger", True, True
+                return "Seleziona un paziente!", "danger", True, True, dash.no_update
 
+            # salvataggio effettivo
             current_user.modifica_info_paziente(id_paz, patologia, fattori, comorbidita)
-            return "Modifica avvenuta con successo", "success", True, False
-        
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+            return "Modifica avvenuta con successo", "success", True, False, True
+
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+
 
 
     # callback di chiusura e aggiornamento dei dati appena modificati.
     @app.callback(
     Output("popup-modifica-info", "is_open", allow_duplicate=True),
     Output("interval-salva-info-paziente", "disabled", allow_duplicate=True),
+    Output("aggiorna-info-paziente", "data", allow_duplicate=True),
     Input("interval-salva-info-paziente", "n_intervals"),
     prevent_initial_call=True
     )
     def chiudi_modal_info_paziente(n_intervals):
         if n_intervals == 0:
             raise dash.exceptions.PreventUpdate
+        return False, True, False
 
-        return False, True  # chiude il modal, disattiva interval
-    
+    # callback che aggiorna il div delle informazioni dettagliate del paziente dopo la modifica.
+    @app.callback(
+    Output("patient-info", "children", allow_duplicate=True),
+    Input("interval-salva-info-paziente", "n_intervals"),
+    State("selected-patient-id", "data"),
+    State("url", "pathname"),
+    prevent_initial_call=True
+    )
+    def aggiorna_info_dopo_modifica(n_intervals, id_paz, path):
+        if n_intervals == 0:
+            raise dash.exceptions.PreventUpdate
+
+        if path != "/doctor-patient" or not id_paz:
+            raise dash.exceptions.PreventUpdate
+
+        dati = current_user.visualizza_dati_paziente(id_paz)
+        segnalazioni = current_user.get_segnalazioni_paziente(id_paz)
+        return view.crea_div_paziente(dati[0], dati[1], segnalazioni)
+
+
+        
 
     
 # ******************************************************************************************************************

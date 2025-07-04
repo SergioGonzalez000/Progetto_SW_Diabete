@@ -1309,7 +1309,9 @@ doctor_patient = html.Div(
                     ],
                     style={"flex": 1},
                     className="card"
-                )
+                ),
+
+                dcc.Store(id="aggiorna-info-paziente", data=False)
             ]
         )
     ]
