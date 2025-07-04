@@ -16,13 +16,6 @@ def getLayout():
             #fil-serve per non far fallire una callback -> forse si può risolvere in un altro modo
             dcc.Store(id="selected-patient-id",data=None),
             dcc.Store(id="terapia-selezionata", data=None),
-            dcc.Dropdown(
-                id="dropdown-terapia-selezionata",
-                options=[{"label":"placeholder","value":"placeholder"}
-                         ],
-                value=None,
-                style={"display": "none"}  # o visibile ma vuoto
-            ),
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
@@ -141,8 +134,7 @@ sidebar = html.Div(
         "padding": "2rem 1rem",
         # colore sfondo:
         "backgroundColor" : "white",
-        "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-        "border": 'none',
+        "border": "2px solid #dee2e6",
         # Arrotonda gli angoli
         "border-radius": "15px",
         # Questo elemento diventa un contenitore "flessibile"
@@ -746,7 +738,7 @@ patient_dashboard = html.Div(
                     style={"textAlign": "center"}
                 ),
                 dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0,style={'border': 'none', 'border-radius': '25px'}),
-                dbc.Alert(id="inserisci-glicemia-output",is_open=False),
+                dbc.Alert(id="inserisci-glicemia-output",is_open=False,duration=5000),
                 html.Hr(),
                 html.Div(
                     [
@@ -781,7 +773,7 @@ patient_dashboard = html.Div(
                 ),
                 dbc.Button("Inserisci assunzione", id="inserisci-assfarmaco-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
                 # Feedback
-                dbc.Alert(id="output-assunzione", is_open=False),                           
+                dbc.Alert(id="output-assunzione", is_open=False,duration=5000),                           
             ]
         )
     ]
@@ -793,6 +785,7 @@ patient_dashboard = html.Div(
 # |___|___|
 # | 2 | 4 |
 # |___|___|
+
 def filtro_temporale(grafico_id):
     return dcc.RadioItems(
         id=f"filtro-temporale{grafico_id}",
@@ -808,6 +801,7 @@ def filtro_temporale(grafico_id):
         inputStyle={"margin-right": "5px"},
         style={"textAlign": "center"}
     )
+
 def filtro_calendario():
     return dbc.Row([
                             dbc.Col([
@@ -937,9 +931,8 @@ patient_graphs = html.Div(
                             ],
                             style={"display": "flex", "alignItems": "auto", "gap": "8px"}
                         ),
-                        html.Div(id='third-graph', children=[]),
-                        html.Br(),
-                        filtro_calendario()
+                        html.Div(id='third-graph'),
+                        html.Div(filtro_calendario())
                     ]
                 ),
 
@@ -998,7 +991,7 @@ patient_graphs = html.Div(
                             dbc.Button("Invia Segnalazione", id="invia-segnalazione-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
 
                             # Feedback
-                            dbc.Alert(id="output-segnalazione", is_open=False),
+                            dbc.Alert(id="output-segnalazione", is_open=False, duration=5000),
                         ],
                         style={'flex': 1, 'height': '100%', 'width': '100%'})
 
@@ -1779,9 +1772,9 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             # Div nome farmaco e dosaggio:
                             html.H4(f"{terapia[3].upper()}, {terapia[4]}mg"),
                             # Dose giornaliera + Idicazioni
-                            html.P(f"{terapia[5]} volte al giorno {terapia[9]}"),
+                            html.P(f"{terapia[5]} volte al giorno {'' if terapia[9] is None else terapia[9]}"),
                             # Ultima modifica
-                            html.Small(f"Ultima modifica: {terapia[8]}", style={'text-align': 'center'})
+                            html.Small(f"Ultima modifica: {terapia[8].strftime("%d/%m/%Y")} - {terapia[8].strftime("%H:%M")}", style={'text-align': 'center'})
                         ],
                         style={
                             'flex': 1,
@@ -1846,6 +1839,18 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             dbc.Alert(id="modifica-terapia-output", is_open=False),
 
                             # Modal di eliminazione terapia:
+                            dbc.Modal([
+                                dbc.ModalHeader("Attenzione!", style={'color': 'gray', 'font-size': '20px'}),
+                                dbc.ModalBody("Eliminare la terapia è un'operazione irreversibile. Continuare?", style={'font-size': '18px'}),
+                                dbc.ModalFooter([
+                                    dbc.Button("No", id="declina-elimina-terapia", color="success", style={'border-radius': '25px', 'padding': '5px 15px'}),
+                                    dbc.Button("Sì", id="conferma-elimina-terapia", n_clicks=0,color="danger", style={'border-radius': '25px', 'padding': '5px 15px'})
+                                ])
+                            ],
+                                id="popup-elimina-terapia",
+                                centered=True,
+                                is_open=False
+                            )
                             
                         ],
                         style={
@@ -2332,7 +2337,7 @@ def layout_lista_pazienti():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, id="contenitore-lista-pazienti", style={"overflowY": "auto", "height": "80vh"})  
+    return html.Div(lista_pulsanti, id="contenitore-lista-pazienti", style={"overflowY": "auto", 'height': '80vh'})  
 
 #*****************************************************************************************************
 
@@ -2636,7 +2641,7 @@ admin_patient = html.Div(
             html.H4("Pazienti:", style={'color': 'gray'}),
             html.Hr(),
             # Genera la lista dei pazienti
-            layout_lista_pazienti()
+            html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
         ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
         # Info dei pazienti:
         html.Div([
@@ -2649,60 +2654,6 @@ admin_patient = html.Div(
 )
 
 #************************************************************************************************************************************************************
-
-# funzione per il layout dell'elenco diabetologi
-def render_lista_diabetologi(diabetologi):
-    return html.Div(
-        className="card",
-        style={                 # CONTENITORE ESTERNO
-            "flex": 1,
-            "display": "flex",
-            "flexDirection": "column",
-            "border": "2px solid #dee2e6",
-            "borderRadius": "15px",
-            "padding": "10px",
-            "boxShadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
-            "overflow": "hidden",           # nasconde scrollbar esterna
-            "maxHeight": "100vh",           
-        },
-        children=[
-            # titolo della lista dibetologi. Ho allineato il tutto con i precedenti titoli e con la linietta sotto "MyAPP"
-            html.H5("Lista Diabetologi", style={"color": "grey", "padding": "10px", "paddingBottom" :"8px"}),
-            html.Hr(style= {"margin-top": "2px", "width": "93.5%", "alignSelf": "center"}),
-            
-            html.Div(
-                style={         # CONTENUTO SCROLLABILE
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "padding": "5px",
-                    "paddingRight": "5px",   # spazio extra sulla destra per ospitale la scrollbar
-                    "overflowY": "auto",
-                    "boxSizing": "border-box",
-                    "maxHeight": "83vh",                        # IMPORTANTE: L'ALTEZZA DELLA LISTA DI BOTTONI PAZIENTE è DEFINITA QUI. QUESTO PARAMETRO è BUONO PER IL MIO PC (14 POLLICI)
-                },
-                children=[
-                    
-                    # bottoni che compongono l'elenco di diabetologi
-                    dbc.Button(
-                        f"{d['nome']} {d['cognome']}",
-                        id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
-                        color="light",
-                        style={
-                            "textAlign": "left",
-                            "marginBottom": "10px",
-                            "border": "1px solid #ccc",
-                            "borderRadius": "10px",
-                            "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                        },
-                        className="text-start"
-                    )
-                    for d in diabetologi
-                ]
-            )
-        ]
-    )
-
-
 # renderizza in modo corretto e uguale alla pagina dei pazienti, il layout.
 # Funzione che restituisce la lista dei pazienti per la pagina di ADMIN
 def layout_lista_diabetologi():
@@ -2728,7 +2679,7 @@ def layout_lista_diabetologi():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, id="contenitore-lista-diabetologi", style={"overflowY": "auto", "height": "80vh"})
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", "height": "80vh"})
 
 
 # funzione che crea la card dove vengono visualizzati i dettagli del diabetologo selezionato dalla lista
@@ -2752,7 +2703,7 @@ def crea_card_diabetologo(dati_diabetologo):
             # Numero pazienti associati
             html.Div([
                 html.H4("Pazienti associati:", style={'color': 'gray'}),
-                html.H2(model.get_numero_pazienti_associati_by_id(dati_diabetologo['id_diabetologo']))
+                html.H3(model.get_numero_pazienti_associati_by_id(dati_diabetologo['id_diabetologo']))
             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justify-content': 'center'})
         
         ], style={'display': 'flex', 'flexDirection': 'row'}),
@@ -3096,7 +3047,8 @@ admin_doctor = html.Div(
             html.H4("Diabetologi:", style={'color': 'gray'}),
             html.Hr(),
             # Genera la lista dei diabetologi
-            layout_lista_diabetologi()
+            html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
+            
         ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
         # Info dei pazienti:
         html.Div([
@@ -3124,7 +3076,7 @@ def layout_lista_messaggi(messaggi):
         if giorno != data_precedente:
             #card che segna la data
             day_header = dbc.Card(
-                children = giorno,
+                children = giorno.strftime("%d-%m-%Y"),
                 style={
                     'maxHeight': 'fit-content',
                     'width': 'fit-content',
@@ -3259,7 +3211,6 @@ chat_content = html.Div(
                 "display": "flex",
                 # definisce la direzione degli elementi in un contenitore di tipo flex : "column" = dall'alto verso il basso
                 "flexDirection": "column",
-                "box-shadow": "0 4px 8px rgba(0, 0, 255, 0.2)",
                 "border": "2px solid #dee2e6",
                 # Arrotonda gli angoli
                 "border-radius": "15px",

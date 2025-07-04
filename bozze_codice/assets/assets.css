@@ -3,7 +3,6 @@
     flex: 1;
     padding: 30px;
     background-color: rgb(255, 255, 255);
-    box-shadow: 0 4px 8px rgba(0, 0, 255, 0.2);
     border: 2px solid #dee2e6;
     border-radius: 15px;
     width: 100%;
@@ -14,7 +13,6 @@
 .form-card {
     padding: 30px;
     background-color: rgb(255, 255, 255);
-    box-shadow: 0 4px 8px rgba(0, 0, 255, 0.2);
     border: 2px solid #dee2e6;
     border-radius: 15px;
     width: 500px;

@@ -109,13 +109,15 @@ def registra_callbacks(app):
             
             if user=='P':
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,True,pw)
-                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
-                id_richiesta=model.cur.fetchone()
+                with model.get_cursor() as cursore:
+                    cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                    id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
             else:
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,False,pw)
-                model.cur.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
-                id_richiesta=model.cur.fetchone()
+                with model.get_cursor() as cursore:
+                    cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
+                    id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
         else:
             return None,None,None,None
@@ -434,19 +436,19 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def mostra_dati_dashboard(pathname):
-        cur=model.connection.cursor()
         if pathname=="/doctor-dashboard":
             id=current_user.get_id_diabetologo()
             # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
             labels = ['Fuori dal limite','Alta','Normale']
-            cur.execute("""
-                SELECT AVG(g.valore)
-                FROM Paziente p
-                JOIN Glicemia g on p.id_paziente=g.paziente
-                WHERE p.diabetologo_associato=%s
-                GROUP BY id_paziente
-            """, (id,))
-            media_glicemie = cur.fetchall()
+            with model.get_cursor() as cursore:
+                cursore.execute("""
+                    SELECT AVG(g.valore)
+                    FROM Paziente p
+                    JOIN Glicemia g on p.id_paziente=g.paziente
+                    WHERE p.diabetologo_associato=%s
+                    GROUP BY id_paziente
+                """, (id,))
+                media_glicemie = cursore.fetchall()
 
             a = n = o = 0
             for media in media_glicemie:
@@ -809,7 +811,6 @@ def registra_callbacks(app):
             if not terapie:
                 return html.Div([  
                     html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom':'80px'}),
-
                     dbc.Button(
                         "Nuova Terapia",
                         id='aggiungi-terapia-btn',
@@ -878,7 +879,7 @@ def registra_callbacks(app):
     def mostra_terapia_selezionata(id_terapia, path, id_paz):
         # Se il parametro id_terapia è nullo (come ad esempio non'appena si seleziona un paziente):
         if id_terapia is None:
-            if path=="/doctor-dashboard":
+            if path=="/doctor-patient":
                 return html.Div(
                     dbc.Button(
                         "Nuova Terapia",
@@ -899,16 +900,6 @@ def registra_callbacks(app):
                         'height': '100%'
                     }
                 )
-            else:
-                return html.Div()
-
-        # lista_terapie = current_user.get_terapie_paziente(id_paz)
-        # # Costruzione della terapia: cerca la terapia
-        # # t[0] id terapia
-        # terapia = next((t for t in lista_terapie if t[0] == id_terapia), None)
-        # # Se non trova la terapia:
-        # if terapia is None:
-        #     return html.Div("Terapia non trovata.")
         
         elif path == "/patient-dashboard":
             if id_terapia is None:
@@ -963,20 +954,19 @@ def registra_callbacks(app):
         Input("input-data-inizio", "value"),
         Input("input-data-fine", "value"),
         Input("input-indicazioni", "value"),
-        #Input("conferma-elimina-terapia", "n_clicks"),
+        Input("conferma-elimina-terapia", "n_clicks"),
         State("selected-patient-id", "data"),
-        State("dropdown-terapia-selezionata", "data"),
+        State("dropdown-terapia-selezionata", "value"),
         prevent_initial_call=True
     )
-    def modifica_terapia_paziente(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
+    def modifica_terapia(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, conferma, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
-        #if trigger_id == "conferma-elimina-terapia" and conferma > 0:
+        if trigger_id == "conferma-elimina-terapia" and conferma > 0:
             # Azione di eliminazione terapia
-            #model.cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
-            #model.connection.commit()
-            #model.cur.close()
-            #return "Terapia eliminata correttamente", "success", True
+            with model.get_cursor() as cur:
+                cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
+            return "Terapia eliminata con successo!", "success", True
 
         if trigger_id == "btn-salva-modifiche-terapia":
             # Gestione modifica terapia
@@ -1014,8 +1004,6 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
-        # controllo del path
-        #
         if n_apri or n_chiudi:
             return not is_open
         return is_open
@@ -1162,12 +1150,11 @@ def registra_callbacks(app):
 
 #************************************************************************************************************************************
 
-
     @app.callback(
         Output('first-graph', 'children'),
         Output('second-graph', 'children'),
         Output('third-graph', 'children'),
-        Input("url","pathname"),
+        Input("url", "pathname"),
         Input('filtro-temporale1', 'value'),
         Input('filtro-temporale2', 'value'),
         Input("selezione-mese", "value"),
@@ -1175,21 +1162,35 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def aggiorna_grafici(path, filtro1, filtro2, mese, anno):
-        id_paz=current_user.get_id_paziente()
-        if not id_paz:
+        id_paz = current_user.get_id_paziente()
+        if not id_paz or path != "/grafici":
             raise dash.exceptions.PreventUpdate
-        if path=="/grafici":
-            dati1=model.get_dati_glicemia_filtrati(id_paz,filtro1,"andamento")
-            dati2=model.get_dati_glicemia_filtrati(id_paz,filtro2,"medie")
-            dati3=model.get_eventi_basso_glucosio(current_user.get_id_paziente())
-            # Funzioni che generano grafici
-            fig1 = model.visualizza_andamento_glicemia(dati1)
-            fig2 = model.visualizza_media_glicemica_fasce_orarie(dati2)
-            fig3 = model.crea_calendario_ipoglicemia_con_pallini(dati3, anno, mese)
 
-            return dcc.Graph(figure=fig1), dcc.Graph(figure=fig2), dcc.Graph(figure=fig3)
-        else:
-            return dash.no_update, dash.no_update, dash.no_update
+        grafico1, grafico2, grafico3 = None, None, None
+
+        try:
+            dati1 = model.get_dati_glicemia_filtrati(id_paz, filtro1, "andamento")
+            fig1 = model.visualizza_andamento_glicemia(dati1)
+            grafico1 = dcc.Graph(figure=fig1)
+        except ValueError as e:
+            grafico1 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        try:
+            dati2 = model.get_dati_glicemia_filtrati(id_paz, filtro2, "medie")
+            fig2 = model.visualizza_media_glicemica_fasce_orarie(dati2)
+            grafico2 = dcc.Graph(figure=fig2)
+        except ValueError as e:
+            grafico2 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        try:
+            dati3 = model.get_eventi_basso_glucosio(id_paz)
+            fig3 = model.crea_calendario_ipoglicemia_con_pallini(dati3, anno, mese)
+            grafico3 = dcc.Graph(figure=fig3)
+        except ValueError as e:
+            grafico3 = html.H5(str(e), style={'color': 'gray', 'textAlign': 'center'})
+
+        return grafico1, grafico2, grafico3
+
 
     #callback del paziente che gli permette di inserire segnalazioni
     @app.callback(
@@ -1199,8 +1200,8 @@ def registra_callbacks(app):
         Input("invia-segnalazione-btn", "n_clicks"),
         State("tipo-segnalazione", "value"),
         State("descrizione-segnalazione", "value"),
-        State("data-inizio-segnalazione", "date"),
-        State("data-fine-segnalazione", "date"),
+        State("data-inizio-segnalazione", "value"),
+        State("data-fine-segnalazione", "value"),
         prevent_initial_call=True
     )
     def salva_segnalazione(n_clicks, tipo, descrizione, data_i, data_f):
@@ -1272,7 +1273,7 @@ def registra_callbacks(app):
 
     # callback dei pulsanti dentro il popup per confermare o meno la cancellazione di un paziente
     @app.callback(
-    Output("contenitore-lista-pazienti", "children"),
+    Output("lista-pazienti-admin", "children"),
     Output("pop-admin-delete-patient", "is_open"),
     Input("btn-delete-paz-confirm-YES", "n_clicks"),
     Input("btn-delete-paz-confirm-NO", "n_clicks"),
@@ -1289,7 +1290,7 @@ def registra_callbacks(app):
         # click sul pulsante "Sì"
         if n_clicks_yes:
                 model.Admin.elimina_paziente(id_paziente)                           # elimina dal DB
-                nuova_lista = view.render_lista_pazienti(model.get_all_pazienti())  # aggiorna la lista in modo da togliere l'eliminato. N.B. Manca togliere l'eliminato anche dalla card a destra!
+                nuova_lista = view.layout_lista_pazienti()  # aggiorna la lista in modo da togliere l'eliminato. N.B. Manca togliere l'eliminato anche dalla card a destra!
                 return nuova_lista, False
         
         return dash.no_update, False
@@ -1398,10 +1399,11 @@ def registra_callbacks(app):
             return False
         return is_open
 
-
+    # CALLBACK che modifica i dati di un paziente nella pagina Pazienti di admin
     @app.callback(
     Output("modifica-paziente-alert", "is_open"),
     Output("interval-update-card", "disabled", allow_duplicate=True),
+    Output("lista-pazienti-admin", "children", allow_duplicate=True), # Aggiorna la lista del paziente nel caso in cui sia stato modificato il nome
     Input("btn-salva-modifiche-paziente", "n_clicks"),
     Input("btn-annulla-modifiche-paziente", "n_clicks"),
     State("modifica-nome", "value"),
@@ -1433,10 +1435,10 @@ def registra_callbacks(app):
                 cap=cap
             )
 
-            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
+            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False, view.layout_lista_pazienti()
 
         except Exception as e:
-            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True, dash.no_update
 
     
 
@@ -1514,7 +1516,7 @@ def registra_callbacks(app):
 
 
     @app.callback(
-    Output("contenitore-lista-diabetologi", "children"),
+    Output("lista-diabetologi-admin", "children"),
     Output("pop-admin-delete-diab", "is_open"),
     Input("btn-delete-diab-confirm-YES", "n_clicks"),
     Input("btn-delete-diab-confirm-NO", "n_clicks"),
@@ -1530,7 +1532,7 @@ def registra_callbacks(app):
         # Click su "Sì"
         if n_clicks_yes:
             model.Admin.elimina_diabetologo(id_diabetologo)
-            nuova_lista = view.render_lista_diabetologi(model.get_all_diabetologi())
+            nuova_lista = view.layout_lista_diabetologi()
             return nuova_lista, False
 
         return dash.no_update, False
@@ -1584,6 +1586,7 @@ def registra_callbacks(app):
     @app.callback(
     Output("modifica-diabetologo-alert", "is_open"),
     Output("interval-update-diabetologo", "disabled"),
+    Output("lista-diabetologi-admin", "children", allow_duplicate=True),
     Input("btn-salva-modifiche-diabetologo", "n_clicks"),
     Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
     State("modifica-nome-diabetologo", "value"),
@@ -1618,10 +1621,10 @@ def registra_callbacks(app):
                 cap=cap
             )
 
-            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
+            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False, view.layout_lista_diabetologi()
 
         except Exception as e:
-            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True, dash.no_update
 
 
     @app.callback(
