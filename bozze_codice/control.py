@@ -1462,17 +1462,15 @@ def registra_callbacks(app):
     Output("interval-update-card-paz", "disabled", allow_duplicate=True),
     Input("btn-salva-modifiche-paziente", "n_clicks"),
     Input("btn-annulla-modifiche-paziente", "n_clicks"),
-    State("modifica-nome", "value"),
-    State("modifica-cognome", "value"),
-    State("modifica-data-nascita", "value"),
-    State("modifica-sesso", "value"),
     State("modifica-indirizzo", "value"),
     State("modifica-citta", "value"),
     State("modifica-cap", "value"),
+    State("modifica-email", "value"),
+    State("modifica-telefono", "value"),
     State("store-id-paziente", "data"),
     prevent_initial_call=True
     )
-    def modifica_dati_paziente(salva_clicks, annulla_clicks, nome, cognome, data_nascita, sesso, indirizzo, citta, cap, id_paziente):
+    def modifica_dati_paziente(salva_clicks, annulla_clicks, indirizzo, citta, cap, email, telefono, id_paziente):
         trigger_id = ctx.triggered_id
 
         if trigger_id == "btn-annulla-modifiche-paziente":
@@ -1482,13 +1480,11 @@ def registra_callbacks(app):
             # Esegui la modifica nel DB
             model.modifica_dati_paziente_db(
                 id_paziente=id_paziente,
-                nome=nome,
-                cognome=cognome,
-                data_nascita=data_nascita,
-                sesso=sesso,
                 indirizzo=indirizzo,
                 citta=citta,
-                cap=cap
+                cap=cap,
+                email=email,
+                telefono=telefono
             )
 
             return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
@@ -1644,8 +1640,6 @@ def registra_callbacks(app):
     Output("interval-update-diabetologo", "disabled"),
     Input("btn-salva-modifiche-diabetologo", "n_clicks"),
     Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
-    State("modifica-nome-diabetologo", "value"),
-    State("modifica-cognome-diabetologo", "value"),
     State("modifica-email-diabetologo", "value"),
     State("modifica-telefono-diabetologo", "value"),
     State("modifica-indirizzo-diabetologo", "value"),
@@ -1656,7 +1650,7 @@ def registra_callbacks(app):
     )
     def modifica_dati_diabetologo(
         salva_clicks, annulla_clicks,
-        nome, cognome, email, telefono, indirizzo, citta, cap,
+        email, telefono, indirizzo, citta, cap,
         id_diabetologo
     ):
         trigger_id = ctx.triggered_id
@@ -1667,8 +1661,6 @@ def registra_callbacks(app):
         try:
             model.modifica_dati_diabetologo_db(
                 id_diabetologo=id_diabetologo,
-                nome=nome,
-                cognome=cognome,
                 email=email,
                 telefono=telefono,
                 indirizzo=indirizzo,
@@ -1680,6 +1672,7 @@ def registra_callbacks(app):
 
         except Exception as e:
             return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+
 
 
     @app.callback(

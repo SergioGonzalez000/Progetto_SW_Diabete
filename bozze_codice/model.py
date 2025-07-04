@@ -1444,30 +1444,14 @@ def get_nomecognome(id):
     return nomecognome(nome = result[0], cognome = result[1])
 
 
+
 # funzione che permette la modifica dei dati del paziente nella db
-# funzione che permette la modifica dei dati del paziente nella db
-def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, data_nascita=None, 
-                               sesso=None, indirizzo=None, citta=None, cap=None):
-    """
-    Aggiorna solo i dati modificabili del paziente nel database.
-    I parametri sono opzionali: solo i campi forniti verranno aggiornati.
-    """
+def modifica_dati_paziente_db(id_paziente, indirizzo=None, citta=None, cap=None, email=None, telefono=None):
+ 
     updates = []
     params = []
 
     # Costruzione dinamica della query
-    if nome is not None:
-        updates.append("nome = %s")
-        params.append(nome)
-    if cognome is not None:
-        updates.append("cognome = %s")
-        params.append(cognome)
-    if data_nascita is not None:
-        updates.append("data_nascita = %s")
-        params.append(data_nascita)
-    if sesso is not None:
-        updates.append("sesso = %s")
-        params.append(sesso)
     if indirizzo is not None:
         updates.append("indirizzo = %s")
         params.append(indirizzo)
@@ -1477,6 +1461,12 @@ def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, data_nascita
     if cap is not None:
         updates.append("cap = %s")
         params.append(cap)
+    if email is not None:
+        updates.append("email = %s")
+        params.append(email)
+    if telefono is not None:
+        updates.append("telefono = %s")
+        params.append(telefono)
 
     if not updates:
         raise ValueError("Nessun dato da aggiornare")
@@ -1497,23 +1487,14 @@ def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, data_nascita
 
 
 
+
 # funzione che permette la modifica dei dati del diabetologo nella db
-def modifica_dati_diabetologo_db(id_diabetologo, nome=None, cognome=None, email=None,
-                                 telefono=None, indirizzo=None, citta=None, cap=None):
-    """
-    Aggiorna i dati del diabetologo nel database.
-    I parametri possono essere stringhe vuote o None. Solo i campi non vuoti saranno aggiornati.
-    """
+def modifica_dati_diabetologo_db(id_diabetologo, email=None, telefono=None,
+                                 indirizzo=None, citta=None, cap=None):
+
     updates = []
     params = []
 
-    # Usa solo i campi che non sono stringa vuota o None
-    if nome:
-        updates.append("nome = %s")
-        params.append(nome)
-    if cognome:
-        updates.append("cognome = %s")
-        params.append(cognome)
     if email:
         updates.append("email = %s")
         params.append(email)
@@ -1533,7 +1514,6 @@ def modifica_dati_diabetologo_db(id_diabetologo, nome=None, cognome=None, email=
     if not updates:
         raise ValueError("Nessun dato da aggiornare")
 
-    # ID diabetologo come ultimo parametro
     params.append(id_diabetologo)
 
     query = f"""
