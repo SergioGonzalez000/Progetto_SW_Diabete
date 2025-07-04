@@ -14,37 +14,39 @@ import pandas as pd
 import calendar
 from contextlib import contextmanager
 # Eseguito una sola volta all'avvio
-conn = psycopg2.connect(
-    host='aws-0-eu-central-2.pooler.supabase.com',
-    dbname='postgres',
-    user='postgres.dozqdfylbqeriitzoblm',
-    password='IOtRbsJmgylEH5Pl',
-    port='5432'
-)
 
-@contextmanager
-def get_cursor():
-    cursore = conn.cursor()
-    try:
-        yield cursore
-        conn.commit()
-    except:
-        conn.rollback()
-        raise
-    finally:
-        cursore.close()
+class DBSingleton:
+    _connection = None
+
+    @classmethod
+    @contextmanager
+    def get_cursor(cls):
+        if cls._connection is None or cls._connection.closed:
+            cls._connection = psycopg2.connect(
+                host='aws-0-eu-central-2.pooler.supabase.com',
+                dbname='postgres',
+                user='postgres.dozqdfylbqeriitzoblm',
+                password='IOtRbsJmgylEH5Pl',
+                port='5432'
+            )
+        
+        cursor = cls._connection.cursor()
+        try:
+            yield cursor
+            cls._connection.commit()
+        except:
+            cls._connection.rollback()
+            raise
+        finally:
+            cursor.close()
+
+    @classmethod
+    def close_connection(cls):
+        if cls._connection is not None:
+            cls._connection.close()
+            cls._connection = None
 
 
-
-# connection = psycopg2.connect(
-#     host='aws-0-eu-central-2.pooler.supabase.com',
-#     dbname='postgres',
-#     user='postgres.dozqdfylbqeriitzoblm',
-#     password='IOtRbsJmgylEH5Pl',
-#     port='5432'
-# )
-
-# cur=connection.cursor()
 
 # srj - Persona deve ereditare da UserMixin per permettere l'autenticazione con Flask
 #       Da aggiugnere altra roba
@@ -184,20 +186,20 @@ class Paziente(Persona):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
     
     def get_id_paziente(self):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("SELECT id_paziente FROM Paziente WHERE codice_fiscale = %s", (self.cf,))
             res=cursore.fetchone()
         return res[0] 
     
     def inserisci_glicemia(self, valore, flag_pasto, sintomi=None ):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO Glicemia 
                         (paziente, pasto, sintomo, valore) 
                         VALUES (%s, %s, %s, %s)""", 
                         (self.get_id_paziente(), flag_pasto, sintomi, valore))
 
     def inserisci_assunzione_farmaco(self, farmaco, dosaggio):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO AssunzioniFarmaco 
                         (paziente, farmaco, dosaggio) 
                         VALUES (%s, %s, %s)""", 
@@ -207,7 +209,7 @@ class Paziente(Persona):
         if tipo_segnalazione not in ('sintomo', 'patologia', 'terapia'):
             raise ValueError("Tipo segnalazione non valido. Deve essere 'sintomo', 'patologia' o 'terapia'.")
         print(tipo_segnalazione)
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             query = """
                 INSERT INTO SegnalazioniPaziente (paziente, tipo_segnalazione, descrizione, data_inizio, data_fine)
                 VALUES (%s, %s, %s, %s, %s)
@@ -215,7 +217,7 @@ class Paziente(Persona):
             cursore.execute(query, (self.get_id_paziente(), tipo_segnalazione, descrizione, data_inizio, data_fine))
 
     def get_diabetologo(self):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""
                 Select id_diabetologo, d.nome, d.cognome
                 from paziente p
@@ -236,7 +238,7 @@ class Paziente(Persona):
 
     
     def inserisci_segnalazione(self,tipo,descrizione,data_i,data_f=None):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             id=self.get_id_paziente()
             cursore.execute("INSERT INTO SegnalazioniPaziente (paziente,tipo_segnalazione,descrizione,data_inizio,data_fine) VALUES (%s,%s,%s,%s,%s)",(id,tipo,descrizione,data_i,data_f))
     
@@ -248,7 +250,7 @@ class Diabetologo(Persona):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
     def get_id_diabetologo(self):
-        with get_cursor() as cursore:        
+        with DBSingleton.get_cursor() as cursore:        
             cursore.execute("""SELECT id_diabetologo
                         FROM Diabetologo 
                         WHERE codice_fiscale = %s""", (self.cf,))
@@ -256,7 +258,7 @@ class Diabetologo(Persona):
         return id
     
     def inserisci_terapia(self,id_paz, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO Terapia 
                         (paziente, diabetologo, farmaco, dosaggio, assunzioni_gg, data_inizio, data_fine,indicazioni) 
                         VALUES (%s, %s, %s, %s, %s, %s, %s,%s)""", 
@@ -264,7 +266,7 @@ class Diabetologo(Persona):
     
     
     def modifica_terapia_paziente(self, id_paz,id_t, farmaco, dose, assunzioni_gg, data_inizio, data_fine, indicazioni=None):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""UPDATE Terapia 
                                 SET farmaco=%s, dosaggio=%s, assunzioni_gg=%s, data_inizio=%s, data_fine=%s, indicazioni=%s,data_ultima_modifica = CURRENT_DATE
                                 WHERE paziente=%s and diabetologo=%s AND id_terapia=%s""", 
@@ -272,7 +274,7 @@ class Diabetologo(Persona):
 
     
     def visualizza_n_c_pazienti_associati(self):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""
                 SELECT p.id_paziente, p.nome, p.cognome, COALESCE(AVG(g.valore), 0) AS media
                 FROM paziente p
@@ -303,7 +305,7 @@ class Diabetologo(Persona):
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def inserisci_info_paziente(self,id_paz, patologie=None, fattori=None, comorbidita=None):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO InfoPaziente 
                         (paziente, diabetologo, patologie_pregresse, fattori_rischio, comorbidita) 
                         VALUES (%s, %s, %s, %s, %s)""", 
@@ -313,14 +315,14 @@ class Diabetologo(Persona):
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def modifica_info_paziente(self,id_paz, patologie=None, fattori=None, comorbidita=None):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""UPDATE InfoPaziente 
                             SET fattori_rischio=%s, patologie_pregresse=%s, comorbidita=%s, data_ultima_modifica = CURRENT_DATE
                             WHERE paziente=%s and diabetologo=%s""", (fattori, patologie, comorbidita, id_paz, self.get_id_diabetologo()))
 
     # funzione che prende tutti i pazienti nella db
     def get_all_pazienti_associati(self):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s", (self.get_id_diabetologo(),))
             result = cursore.fetchall()
 
@@ -341,7 +343,7 @@ class Diabetologo(Persona):
     # insieme alle informazioni cliniche. 
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def visualizza_dati_paziente(self,id_paz):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita), nome
                             FROM Paziente
                             WHERE id_paziente=%s
@@ -356,7 +358,7 @@ class Diabetologo(Persona):
         return cfannonome,info 
 
     def get_segnalazioni_paziente(self,id_paziente):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""
                 SELECT sp.tipo_segnalazione, sp.descrizione, sp.data_inizio, sp.data_fine
                 FROM SegnalazioniPaziente sp
@@ -372,18 +374,19 @@ class Admin(Persona):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
 
     def get_id_admin(self):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("SELECT id_admin FROM Admin WHERE codice_fiscale = %s", (self.cf,))
             res=cursore.fetchone()
         return res[0]
     
     def genera_username(id_richiesta):
         
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
         
             cursore.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ",(id_richiesta,))
             richiesta = cursore.fetchone()
-            nome=richiesta[1]
+            n=richiesta[1]
+            nome=n.replace(" ","")
             cognome=richiesta[2]
             paziente=richiesta[11]
 
@@ -401,7 +404,7 @@ class Admin(Persona):
         return username
 
     def inserisci_paziente(p: Paziente):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO Paziente 
                         (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
                         VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
@@ -410,7 +413,7 @@ class Admin(Persona):
 
     def inserisci_diabetologo(d: Diabetologo):
         
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO Diabetologo 
                         (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
                         VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
@@ -420,7 +423,7 @@ class Admin(Persona):
     # potremmo permettere al paziente di selezionare quale sarà il suo
     # medico di riferimento.
     def associa_a_diabetologo(paziente):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute(""" SELECT d.id_diabetologo
                                 FROM diabetologo d
                                 LEFT JOIN paziente p ON d.id_diabetologo = p.diabetologo_associato
@@ -433,7 +436,7 @@ class Admin(Persona):
     
     def approva_richiesta(id_richiesta):
         
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
 
             cursore.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s ", (id_richiesta,))
             richiesta = cursore.fetchone()
@@ -454,7 +457,7 @@ class Admin(Persona):
             
 
     def approva_richiesta_cf(codice_fiscale):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
 
                 # Recupera la richiesta tramite codice fiscale
                 cursore.execute("SELECT * FROM RichiesteAccount WHERE codice_fiscale = %s", (codice_fiscale,))
@@ -486,7 +489,7 @@ class Admin(Persona):
 
     
     def rifiuta_richiesta_cf(codice_fiscale):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
 
             cursore.execute("SELECT * FROM RichiesteAccount WHERE codice_fiscale = %s", (codice_fiscale,))
             richiesta = cursore.fetchone()
@@ -506,7 +509,7 @@ class Admin(Persona):
     def rifiuta_richiesta(id_richiesta):
         """cambia lo stato della richiesta da << in_attesa >> a << rifiutata >>"""
 
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
         
             cursore.execute("SELECT * FROM RichiesteAccount WHERE id_richiesta = %s", (id_richiesta,))
             richiesta = cursore.fetchone()
@@ -524,14 +527,14 @@ class Admin(Persona):
     def elimina_paziente(id_paziente):
         """elimina un paziente dal DB dato il suo id_paziente"""
 
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("DELETE FROM Paziente WHERE id_paziente = %s", (id_paziente,))
 
     # funzione che elimina un diabetologo nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
     def elimina_diabetologo(id_diabetologo):
         """elimina un diabetologo dal DB dato il suo id_diabetologo"""
 
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
 
         
@@ -716,7 +719,7 @@ def get_user_id():
 def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password):
     
     # aggiunto cursore nuovo, per evitare errori di buffer
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
     
         cursore.execute("""INSERT INTO RichiesteAccount 
                         (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, paziente, password) 
@@ -731,7 +734,7 @@ def get_by_username(username_utente):
     '''se l'utente esiste ritorna un oggetto paziente/diabetologo/admin con i campi compilati, se non esiste, ritorna None '''
     
     # ho dovuto aggiungere questo cursore locale per evitare letture sporche e sovrapposizioni nelle query (dava errori strani)
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
 
         presente_in_paziente = False     # flag per controllare se l'utente è un paz/diab
         presente_in_diabetologo = False  # flag per controllare se l'utente è un diab
@@ -780,7 +783,7 @@ def get_by_username(username_utente):
 # funzione che ritorna tutte le richieste di creazione account con stato "in_attesa"
 def get_richieste_account_pazienti():
     
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
 
         cursore.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s", ("in_attesa", "TRUE",))
         result = cursore.fetchall()
@@ -798,7 +801,7 @@ def get_richieste_account_pazienti():
 # funzione che ritorna tutte le richieste di creazione account con stato "in_attesa"
 def get_richieste_account_diabetologi():
     
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
 
         cursore.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s", ("in_attesa", "FALSE",))
         result = cursore.fetchall()
@@ -817,7 +820,7 @@ def get_richieste_account_diabetologi():
 # viene triggerata dalla callback del dropdown.
 def get_dati_richiesta_account_by_id(id_richiesta):
     
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
 
         cursore.execute("""
             SELECT nome, cognome, data_nascita, sesso, codice_fiscale,
@@ -836,7 +839,7 @@ def get_dati_richiesta_account_by_id(id_richiesta):
 
 # funzione che prende i dettagli di un singolo paziente dato il suo id.
 def get_dettagli_paziente(id_paziente):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("""
             SELECT id_paziente, nome, cognome, data_nascita, sesso, codice_fiscale,
                 indirizzo, citta, cap, telefono, email, username, diabetologo_associato
@@ -853,7 +856,7 @@ def get_dettagli_paziente(id_paziente):
 
 # funzione che prende tutti i pazienti nella db, e ne ritorna i dati in un dict
 def get_all_pazienti():
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente")
         result = cursore.fetchall()
 
@@ -876,7 +879,7 @@ def get_all_pazienti():
 
 # funzione che dato l'id di un diabetologo, ritorna tutti i suoi dati (tranne pw)
 def get_dettagli_diabetologo(id_diabetologo):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("""
             SELECT id_diabetologo, nome, cognome, data_nascita, sesso, codice_fiscale,
                 indirizzo, citta, cap, telefono, email, username
@@ -906,7 +909,7 @@ def get_dettagli_diabetologo(id_diabetologo):
 
 # funzione che prende tutti i diabetologi nella db e li restituisce sotto forma di dict.
 def get_all_diabetologi():
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo")
         result = cursore.fetchall()
 
@@ -928,7 +931,7 @@ def get_all_diabetologi():
 # ***********************
 # funzione che ritorna il grafico delle media della glicemia dei pazienti di ogni diabetologo
 def visualizza_media_glicemia_per_diabetologi():
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         diabetologi = get_all_diabetologi()
         nomi = []
         medie = []
@@ -1008,7 +1011,7 @@ def visualizza_media_glicemia_per_diabetologi():
 # funzione che permette di prendere il grafico dei pazienti associati diun solo diabetologo
 def visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo):
     """Ritorna un grafico a istogramma contenente la media glicemica dei pazienti associati ad un diabetologo."""
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("SELECT * FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
         r = cursore.fetchone()
 
@@ -1042,7 +1045,7 @@ def visualizza_media_glicemia_pazienti_diabetologo(id_diabetologo):
 
 
 def visualizza_pazienti_associati_singolo_diab(id_diabetologo):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("""
             SELECT p.nome, p.cognome, p.username
             FROM paziente p
@@ -1062,7 +1065,7 @@ def visualizza_pazienti_associati_singolo_diab(id_diabetologo):
 
 
 def get_id_paziente_by_username(username):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         query = "SELECT id_paziente FROM paziente WHERE username = %s"
         cursore.execute(query, (username,))
         result = cursore.fetchone()
@@ -1075,7 +1078,7 @@ def get_id_paziente_by_username(username):
 #funzione per filtrare il periodo del grafico, 
 #filtro_temporale è fatto in modo da combaciare con i value del radio items
 def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         if filtro_grafico == "andamento":
             query_base = """
                 SELECT valore, data_inserimento, sintomo
@@ -1178,7 +1181,7 @@ def visualizza_andamento_glicemia(dati):
 #****************************************************************************************************************
 
 def get_terapie_paziente(id_diab, id_paz):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s",(id_paz,id_diab))
         result=cursore.fetchall()
     return result
@@ -1244,7 +1247,7 @@ def visualizza_media_glicemica_fasce_orarie(dati):
     return fig
 
 def get_eventi_basso_glucosio(id_paz):
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
         
             query_base="""SELECT valore, data_inserimento
                         FROM Glicemia 
@@ -1342,7 +1345,7 @@ def crea_calendario_ipoglicemia_con_pallini(dati, anno, mese, soglia=60):
 # Se la query fallisce lancia un'eccezione
 def get_info_base_paziente(id_diab, id_paz):
     try:
-        with get_cursor() as cursore:
+        with DBSingleton.get_cursor() as cursore:
             cursore.execute("""
                 SELECT 
                     username, 
@@ -1366,7 +1369,7 @@ def get_info_base_paziente(id_diab, id_paz):
 #*************************************************************************************************************************
 
 def get_info_base_diabetologo(id_diab):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("""SELECT d.username, d.nome, d.cognome, d.data_nascita, d.sesso, COUNT(*)
                                 FROM Diabetologo d
                                 JOIN Paziente p ON d.id_diabetologo=p.diabetologo_associato
@@ -1381,7 +1384,7 @@ def get_info_base_diabetologo(id_diab):
 def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
 
     Messaggio = namedtuple('Messaggio', ['contenuto', 'orario', 'giorno','d_is_mittente', 'user_is_diabetologo'])
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
     #query che restituisce i dati del messaggio capendo chi è il diabetologo e chi il paziente
         cursore.execute("""
             Select contenuto, orario, d_is_mittente, id_diabetologo
@@ -1405,7 +1408,7 @@ def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
 #funzione che inserisci i messaggi nella base di dati. 
 def insert_messaggio(id_user, id_interlocutore, contenuto):
 
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
 
     #check per capire i ruoli di user e interlocutore:
         cursore.execute("""
@@ -1428,7 +1431,7 @@ def insert_messaggio(id_user, id_interlocutore, contenuto):
 # Restituisce la tupla (nome, cognome) per il contatto della chat
 def get_nomecognome(id):
     nomecognome = namedtuple('nomecognome',['nome','cognome'])
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("""
             SELECT nome, cognome
             FROM diabetologo 
@@ -1490,7 +1493,7 @@ def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, data_nascita
     WHERE id_paziente = %s
     """
 
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute(query, params)
 
     return True
@@ -1542,7 +1545,7 @@ def modifica_dati_diabetologo_db(id_diabetologo, nome=None, cognome=None, email=
     WHERE id_diabetologo = %s
     """
 
-    with get_cursor() as cursor:
+    with DBSingleton.get_cursor() as cursor:
         cursor.execute(query, params)
     return True
 
@@ -1560,7 +1563,7 @@ def is_number(s):
     
 # Dato un id del diabetologo estrae il numero di pazienti associati
 def get_numero_pazienti_associati_by_id(id_diabetologo):
-    with get_cursor() as cursore:
+    with DBSingleton.get_cursor() as cursore:
         cursore.execute("""
             SELECT COUNT(*) 
             FROM Paziente 

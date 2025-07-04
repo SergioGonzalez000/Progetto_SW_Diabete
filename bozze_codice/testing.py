@@ -31,7 +31,7 @@ class TestPaziente(unittest.TestCase):
             telefono="0987654321", email="luca.bianchi@example.com", username="luca.bianchi", pw="securepass"
         )
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_get_id_paziente(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -44,7 +44,7 @@ class TestPaziente(unittest.TestCase):
             (self.paziente.cf,)
         )
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_inserisci_glicemia(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -53,7 +53,7 @@ class TestPaziente(unittest.TestCase):
         self.paziente.inserisci_glicemia(120, True, "nausea")
         mock_cursor.execute.assert_called_once()
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_inserisci_assunzione_farmaco(self, mock_get_cursor):
             mock_cursor = MagicMock()
             mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -62,7 +62,7 @@ class TestPaziente(unittest.TestCase):
             self.paziente.inserisci_assunzione_farmaco("Metformina", "500mg")
             mock_cursor.execute.assert_called_once()
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_inserisci_segnalazione_valida(self, mock_get_cursor):
             mock_cursor = MagicMock()
             mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -73,7 +73,7 @@ class TestPaziente(unittest.TestCase):
 
 
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_get_diabetologo(self, mock_get_cursor):
             mock_cursor = MagicMock()
             mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -93,7 +93,7 @@ class TestDiabetologo(unittest.TestCase):
                 telefono="1231231234", email="giovanni.verdi@example.com", username="giovanni.verdi", pw="medico123"
             )
 
-        @patch("model.get_cursor")
+        @patch("model.DBSingleton.get_cursor")
         def test_get_id_diabetologo(self, mock_get_cursor):
             mock_cursor = MagicMock()
             mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -102,7 +102,7 @@ class TestDiabetologo(unittest.TestCase):
             result = self.diabetologo.get_id_diabetologo()
             self.assertEqual(result, 99)
 
-        @patch("model.get_cursor")
+        @patch("model.DBSingleton.get_cursor")
         def test_inserisci_terapia(self, mock_get_cursor):
             mock_cursor = MagicMock()
             mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -120,7 +120,7 @@ class TestDiabetologo(unittest.TestCase):
 
             mock_cursor.execute.assert_called_once()
 
-        @patch("model.get_cursor")
+        @patch("model.DBSingleton.get_cursor")
         def test_modifica_terapia_paziente(self, mock_get_cursor):
             mock_cursor = MagicMock()
             mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -139,7 +139,7 @@ class TestDiabetologo(unittest.TestCase):
 
             mock_cursor.execute.assert_called_once()
 
-        @patch("model.get_cursor")
+        @patch("model.DBSingleton.get_cursor")
         def test_visualizza_n_c_pazienti_associati(self, mock_get_cursor):
             mock_cursor = MagicMock()
             mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -156,7 +156,7 @@ class TestDiabetologo(unittest.TestCase):
 
 class TestAdmin(unittest.TestCase):
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_genera_username_paziente(self, mock_get_cursor):
         # Simula richiesta paziente
         mock_cursor = MagicMock()
@@ -167,7 +167,7 @@ class TestAdmin(unittest.TestCase):
         username = model.Admin.genera_username(1)
         self.assertEqual(username, "Mario.Rossi1_P")
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_genera_username_diabetologo(self, mock_get_cursor):
         # Simula richiesta diabetologo
         mock_cursor = MagicMock()
@@ -178,7 +178,7 @@ class TestAdmin(unittest.TestCase):
         username = model.Admin.genera_username(1)
         self.assertEqual(username, "Luigi.Bianchi2_D")
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     @patch("model.PersonaFactory.crea_persona")
     def test_approva_richiesta_paziente(self, mock_crea_persona, mock_get_cursor):
         # Configura il mock del cursore
@@ -206,7 +206,7 @@ class TestAdmin(unittest.TestCase):
             "UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s ",
             ('approvata', 1)
         )
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_rifiuta_richiesta(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_cursor.fetchone.return_value = (1, "x", "x", "x")
@@ -216,7 +216,7 @@ class TestAdmin(unittest.TestCase):
         mock_cursor.execute.assert_called_with(
             "UPDATE RichiesteAccount SET stato_richiesta=%s WHERE id_richiesta = %s", ('rifiutata', 1))
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_rifiuta_richiesta_cf_not_found(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_cursor.fetchone.return_value = None
@@ -225,7 +225,7 @@ class TestAdmin(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.Admin.rifiuta_richiesta_cf("ABC123")
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_elimina_paziente(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -233,7 +233,7 @@ class TestAdmin(unittest.TestCase):
         model.Admin.elimina_paziente(42)
         mock_cursor.execute.assert_called_with("DELETE FROM Paziente WHERE id_paziente = %s", (42,))
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_elimina_diabetologo(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -241,7 +241,7 @@ class TestAdmin(unittest.TestCase):
         model.Admin.elimina_diabetologo(24)
         mock_cursor.execute.assert_called_with("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (24,))
 
-    @patch("model.get_cursor")
+    @patch("model.DBSingleton.get_cursor")
     def test_associa_a_diabetologo(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_cursor.fetchone.return_value = [3]
@@ -294,7 +294,7 @@ class TestPersonaFactory(unittest.TestCase):
 
 class TestUtilityFunctions(unittest.TestCase):
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     @patch('model.generate_password_hash')
     def test_inserisci_richiesta(self, mock_hash, mock_get_cursor):
         mock_cursor = MagicMock()
@@ -312,7 +312,7 @@ class TestUtilityFunctions(unittest.TestCase):
         call_args = mock_cursor.execute.call_args[0][0]
         self.assertIn("INSERT INTO RichiesteAccount", call_args)
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     @patch('model.PersonaFactory.crea_persona')
     def test_get_by_username(self, mock_crea_persona, mock_get_cursor):
         mock_cursor = MagicMock()
@@ -352,7 +352,7 @@ class TestUtilityFunctions(unittest.TestCase):
         result = model.get_by_username("non.esiste")
         self.assertIsNone(result)
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_richieste_account_pazienti(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -371,7 +371,7 @@ class TestUtilityFunctions(unittest.TestCase):
             ("in_attesa", "TRUE")
         )
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_richieste_account_diabetologi(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -394,7 +394,7 @@ class TestUtilityFunctions(unittest.TestCase):
 
 class TestDatabaseFunctions(unittest.TestCase):
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_dati_richiesta_account_by_id(self, mock_get_cursor):
         # Configura il mock
         mock_cursor = MagicMock()
@@ -418,7 +418,7 @@ class TestDatabaseFunctions(unittest.TestCase):
         self.assertEqual(result["stato_richiesta"], "approvata")
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_dettagli_paziente(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -437,7 +437,7 @@ class TestDatabaseFunctions(unittest.TestCase):
         self.assertEqual(result["diabetologo_associato"], 3)
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_all_pazienti(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -455,7 +455,7 @@ class TestDatabaseFunctions(unittest.TestCase):
         self.assertEqual(result[1]["email"], "luigi@example.com")
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_dettagli_diabetologo(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -473,7 +473,7 @@ class TestDatabaseFunctions(unittest.TestCase):
         self.assertEqual(result["username"], "giovanni.neri")
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_all_diabetologi(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -491,7 +491,7 @@ class TestDatabaseFunctions(unittest.TestCase):
         self.assertEqual(result[1]["codice_fiscale"], "BNCPLA80A01H501Y")
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     @patch('model.get_all_diabetologi')
     @patch('model.Diabetologo')
     def test_visualizza_media_glicemia_per_diabetologi(self, mock_diabetologo, mock_get_all_diabetologi, mock_get_cursor):
@@ -531,7 +531,7 @@ class TestDatabaseFunctions(unittest.TestCase):
         self.assertEqual(fig.data[0].x[0], "Giovanni Neri")
         self.assertEqual(fig.data[0].x[1], "Anna Rossi")
         
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     @patch('model.get_all_diabetologi')
     def test_visualizza_media_glicemia_senza_dati(self, mock_get_all_diabetologi, mock_get_cursor):
         # Configura mock senza dati
@@ -548,7 +548,7 @@ class TestDatabaseFunctions(unittest.TestCase):
 
 class TestAdditionalFunctions(unittest.TestCase):
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     @patch('model.Diabetologo')
     def test_visualizza_media_glicemia_pazienti_diabetologo(self, mock_diabetologo, mock_get_cursor):
         # Configura mock del database
@@ -577,7 +577,7 @@ class TestAdditionalFunctions(unittest.TestCase):
         self.assertEqual(fig.data[0].y[0], 120.5)
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_visualizza_pazienti_associati_singolo_diab(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -593,7 +593,7 @@ class TestAdditionalFunctions(unittest.TestCase):
         self.assertEqual(result[1]["username"], "luigi.bianchi")
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_id_paziente_by_username(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -603,7 +603,7 @@ class TestAdditionalFunctions(unittest.TestCase):
         self.assertEqual(result, 42)
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_dati_glicemia_filtrati(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -623,7 +623,7 @@ class TestAdditionalFunctions(unittest.TestCase):
         result = model.get_dati_glicemia_filtrati(1, "mensile", "media")
         self.assertEqual(len(result), 2)
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_terapie_paziente(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -672,7 +672,7 @@ class TestAdditionalFunctions(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.visualizza_media_glicemica_fasce_orarie([])
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_eventi_basso_glucosio(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -691,7 +691,7 @@ class TestAdditionalFunctions(unittest.TestCase):
 
 class TestRemainingFunctions(unittest.TestCase):
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_info_base_paziente(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -702,7 +702,7 @@ class TestRemainingFunctions(unittest.TestCase):
         self.assertEqual(result, test_data)
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_info_base_diabetologo(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -713,7 +713,7 @@ class TestRemainingFunctions(unittest.TestCase):
         self.assertEqual(result, test_data)
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_messaggi(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -729,7 +729,7 @@ class TestRemainingFunctions(unittest.TestCase):
         self.assertEqual(result[1].user_is_diabetologo, True)# mittente=diabetologo
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_insert_messaggio(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -750,7 +750,7 @@ class TestRemainingFunctions(unittest.TestCase):
             (1, 2, "Ciao dottore", False)
         )
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_nomecognome(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -762,7 +762,7 @@ class TestRemainingFunctions(unittest.TestCase):
         self.assertEqual(result.cognome, "Rossi")
         mock_cursor.execute.assert_called_once()
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_modifica_dati_paziente_db(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -782,7 +782,7 @@ class TestRemainingFunctions(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.modifica_dati_paziente_db(1)
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_modifica_dati_diabetologo_db(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
@@ -810,7 +810,7 @@ class TestRemainingFunctions(unittest.TestCase):
         self.assertFalse(model.is_number("abc"))
         self.assertFalse(model.is_number(None))
 
-    @patch('model.get_cursor')
+    @patch('model.DBSingleton.get_cursor')
     def test_get_numero_pazienti_associati_by_id(self, mock_get_cursor):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor

@@ -107,15 +107,18 @@ def registra_callbacks(app):
             if pw != conf_pw:
                 return "Password errata!", "danger", True, None
             
+            if len(cf) > 16 or len(nome) > 50 or len(cognome)>50 or len(indirizzo)>100 or len(citta)>50 or len(cap)>10 or len(tel)>20 or len(email)>100:
+                return "Uno o più campi errati!","danger", True, None
+            
             if user=='P':
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,True,pw)
-                with model.get_cursor() as cursore:
+                with model.DBSingleton.get_cursor() as cursore:
                     cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
                     id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
             else:
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,False,pw)
-                with model.get_cursor() as cursore:
+                with model.DBSingleton.get_cursor() as cursore:
                     cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
                     id_richiesta=cursore.fetchone()
                 return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
@@ -440,7 +443,7 @@ def registra_callbacks(app):
             id=current_user.get_id_diabetologo()
             # labels del grafico a torta che indica la % di pazienti con valori fuori dal limite, alti, normali
             labels = ['Fuori dal limite','Alta','Normale']
-            with model.get_cursor() as cursore:
+            with model.DBSingleton.get_cursor() as cursore:
                 cursore.execute("""
                     SELECT AVG(g.valore)
                     FROM Paziente p
@@ -964,7 +967,7 @@ def registra_callbacks(app):
 
         if trigger_id == "conferma-elimina-terapia" and conferma > 0:
             # Azione di eliminazione terapia
-            with model.get_cursor() as cur:
+            with model.DBSingleton.get_cursor() as cur:
                 cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
             return "Terapia eliminata con successo!", "success", True
 
