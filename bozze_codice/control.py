@@ -1434,14 +1434,12 @@ def registra_callbacks(app):
                 nome_contatto,
                 dash.no_update
             )
-        
-    # CALLBACK PER IL MODAL E PULSANTE CHE MODIFICA DATI PAZIENTE
-
         return dash.no_update, dash.no_update, dash.no_update
 
 
 #***************************************************************************************************************************************************
-
+    # CALLBACKs PER IL MODAL E PULSANTE CHE MODIFICA DATI PAZIENTE
+    # Apertura/chiusura del modal e reset alert
     @app.callback(
     Output("popup-modifica-dati-paziente", "is_open"),
     Output("interval-update-card-paz", "disabled", allow_duplicate=True),
@@ -1466,7 +1464,7 @@ def registra_callbacks(app):
         return is_open, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
 
-
+    # Chiusura modal dopo salvataggio modifiche paziente
     @app.callback(
     Output("popup-modifica-dati-paziente", "is_open", allow_duplicate=True),
     Output("interval-update-card-paz", "disabled", allow_duplicate=True),
@@ -1475,13 +1473,13 @@ def registra_callbacks(app):
     State("trigger-update-paziente", "data"),
     prevent_initial_call=True
     )
-    def chiudi_modal_dopo_salvataggio(n_intervals, trigger):
+    def chiudi_modal_dopo_salvataggio_paziente(n_intervals, trigger):
         if n_intervals == 0 or not trigger:
             raise dash.exceptions.PreventUpdate
         return False, True, False
 
 
-
+    # Salvataggio dati + gestione alert + trigger aggiornamento
     @app.callback(
     Output("modifica-paziente-alert", "children"),
     Output("modifica-paziente-alert", "color"),
@@ -1529,6 +1527,7 @@ def registra_callbacks(app):
             )
 
 
+    # Aggiorna scheda dopo salvataggio
     @app.callback(
     Output("dettagli-paziente", "children", allow_duplicate=True),
     Input("interval-update-card-paz", "n_intervals"),
@@ -1545,7 +1544,7 @@ def registra_callbacks(app):
         return view.crea_card_paziente(dati_paziente, dati_diabetologo)
 
 
-
+    # CALLBACKS p
 
     @app.callback(
     Output("pop-admin-grafico-diabetologo", "is_open"),
@@ -1553,7 +1552,7 @@ def registra_callbacks(app):
     State("pop-admin-grafico-diabetologo", "is_open")
     )
     def gestisci_popup_admin_graf_diabetologo(n_apri, is_open):
-        """Apertura e chiusura del popup dei grafici dei diabetologi."""
+        """apertura e chiusura del popup dei grafici dei diabetologi."""
         if n_apri is None:
             return is_open
         if n_apri:
@@ -1625,18 +1624,18 @@ def registra_callbacks(app):
         return dash.no_update, False
     
 
-
     @app.callback(
     Output("pop-admin-lista-pazienti-ass", "is_open"),
     Input("btn-lista-paz-assoc-diab", "n_clicks"),
     State("pop-admin-lista-pazienti-ass", "is_open"),
     prevent_initial_call=True
     )
-    def toggle_modal(n_clicks, is_open):
+    def toggle_modal_lista_paz_associati(n_clicks, is_open):
         if n_clicks:
             return not is_open
         return is_open
     
+
     @app.callback(
     Output("contenitore-popup-lista-paz-diabetologo", "children", allow_duplicate= True),
     Input("btn-lista-paz-assoc-diab", "n_clicks"),
@@ -1652,8 +1651,7 @@ def registra_callbacks(app):
         return view.genera_lista_pazienti_associati(lista_pazienti)
     
 
-    # CALLBACK PER IL MODAL E PULSANTE CHE MODIFICA DATI DIABETOLOGO
-    
+   # CALLBACK PER IL MODAL E PULSANTE CHE MODIFICA DATI DIABETOLOGO
    # Apertura/chiusura del modal e reset alert
     @app.callback(
         Output("popup-modifica-dati-diabetologo", "is_open"),
@@ -1728,7 +1726,7 @@ def registra_callbacks(app):
             )
 
 
-    # Chiusura modal dopo salvataggio
+    # Chiusura modal dopo salvataggio modifiche diabetologo
     @app.callback(
         Output("popup-modifica-dati-diabetologo", "is_open", allow_duplicate=True),
         Output("interval-update-diabetologo", "disabled", allow_duplicate=True),
@@ -1750,7 +1748,7 @@ def registra_callbacks(app):
         State("store-id-diabetologo", "data"),
         prevent_initial_call=True
     )
-    def aggiorna_card_diabetologo_dopo_delay(n_intervals, id_diabetologo):
+    def aggiorna_card_diabetologo(n_intervals, id_diabetologo):
         if n_intervals == 0:
             raise dash.exceptions.PreventUpdate
 
