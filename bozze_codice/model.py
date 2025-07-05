@@ -3,8 +3,8 @@ from collections import namedtuple
 import dash_bootstrap_components as dbc
 from abc import ABC,abstractmethod
 from werkzeug.security import generate_password_hash #password criptate
-
 import psycopg2
+from psycopg2 import sql
 from flask_login import UserMixin, login_user, logout_user, current_user 
 import dash
 import plotly.express as px
@@ -321,7 +321,7 @@ class Diabetologo(Persona):
     # funzione che prende tutti i pazienti nella db
     def get_all_pazienti_associati(self):
         with get_cursor() as cursore:
-            cursore.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s", (self.get_id_diabetologo(),))
+            cursore.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s ORDER BY cognome", (self.get_id_diabetologo(),))
             result = cursore.fetchall()
 
             # Conversione in lista di dizionari
@@ -1378,51 +1378,36 @@ def get_info_base_diabetologo(id_diab):
 
 #*************************************************************************************************************************
 # Restituisce la tupla (contenuto, orario, giorno, is_mittente, is_diabetologo) per i messaggi
-def get_messaggi(id_user, id_interlocutore): #current_user.get_id() e id_button
+def get_messaggi(id_paziente): #current_user.get_id() e id_button
 
-    Messaggio = namedtuple('Messaggio', ['contenuto', 'orario', 'giorno','d_is_mittente', 'user_is_diabetologo'])
+    Messaggio = namedtuple('Messaggio', ['contenuto', 'orario', 'giorno','is_mittente',"is_paziente"])
     with get_cursor() as cursore:
     #query che restituisce i dati del messaggio capendo chi è il diabetologo e chi il paziente
         cursore.execute("""
-            Select contenuto, orario, d_is_mittente, id_diabetologo
+            Select contenuto, orario, is_mittente
             from messaggio
-            where (id_diabetologo = %s and id_paziente = %s)
-            or (id_paziente = %s and id_diabetologo = %s)
+            where id_paziente = %s
             order by orario
-        """,(id_user,id_interlocutore,id_user,id_interlocutore))
+        """,(id_paziente,))
 
         result = cursore.fetchall()
+        if not result: return
     return  [
         Messaggio(
             contenuto = r[0],
             orario = r[1].time(),
             giorno = r[1].date(),
-            d_is_mittente = r[2], #flag che mi dice se l'ha scritto il diabetologo o no
-            user_is_diabetologo = (id_user == r[3])) #se l'user è diabetologo restituisce true, altrimenti false. serve per capire se caricare le colonne a sx o dx
+            is_mittente = r[2],
+            is_paziente = isinstance(current_user,Paziente)
+        )
         for r in result
     ]
 #*************************************************************************************************************************
 #funzione che inserisci i messaggi nella base di dati. 
-def insert_messaggio(id_user, id_interlocutore, contenuto):
-
-    with get_cursor() as cursore:
-
-    #check per capire i ruoli di user e interlocutore:
-        cursore.execute("""
-            Select id_diabetologo
-            from diabetologo
-            where id_diabetologo = %s
-        """,(id_user,))
-        if not cursore.fetchone():
-            id_diabetologo = id_interlocutore
-        else : id_diabetologo = id_user 
-        #messaggio(id_diabetologo,id_paziente,contenuto,orario,d_is_mittente)
-        #se è il diabetologo lo metto per primo
-        if id_user == id_diabetologo:
-            cursore.execute("""Insert into messaggio values (%s,%s,%s,current_timestamp,%s)""",(id_user,id_interlocutore,contenuto,True))
-        else: #id_interlocutore == id_diabetologo:
-            cursore.execute("""Insert into messaggio values (%s,%s,%s,current_timestamp,%s)""",(id_interlocutore,id_user,contenuto,False))
-        
+def insert_messaggio(id_paziente, contenuto, is_mittente):
+        with get_cursor() as cursore:
+            cursore.execute("""Insert into messaggio values (%s,current_timestamp,%s,%s)""",(id_paziente,is_mittente,contenuto))
+        return
 
 #*************************************************************************************************************************
 # Restituisce la tupla (nome, cognome) per il contatto della chat
@@ -1441,10 +1426,10 @@ def get_nomecognome(id):
             WHERE id_paziente = %s
         """,(id,id))
         result = cursore.fetchone()
+    if not result : return
     return nomecognome(nome = result[0], cognome = result[1])
+    
 
-
-# funzione che permette la modifica dei dati del paziente nella db
 # funzione che permette la modifica dei dati del paziente nella db
 def modifica_dati_paziente_db(id_paziente, nome=None, cognome=None, data_nascita=None, 
                                sesso=None, indirizzo=None, citta=None, cap=None):
@@ -1567,4 +1552,80 @@ def get_numero_pazienti_associati_by_id(id_diabetologo):
             WHERE diabetologo_associato = %s
         """, (id_diabetologo,))
         numero = cursore.fetchone()[0]
+
     return numero
+
+
+def check_glicemia(id_paziente,valore,pasto):
+    with get_cursor() as cursore:
+
+    #supponendo flag == True prima dei pasti
+        if (80 > valore < 130 and pasto == "pre"):
+            cursore.execute(
+                """Insert into alerts values(%s,current_timestamp,%s)""",(
+                id_paziente,
+                f"Glicemia pre-pasto {valore} fuori range  [80 - 130]")
+                )
+
+        elif (valore > 180 and not pasto == "post"):
+            cursore.execute(
+            """Insert into alerts values(%s,current_timestamp,%s)""",(
+                id_paziente,
+                f"Glicemia post-pasto {valore} fuori range  [80 - 180]")
+            )
+    return
+#************************************************************
+#metodo che verifica che il farmaco e il dosaggio siano coerenti con le terapie attive
+def check_farmaco(id_paziente,farmaco, dose):
+    id_diabetologo = get_diabetologo_associato(id_paziente)
+    with get_cursor() as cursore:
+    #query che restituisce le assunzioni di farmaci non coincidenti
+        cursore.execute("""
+            WITH terapie AS(
+                SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s
+            )
+            SELECT 
+                NOT EXISTS (SELECT 1 FROM terapie WHERE farmaco = %s) AS farmaco_mancante,
+                NOT EXISTS (SELECT 1 FROM terapie WHERE farmaco = %s AND dosaggio = %s) AS dose_errata
+        """,
+        (id_paziente, id_diabetologo, farmaco, farmaco, dose))
+
+        farmaco_mancante, dose_errata = cursore.fetchone()
+
+        if farmaco_mancante:
+            cursore.execute(
+                """Insert into alerts values(%s,current_timestamp,%s)""",(
+                id_paziente,
+                f"Il paziente ha assunto un farmaco non previsto dalle terapie correnti: {farmaco}")
+            )
+        if dose_errata and not farmaco_mancante:
+            cursore.execute(
+                """Insert into alerts values(%s,current_timestamp,%s)""",(
+                id_paziente,
+                f"Il paziente ha assunto un dosaggio non previsto dalle terapie correnti: {dose}")
+            )
+    return
+
+def get_alerts_paziente(id_paziente):
+    with get_cursor() as cursore:
+        Alerts = namedtuple("Alerts", ["orario", "contenuto"])
+        cursore.execute("""
+            SELECT orario, alert_case
+            FROM alerts 
+            where id_paziente = %s
+        """,(id_paziente,))
+        result = cursore.fetchmany(5)
+        if not result: return
+        return [
+            Alerts(
+                orario = r[0].time().strftime("%H:%M"),
+                contenuto = r[1]
+            )
+            for r in result
+        ]
+    
+def get_diabetologo_associato(id_paziente):
+    with get_cursor() as cursore:
+        cursore.execute("""Select p.diabetologo_associato from paziente p where p.id_paziente = %s""",(id_paziente,))
+        return cursore.fetchone()
+    
