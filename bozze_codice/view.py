@@ -3089,12 +3089,13 @@ def layout_lista_messaggi(messaggi):
     """Genera card messaggi allineate a sx/dx in base al mittente.
     
     Args:
-        messages: Lista di tuple (contenuto, orario,d_is_mittente, user_is_diabetologo). ci appendo i messaggi della query
+        messages: Lista di tuple (contenuto, orario,is_mittente). ci appendo i messaggi della query
     """
+    if not messaggi: return html.P("Non ci sono messaggi da visualizzare")
     message_cards = []
     data_precedente = None  #variabile per capire quando si cambia giorno
-    for contenuto, orario, giorno, d_is_mittente, user_is_diabetologo in messaggi:
-        is_sender = (user_is_diabetologo == d_is_mittente) #se l'utente è il diabetologo e il diabetologo è il mittente allora lo user è il mittente
+    for contenuto, orario, giorno, is_mittente, is_paziente in messaggi:
+        is_mittente = ( is_mittente == is_paziente ) #se l'user è il mittente ed è un paziente allora il mex va a destra.
         if giorno != data_precedente:
             #card che segna la data
             day_header = dbc.Card(
@@ -3121,11 +3122,11 @@ def layout_lista_messaggi(messaggi):
             'width': 'fit-content',  # Adatta la larghezza al testo
             'minHeight': 'auto',     # Altezza minima automatica
             'maxHeight': 'fit-content',
-            'marginLeft': 'auto' if is_sender else '0',
-            'marginRight': '0' if is_sender else 'auto',
+            'marginLeft': 'auto' if is_mittente else '0',
+            'marginRight': '0' if is_mittente else 'auto',
             'marginBottom': '10px',
             'padding': '8px 12px',
-            'backgroundColor': "#C6E9F9" if is_sender else '#f8f9fa',
+            'backgroundColor': "#C6E9F9" if is_mittente else '#f8f9fa',
             'border': 'none',
             'borderRadius': '25px',
             'wordBreak': 'break-word',  #Forza a capo per parole lunghe
@@ -3152,7 +3153,7 @@ def layout_lista_messaggi(messaggi):
         )
         message_cards.append(card)
     
-    return message_cards
+    return html.Div(message_cards, className = "messages-container")
 
 #************************************************************************************************************
 # GENERA LA LISTA DI PULSANTI DEI CONTATTI
@@ -3253,8 +3254,48 @@ chat_content = html.Div(
                         
                     },
                     children=[
-                        html.Div(id="nome-contatto", className="chat-header"),  # Aggiungi questo
-                        dcc.Store(id="id-contatto-store", storage_type="memory") #memorizza l'id del contatto
+                        html.Div(id="nome-contatto", className="chat-header",   style={
+                                        "float": "left",  # Allinea a sinistra
+                                        "margin-left": "0",
+                                        "align-self": "flex-start"  # Per flexbox
+                                    }),  # Aggiungi questo
+                        dcc.Store(id="id-contatto-store", storage_type="memory"), #memorizza l'id del contatto
+                        html.Div([
+                                # Bottone per aprire gli avvisi
+                                dbc.Button(
+                                    "Avvisi", 
+                                    id="open-alert-btn",
+                                    className = "btn-avvisi"
+                                ),
+                                
+                                # Modal con body vuoto inizialmente
+                                dbc.Modal(
+                                    [
+                                        dbc.ModalHeader("Avvisi: ", 
+                                                        style={
+                                                            'position': 'margin-left',
+                                                            'right': '15px',
+                                                            'bottom': '5px',
+                                                            'color': '#999',
+                                                            'fontSize': '1.2rem'
+                                                        }),
+                                        dbc.ModalBody(id="alert-body-content",
+                                                    style={
+                                                        "background-color":"#e6f2ff"    
+                                                    }
+                                                    ),  
+                                        dbc.ModalFooter(
+                                            dbc.Button("Chiudi", id="close-alert-btn")
+                                        )
+                                    ],
+                                    id="alert-modal",
+                                    is_open=False,
+                                    size="lg"
+                                ),
+                                
+                                # Store per mantenere i dati
+                                dcc.Store(id="alert-data-store")
+                            ]),
                     ]
                 ),
 
@@ -3281,7 +3322,7 @@ chat_content = html.Div(
                 ),
                 dcc.Interval(
                     id='interval-component',
-                    interval=2000,
+                    interval=10000,
                     n_intervals = 0
                 ),
                 # Contenitore dell'Input:
@@ -3315,3 +3356,46 @@ chat_content = html.Div(
         )
     ]
 )
+#DIV PER VISUALIZZARE LE ALERTS:
+
+def layout_lista_alerts(alerts):
+    if not alerts: 
+        return html.P("Il paziente sta seguendo correttamente la terapia.")
+    
+    alert_cards = []
+    for contenuto, orario in alerts:
+        card = dbc.Card(
+            dbc.CardBody([
+                html.H1(contenuto,
+                        className = "text-muted mt-1",
+                        style={
+                        'position': 'center',
+                        'right': '15px',
+                        'bottom': '5px',
+                        'color': '#999',
+                        'fontSize': '1.7rem'
+                    }),
+                html.Br(),
+                html.H1(
+                    orario,
+                    className="text-muted mt-1", 
+                    style={
+                        'position': 'center',
+                        'right': '15px',
+                        'bottom': '5px',
+                        'color': '#999',
+                        'fontSize': '1.2rem'
+                    }
+                )
+            ]),
+            style={  
+                'marginBottom': '100px',
+                'position': 'central'
+            }
+        )
+        alert_cards.append(card)
+    
+    return html.Div(alert_cards)
+
+
+

@@ -539,29 +539,24 @@ def registra_callbacks(app):
         
         if id_paz and not scelta:
             return html.H5("Seleziona un grafico.", style={'color': 'gray', 'margin-top': '10px'})
-        if scelta == "basso":
-            if not mese or not anno:
-                return html.H5("Completa la selezione del mese e dell'anno.", style={'color': 'gray'})
-            dati = model.get_eventi_basso_glucosio(id_paz)
-        else:
-            if not filtro:
-                return html.H5("Seleziona un filtro temporale.", style={'color': 'gray'})
-            dati = model.get_dati_glicemia_filtrati(id_paz, filtro, scelta)
-        
+
+        dati = model.get_eventi_basso_glucosio(id_paz) if scelta=="basso" else model.get_dati_glicemia_filtrati(id_paz,filtro,scelta) 
+        oggi = date.today()
+        mese = oggi.month     # restituisce un intero, es. 6 per giugno
+        anno = oggi.year
         if pathname == "/doctor-patient" and scelta:
             # TRY CATHC per la costruzione del grafico
             try:
                 grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati) if scelta == "medie" else model.crea_calendario_ipoglicemia_con_pallini(dati, anno, mese)
                 return dcc.Graph(figure=grafico,  config={'responsive': True})
             except ValueError as e:
-                return html.H5("Nessun dato glicemico inserito.", style={'color': 'gray'})
+                html.H5("Nessun dato glicemico inserito.", style={'color': 'gray'})
         else:
             return dash.no_update
 
             # grafico = model.visualizza_andamento_glicemia(dati) if scelta == "andamento" else model.visualizza_media_glicemica_fasce_orarie(dati) if scelta == "medie" else model.crea_calendario_ipoglicemia_con_pallini(dati, anno, mese)
             # return dcc.Graph(figure=grafico)
 
-        
 #*************************************************************************************************************************************
     # MOSTRA UN GRAFICO DI ANDAMENTO GIORNALIERO DELLA GLICEMIA NELLA DASHBOARD DEL PAZIENTE:
     @app.callback(
@@ -1138,6 +1133,8 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def aggiorna_cerchio(path, n_clicks,  sintomi, flag_pasto, valore, number, stile_corrente, trigger):
+
+       
         if path != "/patient-dashboard":
             return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
 
@@ -1147,6 +1144,7 @@ def registra_callbacks(app):
                 return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
         if n_clicks and valore:
             current_user.inserisci_glicemia(valore, sintomi, flag_pasto)
+            model.check_glicemia(model.get_user_id(),valore,flag_pasto) #notifica il medico se è troppo alta
             if valore < 80:
                 colore = "#FF4C4C"
             elif 80 <= valore <= 130:
@@ -1181,6 +1179,7 @@ def registra_callbacks(app):
         if path=="/patient-dashboard":
             if farmaco and dosaggio and n_clicks>0:
                 current_user.inserisci_assunzione_farmaco(farmaco,dosaggio)
+                model.check_farmaco(model.get_user_id(),farmaco, dosaggio)
                 return "Inserimento avvenuto correttamente", True, "success"
             elif (not farmaco or not dosaggio) and n_clicks>0:
                 n_clicks=n_clicks-1
@@ -1355,27 +1354,13 @@ def registra_callbacks(app):
             return view.layout_lista_contatti()
         else:
             return dash.no_update
-
-    # CALLBACK CHE PRENDE LA CHAT SELEZIONATA 
-    @app.callback(
-        Output("nome-contatto","data"),
-        Input({"type": "btn-contatto","index": dash.ALL},"n_clicks"),
-        prevent_initial_call=True
-    )
-    def seleziona_chat(n_clicks):
-        ctx = dash.callback_context
-        # Controllo se è stato premuto qualcosa
-        if not ctx.triggered: 
-            return dash.no_update
-        id_contatto = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])["index"]
-        return id_contatto
-
-    # CALLBACK CHE GENERA LA CHAT, IL NOME DEL CONTATTO
+   # CALLBACK CHE GENERA LA CHAT, IL NOME DEL CONTATTO
     @app.callback(
         [
             Output("chat-box", "children"),
             Output("nome-contatto", "children"),
-            Output("input-text", "value")
+            Output("input-text", "value"),
+            Output("nome-contatto", "data")
         ],
         [
             Input({"type": "btn-contatto", "index": dash.ALL}, "n_clicks"),  # Pulsante contatto
@@ -1388,42 +1373,73 @@ def registra_callbacks(app):
         ],
         prevent_initial_call=True
     )
-    def update_chat(btn_clicks, submit_count, n_intervals, messaggio, id_contatto):
-        triggered_id = ctx.triggered_id  # Capisce quale input ha attivato la callback
+    def update_chat(btn_clicks, n_submit, n_intervals, messaggio, id_contatto):
 
-        # Caso 1: Click su un contatto
-        if isinstance(triggered_id, dict) and triggered_id["type"] == "btn-contatto":
-            index = triggered_id["index"]
-            contatto = model.get_nomecognome(index)
-            nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
-            return (
-                view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), index)),
-                nome_contatto,
-                dash.no_update
-            )
-
+        
+        ctx = dash.callback_context
+        triggered_id = ctx.triggered_id
+        id_contatto = triggered_id['index'] if isinstance(ctx.triggered_id, dict) else id_contatto
+    
+        # Caso 1: Click su contatto (gestione JSON per ID complesso)
+        if isinstance(triggered_id,dict) and triggered_id.get("type") == "btn-contatto"and id_contatto:
+                contatto = model.get_nomecognome(id_contatto)
+                nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
+                if isinstance(current_user, model.Diabetologo):
+                    return (
+                    view.layout_lista_messaggi(model.get_messaggi(id_contatto)),
+                    nome_contatto,
+                    dash.no_update,
+                    id_contatto
+                )
+                else: 
+                    return (
+                        view.layout_lista_messaggi(model.get_messaggi(model.get_user_id())),
+                        nome_contatto,
+                        dash.no_update,
+                        id_contatto
+                    )
+        
         # Caso 2: INVIO premuto (submit messaggio)
-        elif triggered_id == "input-text" and messaggio and id_contatto is not None:
-            model.insert_messaggio(model.get_user_id(), id_contatto, messaggio)
-            contatto = model.get_nomecognome(id_contatto)
-            nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
-            return (
-                view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)),
-                nome_contatto,
-                ""
-            )
+        elif messaggio and id_contatto and n_submit:
+
+            if isinstance(current_user, model.Diabetologo):
+                model.insert_messaggio(id_contatto, messaggio, False)
+            else: model.insert_messaggio(model.get_user_id(), messaggio, True)
+
+            if isinstance(current_user, model.Diabetologo):
+                return (
+                    view.layout_lista_messaggi(model.get_messaggi(id_contatto)),
+                    dash.no_update,
+                    "",
+                    dash.no_update
+                )
+            else:
+                return (
+                    view.layout_lista_messaggi(model.get_messaggi(model.get_user_id())),
+                    dash.no_update,
+                    "",
+                    dash.no_update
+                )
 
         # Caso 3: aggiornamento automatico
         elif n_intervals and id_contatto:
-            contatto = model.get_nomecognome(id_contatto)
-            nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
-            return (
-                view.layout_lista_messaggi(model.get_messaggi(model.get_user_id(), id_contatto)),
-                nome_contatto,
+          
+            if isinstance(current_user, model.Diabetologo):
+                return (
+                view.layout_lista_messaggi(model.get_messaggi(id_contatto)),
+                dash.no_update,
+                dash.no_update,
                 dash.no_update
             )
-        return dash.no_update, dash.no_update, dash.no_update
-
+            else: 
+                return (
+                    view.layout_lista_messaggi(model.get_messaggi(model.get_user_id())),
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update
+                )
+            
+        else : return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
 #***************************************************************************************************************************************************
     # CALLBACKs PER IL MODAL E PULSANTE CHE MODIFICA DATI PAZIENTE
@@ -1756,3 +1772,33 @@ def registra_callbacks(app):
 
         dati_diabetologo = model.get_dettagli_diabetologo(id_diabetologo)
         return view.crea_card_diabetologo(dati_diabetologo), True
+    
+    @app.callback(
+    [Output("alert-modal", "is_open"),
+     Output("alert-body-content", "children"),
+     Output("alert-data-store", "data")],
+    [Input("open-alert-btn", "n_clicks"),
+     Input("close-alert-btn", "n_clicks")],
+    [State("alert-modal", "is_open"),
+     State("alert-data-store", "data"),
+     State("nome-contatto", "data")],
+    prevent_initial_call=True
+    )
+    def update_alert(open_clicks, close_clicks, is_open, stored_data, id_contatto):
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            raise dash.exceptions.PreventUpdate
+        button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        if button_id == "open-alert-btn" and not is_open and id_contatto:
+            # Caricamento dati solo quando si apre il modal
+            if(isinstance(current_user,model.Diabetologo)):
+                paziente = id_contatto
+            else: paziente = model.get_user_id()
+            data = model.get_alerts_paziente(paziente)
+            content = view.layout_lista_alerts(data)
+            
+            return True, content, data  # Apri, mostra contenuto, salva dati
+            
+        return False, dash.no_update, stored_data  # Chiudi modal
+        
+        

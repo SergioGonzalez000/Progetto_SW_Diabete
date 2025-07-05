@@ -72,3 +72,21 @@
     font-size: 50px;
     color: #555;
 }
+
+.btn-avvisi {
+    float: right;
+    margin-right: 0;
+    align-self: flex-start;
+    border-radius: 25px;
+    background-color: white;
+    color: red;
+    border: 2px solid red;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-avvisi:hover {
+    background-color: red;
+    color: white;
+    border-color: red;
+}

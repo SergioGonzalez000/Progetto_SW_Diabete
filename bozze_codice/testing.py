@@ -1,16 +1,10 @@
 import unittest
-from unittest.mock import Mock, PropertyMock, patch, MagicMock
-import model  # Sostituisci con il tuo nome file/module
-import unittest
 from unittest.mock import patch, MagicMock
-import model
-from datetime import datetime, date
-import plotly.graph_objects as go
-import pandas as pd
+from model import Persona, Paziente  # Sostituisci con il tuo nome file/module
 
 class TestPersona(unittest.TestCase):
     def setUp(self):
-        self.persona = model.Persona(
+        self.persona = Persona(
             nome="Mario", cognome="Rossi", data_nascita="1990-01-01", sesso="M",
             codice_fiscale="RSSMRA90A01H501U", indirizzo="Via Roma 1", citta="Roma", cap="00100",
             telefono="1234567890", email="mario.rossi@example.com", username="mario.rossi", password="password123"
@@ -25,7 +19,7 @@ class TestPersona(unittest.TestCase):
 
 class TestPaziente(unittest.TestCase):
     def setUp(self):
-        self.paziente = model.Paziente(
+        self.paziente = Paziente(
             nome="Luca", cognome="Bianchi", data_nascita="1985-05-20", sesso="M",
             codice_fiscale="BNCLCU85E20H501Y", indirizzo="Via Milano 10", citta="Milano", cap="20100",
             telefono="0987654321", email="luca.bianchi@example.com", username="luca.bianchi", pw="securepass"
