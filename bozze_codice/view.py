@@ -2659,6 +2659,7 @@ admin_patient = html.Div(
         html.Div([
             html.H4("Informazioni:", style={'color': 'gray'}),
             html.Hr(),
+            dcc.Store(id="trigger-update-paziente", data=False),
             # Genera la card di informazioni
             html.Div(id="dettagli-paziente")
         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   

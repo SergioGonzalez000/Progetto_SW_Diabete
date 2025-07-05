@@ -1444,27 +1444,51 @@ def registra_callbacks(app):
 
     @app.callback(
     Output("popup-modifica-dati-paziente", "is_open"),
-    [Input("btn-modifica-dati-paz", "n_clicks"),
-     Input("btn-annulla-modifiche-paziente", "n_clicks")],  
-    [State("popup-modifica-dati-paziente", "is_open")],
+    Output("interval-update-card-paz", "disabled", allow_duplicate=True),
+    Output("trigger-update-paziente", "data", allow_duplicate=True),
+    Output("modifica-paziente-alert", "children", allow_duplicate=True),
+    Output("modifica-paziente-alert", "color", allow_duplicate=True),
+    Output("modifica-paziente-alert", "is_open", allow_duplicate=True),
+    Input("btn-modifica-dati-paz", "n_clicks"),
+    Input("btn-annulla-modifiche-paziente", "n_clicks"),
+    State("popup-modifica-dati-paziente", "is_open"),
     prevent_initial_call=True
     )
     def toggle_popup_modifica_paziente(apri, annulla, is_open):
-        
-        # apre modal se click sul "Modifica Dati Paziente"
-        if ctx.triggered_id == "btn-modifica-dati-paz":
-            return True
-        # chiude il modal
-        elif ctx.triggered_id == "btn-annulla-modifiche-paziente":
-            return False
-        return is_open
+        trigger_id = ctx.triggered_id
+
+        if trigger_id == "btn-modifica-dati-paz":
+            # Apre il modal e resetta l’alert
+            return True, True, False, "", "primary", False
+        elif trigger_id == "btn-annulla-modifiche-paziente":
+            # Chiude il modal e resetta l’alert
+            return False, True, False, "", "primary", False
+        return is_open, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
 
 
     @app.callback(
+    Output("popup-modifica-dati-paziente", "is_open", allow_duplicate=True),
+    Output("interval-update-card-paz", "disabled", allow_duplicate=True),
+    Output("trigger-update-paziente", "data", allow_duplicate=True),
+    Input("interval-update-card-paz", "n_intervals"),
+    State("trigger-update-paziente", "data"),
+    prevent_initial_call=True
+    )
+    def chiudi_modal_dopo_salvataggio(n_intervals, trigger):
+        if n_intervals == 0 or not trigger:
+            raise dash.exceptions.PreventUpdate
+        return False, True, False
+
+
+
+    @app.callback(
+    Output("modifica-paziente-alert", "children"),
+    Output("modifica-paziente-alert", "color"),
     Output("modifica-paziente-alert", "is_open"),
     Output("interval-update-card-paz", "disabled", allow_duplicate=True),
+    Output("trigger-update-paziente", "data", allow_duplicate=True),
     Input("btn-salva-modifiche-paziente", "n_clicks"),
-    Input("btn-annulla-modifiche-paziente", "n_clicks"),
     State("modifica-indirizzo", "value"),
     State("modifica-citta", "value"),
     State("modifica-cap", "value"),
@@ -1473,14 +1497,13 @@ def registra_callbacks(app):
     State("store-id-paziente", "data"),
     prevent_initial_call=True
     )
-    def modifica_dati_paziente(salva_clicks, annulla_clicks, indirizzo, citta, cap, email, telefono, id_paziente):
+    def modifica_dati_paziente(salva_clicks, indirizzo, citta, cap, email, telefono, id_paziente):
         trigger_id = ctx.triggered_id
 
-        if trigger_id == "btn-annulla-modifiche-paziente":
+        if trigger_id != "btn-salva-modifiche-paziente":
             raise dash.exceptions.PreventUpdate
 
         try:
-            # Esegui la modifica nel DB
             model.modifica_dati_paziente_db(
                 id_paziente=id_paziente,
                 indirizzo=indirizzo,
@@ -1489,29 +1512,38 @@ def registra_callbacks(app):
                 email=email,
                 telefono=telefono
             )
-
-            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
-
+            return (
+                "Dati aggiornati con successo",
+                "success",
+                True,
+                False,  # Disabilita interval
+                True    # Triggera aggiornamento
+            )
         except Exception as e:
-            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+            return (
+                f"Errore durante l'aggiornamento: {str(e)}",
+                "danger",
+                True,
+                True,   # Non disabilitare interval (non parte)
+                dash.no_update
+            )
 
-    
 
     @app.callback(
-    Output("dettagli-paziente", "children",allow_duplicate=True),
-    Output("interval-update-card-paz", "disabled", allow_duplicate=True),
+    Output("dettagli-paziente", "children", allow_duplicate=True),
     Input("interval-update-card-paz", "n_intervals"),
     State("store-id-paziente", "data"),
     prevent_initial_call=True
     )
-    def aggiorna_card_paziente_dopo_delay(n_intervals, id_paziente):
+    def aggiorna_card_paziente(n_intervals, id_paziente):
         if n_intervals == 0:
             raise dash.exceptions.PreventUpdate
 
         dati_paziente = model.get_dettagli_paziente(id_paziente)
         dati_diabetologo = model.get_dettagli_diabetologo(dati_paziente.get("diabetologo_associato"))
         
-        return view.crea_card_paziente(dati_paziente, dati_diabetologo), True
+        return view.crea_card_paziente(dati_paziente, dati_diabetologo)
+
 
 
 
