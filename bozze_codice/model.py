@@ -1,15 +1,10 @@
 # gestione Database remoto, gestione altra roba logica
 from collections import namedtuple
-import dash_bootstrap_components as dbc
-from abc import ABC,abstractmethod
 from werkzeug.security import generate_password_hash #password criptate
 
 import psycopg2
-from flask_login import UserMixin, login_user, logout_user, current_user 
-import dash
-import plotly.express as px
+from flask_login import UserMixin, current_user 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import pandas as pd
 import calendar
 from contextlib import contextmanager
@@ -692,8 +687,10 @@ class PersonaFactory:
 
 
 #da qua in poi metodi generali non appartenenti a classi specifiche
-
-#miglio - funzione che a seconda della classe di appartenenza dell'utente chiama i metodi per restituire la sua lista di contatti 
+#*************************************************************************************************************************************
+# METODI DI UTILITY:
+#miglio - funzione che a seconda della classe di appartenenza dell'utente 
+#chiama i metodi per restituire la sua lista di contatti 
 def get_contatti():
     contacts = []  
 
@@ -709,18 +706,16 @@ def get_user_id():
     if isinstance(current_user, Diabetologo):
         id = current_user.get_id_diabetologo()  
     elif isinstance(current_user, Paziente):
-        id = current_user.get_id_paziente() # Ottieni il diabetologo
+        id = current_user.get_id_paziente()
     else:
-        id=current_user.get_id_admin()
+        id = current_user.get_id_admin()
     return id
 
 #fil - funzione che date tutte le informazioni che il paziente inserisce nella richiesta account, 
 #      procede ad inserirle effettivamente nella base di dati 
 def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, is_paziente, password):
     
-    # aggiunto cursore nuovo, per evitare errori di buffer
     with DBSingleton.get_cursor() as cursore:
-    
         cursore.execute("""INSERT INTO RichiesteAccount 
                         (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, paziente, password) 
                         VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
@@ -728,19 +723,17 @@ def inserisci_richiesta(nome, cognome, data_nascita, sesso, codice_fiscale, indi
         
 
 # Funzione che prende un utente dato lo username, e restituisce un oggetto Persona.diabetologo o Persona.paziente
-# n.b lo username deve essere univoco altrimenti disastro dc
+# n.b lo username deve essere univoco altrimenti disastro 
 # esteso per aggiungere la query sulla tabella "amministratore"
 def get_by_username(username_utente):
     '''se l'utente esiste ritorna un oggetto paziente/diabetologo/admin con i campi compilati, se non esiste, ritorna None '''
     
-    # ho dovuto aggiungere questo cursore locale per evitare letture sporche e sovrapposizioni nelle query (dava errori strani)
     with DBSingleton.get_cursor() as cursore:
 
         presente_in_paziente = False     # flag per controllare se l'utente è un paz/diab
         presente_in_diabetologo = False  # flag per controllare se l'utente è un diab
         presente_in_admin = False        # flag per controllare se l'utente è un admin
 
-        # uso il cursore che c'è già a livello globale
         query_ricerca = "SELECT nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw FROM paziente WHERE username= %s" # pw deve essere la hash
         cursore.execute(query_ricerca, (username_utente,))   # deve essere sotto forma di tupla sennò psycopg non capisce un cazzo
         record = cursore.fetchone()
@@ -761,7 +754,6 @@ def get_by_username(username_utente):
                 if record:
                     presente_in_admin = True
 
-    # chiudo il cursore dopo aver effettuato tutte le query.
 
     # se il record proviene da diabetologo, uso il costruttore del diabetologo, altrimenti del paziente
     # i dati nel recordo sarebbero (in ordine):
@@ -1112,9 +1104,10 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     return dati
 
 #*************************************************************************************************************************
-
+#serve per inserire i sintomi indicati dal paziente direttamente nel marker del grafico
 def formatta_sintomo(s):
     return f"Sintomi: {s}" if s else ""
+
 #grafico linea per l'andamento
 def visualizza_andamento_glicemia(dati):
 
@@ -1245,7 +1238,7 @@ def visualizza_media_glicemica_fasce_orarie(dati):
     )
 
     return fig
-
+#a partire da un paziente ritorna tutti gli eventi di glicemia minore di 60, con il relativo valore
 def get_eventi_basso_glucosio(id_paz):
         with DBSingleton.get_cursor() as cursore:
         
@@ -1254,7 +1247,7 @@ def get_eventi_basso_glucosio(id_paz):
                         WHERE paziente = %s AND valore < 60"""
             parametri = [id_paz]
             
-            query_base += " AND data_inserimento >= NOW() - INTERVAL '1 year'"
+            #query_base += " AND data_inserimento >= NOW() - INTERVAL '1 year'"
             # se "tutto", nessun filtro aggiunto
 
             query_base += " ORDER BY data_inserimento"
@@ -1549,10 +1542,6 @@ def modifica_dati_diabetologo_db(id_diabetologo, nome=None, cognome=None, email=
         cursor.execute(query, params)
     return True
 
-
-    
-#*************************************************************************************************************************************
-# METODI DI UTILITY:
 
 def is_number(s):
     try:
