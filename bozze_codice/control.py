@@ -1654,43 +1654,52 @@ def registra_callbacks(app):
 
     # CALLBACK PER IL MODAL E PULSANTE CHE MODIFICA DATI DIABETOLOGO
     
+   # Apertura/chiusura del modal e reset alert
     @app.callback(
-    Output("popup-modifica-dati-diabetologo", "is_open"),
-    Input("btn-modifica-dati-diab", "n_clicks"),
-    Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
-    State("popup-modifica-dati-diabetologo", "is_open"),
-    prevent_initial_call=True
+        Output("popup-modifica-dati-diabetologo", "is_open"),
+        Output("interval-update-diabetologo", "disabled", allow_duplicate=True),
+        Output("trigger-update-diabetologo", "data", allow_duplicate=True),
+        Output("modifica-diabetologo-alert", "children", allow_duplicate=True),
+        Output("modifica-diabetologo-alert", "color", allow_duplicate=True),
+        Output("modifica-diabetologo-alert", "is_open", allow_duplicate=True),
+        Input("btn-modifica-dati-diab", "n_clicks"),
+        Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
+        State("popup-modifica-dati-diabetologo", "is_open"),
+        prevent_initial_call=True
     )
     def toggle_popup_modifica_diabetologo(apri, annulla, is_open):
         trigger_id = ctx.triggered_id
+
         if trigger_id == "btn-modifica-dati-diab":
-            return True
+            return True, True, False, "", "primary", False
         elif trigger_id == "btn-annulla-modifiche-diabetologo":
-            return False
-        return is_open
+            return False, True, False, "", "primary", False
+
+        return is_open, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
 
+    # Salvataggio dati + gestione alert + trigger aggiornamento
     @app.callback(
-    Output("modifica-diabetologo-alert", "is_open"),
-    Output("interval-update-diabetologo", "disabled"),
-    Input("btn-salva-modifiche-diabetologo", "n_clicks"),
-    Input("btn-annulla-modifiche-diabetologo", "n_clicks"),
-    State("modifica-email-diabetologo", "value"),
-    State("modifica-telefono-diabetologo", "value"),
-    State("modifica-indirizzo-diabetologo", "value"),
-    State("modifica-citta-diabetologo", "value"),
-    State("modifica-cap-diabetologo", "value"),
-    State("store-id-diabetologo", "data"),
-    prevent_initial_call=True
+        Output("modifica-diabetologo-alert", "children"),
+        Output("modifica-diabetologo-alert", "color"),
+        Output("modifica-diabetologo-alert", "is_open"),
+        Output("interval-update-diabetologo", "disabled", allow_duplicate=True),
+        Output("trigger-update-diabetologo", "data", allow_duplicate=True),
+        Input("btn-salva-modifiche-diabetologo", "n_clicks"),
+        State("modifica-email-diabetologo", "value"),
+        State("modifica-telefono-diabetologo", "value"),
+        State("modifica-indirizzo-diabetologo", "value"),
+        State("modifica-citta-diabetologo", "value"),
+        State("modifica-cap-diabetologo", "value"),
+        State("store-id-diabetologo", "data"),
+        prevent_initial_call=True
     )
     def modifica_dati_diabetologo(
-        salva_clicks, annulla_clicks,
-        email, telefono, indirizzo, citta, cap,
-        id_diabetologo
+        salva_clicks, email, telefono, indirizzo, citta, cap, id_diabetologo
     ):
         trigger_id = ctx.triggered_id
 
-        if trigger_id == "btn-annulla-modifiche-diabetologo":
+        if trigger_id != "btn-salva-modifiche-diabetologo":
             raise dash.exceptions.PreventUpdate
 
         try:
@@ -1702,20 +1711,44 @@ def registra_callbacks(app):
                 citta=citta,
                 cap=cap
             )
-
-            return dbc.Alert("Dati aggiornati con successo", color="success", dismissable=True), False
-
+            return (
+                "Dati aggiornati con successo",
+                "success",
+                True,
+                False,  # Disabilita interval
+                True    # Triggera aggiornamento
+            )
         except Exception as e:
-            return dbc.Alert(f"Errore durante l'aggiornamento: {str(e)}", color="danger", dismissable=True), True
+            return (
+                f"Errore durante l'aggiornamento: {str(e)}",
+                "danger",
+                True,
+                True,   # Non disabilitare interval (non parte)
+                dash.no_update
+            )
 
 
-
+    # Chiusura modal dopo salvataggio
     @app.callback(
-    Output("dettagli-diabetologo", "children", allow_duplicate=True),
-    Output("interval-update-diabetologo", "disabled", allow_duplicate=True),
-    Input("interval-update-diabetologo", "n_intervals"),
-    State("store-id-diabetologo", "data"),
-    prevent_initial_call=True
+        Output("popup-modifica-dati-diabetologo", "is_open", allow_duplicate=True),
+        Output("interval-update-diabetologo", "disabled", allow_duplicate=True),
+        Output("trigger-update-diabetologo", "data", allow_duplicate=True),
+        Input("interval-update-diabetologo", "n_intervals"),
+        State("trigger-update-diabetologo", "data"),
+        prevent_initial_call=True
+    )
+    def chiudi_modal_dopo_salvataggio_diabetologo(n_intervals, trigger):
+        if n_intervals == 0 or not trigger:
+            raise dash.exceptions.PreventUpdate
+        return False, True, False
+
+
+    # Aggiorna scheda dopo salvataggio
+    @app.callback(
+        Output("dettagli-diabetologo", "children", allow_duplicate=True),
+        Input("interval-update-diabetologo", "n_intervals"),
+        State("store-id-diabetologo", "data"),
+        prevent_initial_call=True
     )
     def aggiorna_card_diabetologo_dopo_delay(n_intervals, id_diabetologo):
         if n_intervals == 0:
@@ -1723,4 +1756,3 @@ def registra_callbacks(app):
 
         dati_diabetologo = model.get_dettagli_diabetologo(id_diabetologo)
         return view.crea_card_diabetologo(dati_diabetologo), True
-        

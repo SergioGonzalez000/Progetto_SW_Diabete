@@ -3063,6 +3063,7 @@ admin_doctor = html.Div(
         html.Div([
             html.H4("Informazioni:", style={'color': 'gray'}),
             html.Hr(),
+            dcc.Store(id="trigger-update-diabetologo", data=False),
             # Genera la card di informazioni
             html.Div(id="dettagli-diabetologo")
         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
