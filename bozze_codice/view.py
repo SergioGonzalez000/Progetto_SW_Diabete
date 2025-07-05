@@ -1179,91 +1179,114 @@ doctor_patient = html.Div(
 
                                 # POP-UP Nuova terapia:
                                 dbc.Modal(
-                                [
-                                    # Header:
-                                    dbc.ModalHeader(dbc.ModalTitle("Nuova Terapia")),
+                                    [
+                                        # Header:
+                                        dbc.ModalHeader(dbc.ModalTitle("Nuova Terapia")),
 
-                                    # Body:
-                                    dbc.ModalBody([
-                                        # Div di modifica della terapia:
-                                        html.Div([
-                                            # Div Farmaco e dosaggio: 
+                                        # Body:
+                                        dbc.ModalBody([
+                                            # Div di modifica della terapia:
                                             html.Div([
-                                                # Colonna farmaco: 
+                                                # Div Farmaco e dosaggio: 
                                                 html.Div([
-                                                    # Nome del farmaco
-                                                    html.P("Farmaco:", className='mb-0'),
-                                                    dbc.Input(id="input-nuovo-farmaco", type="text", style={'border': 'none'}),
-                                                ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
-                                                # Colonna dosaggio:
-                                                html.Div([
-                                                    # Dosaggio in mg
-                                                    html.P("Dosaggio (mg):", className='mb-0'),
-                                                    dbc.Input(id="input-nuovo-dosaggio", type="number", style={'border': 'none'})
-                                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+                                                    # Colonna farmaco: 
+                                                    html.Div([
+                                                        # Nome del farmaco
+                                                        html.P("Farmaco:", className='mb-0'),
+                                                        dbc.Input(id="input-nuovo-farmaco", type="text", style={'border': 'none'}),
+                                                    ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
+                                                    # Colonna dosaggio:
+                                                    html.Div([
+                                                        # Dosaggio in mg
+                                                        html.P("Dosaggio (mg):", className='mb-0'),
+                                                        dbc.Input(id="input-nuovo-dosaggio", type="number", style={'border': 'none'})
+                                                    ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
 
-                                            # Assunzioni giornaliere + Indicazioni:
-                                            html.Div([
-                                                # Colonna farmaco: 
+                                                # Assunzioni giornaliere + Indicazioni:
                                                 html.Div([
-                                                    # Assunzioni giornaliere
-                                                    html.P("A. giornaliere:", className='mb-0'),
-                                                    dbc.Input(id="input-nuovo-assunzioni", type="number", style={'border': 'none'}),
-                                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                                                # Colonna dosaggio:
-                                                html.Div([
-                                                    # Indicazioni
-                                                    html.P("Indicazioni:", className='mb-0'),
-                                                    dbc.Input(id="input-nuovo-indicazioni", type='text', style={'border': 'none'})
-                                                ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
-                                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+                                                    # Colonna farmaco: 
+                                                    html.Div([
+                                                        # Assunzioni giornaliere
+                                                        html.P("A. giornaliere:", className='mb-0'),
+                                                        dbc.Input(id="input-nuovo-assunzioni", type="number", style={'border': 'none'}),
+                                                    ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                                                    # Colonna dosaggio:
+                                                    html.Div([
+                                                        # Indicazioni
+                                                        html.P("Indicazioni:", className='mb-0'),
+                                                        dbc.Input(id="input-nuovo-indicazioni", type='text', style={'border': 'none'})
+                                                    ], style={'flex': 3, 'display': 'flex', 'flexDirection': 'column'}),
+                                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
 
-                                            # Div delle date:
-                                            html.Div([
-                                                # Dal:
+                                                # Div delle date:
                                                 html.Div([
-                                                    html.P("Dal:", className='mb-0'),
-                                                    dbc.Input(id="input-nuovo-data-inizio", type='date', min=control.get_today(), value=control.get_today() , style={'border': 'none', 'border-radius': '15px'}),
-                                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
-                                                # Al:
-                                                html.Div([
-                                                    html.P("Al:", className='mb-0'),
-                                                    dbc.Input(id="input-nuovo-data-fine", type='date', min=control.get_today(), value=control.get_today(), style={'border': 'none', 'border-radius': '15px'}),
-                                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'})
-                                            ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
+                                                    # Dal:
+                                                    html.Div([
+                                                        html.P("Dal:", className='mb-0'),
+                                                        dbc.Input(id="input-nuovo-data-inizio", type='date', min=control.get_today(), value=control.get_today() , style={'border': 'none', 'border-radius': '15px'}),
+                                                    ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'}),
+                                                    # Al:
+                                                    html.Div([
+                                                        html.P("Al:", className='mb-0'),
+                                                        dbc.Input(id="input-nuovo-data-fine", type='date', min=control.get_today(), value=control.get_today(), style={'border': 'none', 'border-radius': '15px'}),
+                                                    ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'})
+                                                ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
 
-                                            # Box per gli alert:
-                                            dbc.Alert(id="aggiungi-terapia-output", is_open=False)
-                                        ],
-                                        style={
-                                            'flex': 3,
-                                            'display': 'flex',
-                                            'flexDirection': 'column',
-                                            'background-color': '#f8f9fa',
-                                            'border-radius': '15px',
-                                            'padding': '5px',
-                                        }),
-                                        
-                                    ]),
-                                    dbc.ModalFooter([
-                                        # Pulsante per salvare le modifiche
-                                        dbc.Button("Salva", id="salva-nuova-terapia-btn", n_clicks=0, color='success', style={'border': 'none', 'border-radius': '25px'}),
-                                        # Pulsante per annullare e uscire
-                                        dbc.Button("Annulla", id="chiudi-nuova-terapia", color='warning', style={'border': 'none', 'border-radius': '25px'}),
-                                    ], style={'display': 'flex', 'flexDirection': 'row', 'gap': '10px'}
-                                    )
-                                ],
-                                id="popup-nuova-terapia",
-                                centered=True,
-                                is_open=False,
-                            ),
+                                                # Box per gli alert:
+                                                dbc.Alert(id="aggiungi-terapia-output", is_open=False)
+                                            ],
+                                            style={
+                                                'flex': 3,
+                                                'display': 'flex',
+                                                'flexDirection': 'column',
+                                                'background-color': '#f8f9fa',
+                                                'border-radius': '15px',
+                                                'padding': '5px',
+                                            }),
+                                            
+                                        ]),
+                                        dbc.ModalFooter([
+                                            # Pulsante per salvare le modifiche
+                                            dbc.Button("Salva", id="salva-nuova-terapia-btn", n_clicks=0, color='success', style={'border': 'none', 'border-radius': '25px'}),
+                                            # Pulsante per annullare e uscire
+                                            dbc.Button("Annulla", id="chiudi-nuova-terapia", color='warning', style={'border': 'none', 'border-radius': '25px'}),
+                                        ], style={'display': 'flex', 'flexDirection': 'row', 'gap': '10px'}
+                                        )
+                                    ],
+                                    id="popup-nuova-terapia",
+                                    centered=True,
+                                    is_open=False,
+                                ),
     
                             ],
                             className="card",
                             style={'height': '100%'}
                         )
                     ]
+                ),
+                
+                # modal fittizio FATTO SOLO PER FAR STAR ZITTO DASH.
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader(dbc.ModalTitle(id="modal-title")),
+                        dbc.ModalBody([
+                            html.H4(id="modal-nome-eta"),
+                            html.H6(id="modal-codice-fiscale", style={'color': 'gray'}),
+                            dbc.Textarea(id="input-patologie", value="", style={"width": "100%", "height": "80px"}),
+                            dbc.Input(id="input-rischio", type="text", value=""),
+                            dbc.Input(id="input-comorb", type="text", value=""),
+                            dbc.Alert(id="modifica-info-output", is_open=False),
+                            dcc.Interval(id="interval-salva-info-paziente", interval=1500, n_intervals=0, max_intervals=1, disabled=True),
+                        ]),
+                        dbc.ModalFooter([
+                            dbc.Button("Annulla", id="close-modifica-infopaz", style={'background-color':'red'}),
+                            dbc.Button("Salva", id="salva-modifiche-btn", n_clicks=0, style={'background-color':'green'}),
+                        ]),
+                    ],
+                    id="modal-modifiche-btn",
+                    centered=True,
+                    is_open=False
                 ),
 
                 # Riga inferiore (Grafico)
@@ -1309,7 +1332,9 @@ doctor_patient = html.Div(
                     ],
                     style={"flex": 1},
                     className="card"
-                )
+                ),
+
+                dcc.Store(id="aggiorna-info-paziente", data=False)
             ]
         )
     ]
@@ -1643,11 +1668,15 @@ def crea_div_paziente(cfanno, info, segnalazioni):
                             'background-color': '#f8f9fa', 
                             'border-radius': '15px', 
                             'padding': '5px',
-                            'margin-bottom': '10px'
+                            'margin-bottom': '10px',
                         }),
 
                         # Alert per gli inserimenti:
-                        dbc.Alert(id="modifica-info-output", is_open=False),
+                        dbc.Alert(id="modifica-info-output", is_open=False), 
+
+                        # se è stata salvata con successo la modifica ai dati paziente, fa aspettare 1.5 sec, dopodichè chiude da
+                        # solo il modal. 
+                        dcc.Interval(id="interval-salva-info-paziente", interval=1500, n_intervals=0, max_intervals=1, disabled=True),
                         
                     ])),
                     # Footer del modal:
@@ -1774,7 +1803,7 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             # Dose giornaliera + Idicazioni
                             html.P(f"{terapia[5]} volte al giorno {'' if terapia[9] is None else terapia[9]}"),
                             # Ultima modifica
-                            html.Small(f"Ultima modifica: {terapia[8].strftime("%d/%m/%Y")} - {terapia[8].strftime("%H:%M")}", style={'text-align': 'center'})
+                            html.Small(f"Ultima modifica: {terapia[8].strftime('%d/%m/%Y')} - {terapia[8].strftime('%H:%M')}", style={'text-align': 'center'})
                         ],
                         style={
                             'flex': 1,
@@ -2429,7 +2458,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                             children=[],                                    # inizialmente vuoto, quando si clicca il pulsante viene messo il grafico
                             style={"width": "100%", "height": "90%"}        # dimensioni ottimizzate, ho controllato su due schermi diversi
                         ),
-                        filtro_temporale(""),
+                        filtro_temporale("")
                         ], style={"padding": "2px", 'margin-bottom': '15px'}  
                     ),
                 ],
@@ -2505,70 +2534,66 @@ def crea_card_paziente(dati_paziente, dati_diab):
                     dbc.ModalBody(
                         html.Div([
                             html.Div([
-                                html.H5("Anagrafica:", className="mb-3"),
+                                html.H5("Informazioni account", className="mb-3"),
 
-                                dbc.Label("Nome"),
-                                dbc.Input(
-                                    id="modifica-nome",
-                                    type="text",
-                                    value=dati_paziente.get("nome", ""),
-                                    placeholder="Inserisci il nome",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
+                                # Indirizzo + Città + CAP
+                                html.Div([
+                                    html.Div([
+                                        dbc.Label("Indirizzo"),
+                                        dbc.Input(
+                                            id="modifica-indirizzo",
+                                            type="text",
+                                            value=dati_paziente.get("indirizzo", ""),
+                                            placeholder="Inserisci l'indirizzo",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 2}),
+                                    html.Div([
+                                        dbc.Label("Città"),
+                                        dbc.Input(
+                                            id="modifica-citta",
+                                            type="text",
+                                            value=dati_paziente.get("citta", ""),
+                                            placeholder="Inserisci la città",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1}),
+                                    html.Div([
+                                        dbc.Label("CAP"),
+                                        dbc.Input(
+                                            id="modifica-cap",
+                                            type="text",
+                                            value=dati_paziente.get("cap", ""),
+                                            placeholder="Inserisci il CAP",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1})
+                                ], style={'display': 'flex', 'gap': '10px', 'margin-top': '10px'}),
 
-                                dbc.Label("Cognome", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-cognome",
-                                    type="text",
-                                    value=dati_paziente.get("cognome", ""),
-                                    placeholder="Inserisci il cognome",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
+                                # Email + Telefono
+                                html.Div([
+                                    html.Div([
+                                        dbc.Label("Email"),
+                                        dbc.Input(
+                                            id="modifica-email",
+                                            type="email",
+                                            value=dati_paziente.get("email", ""),
+                                            placeholder="Inserisci l'email",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1}),
+                                    html.Div([
+                                        dbc.Label("Telefono"),
+                                        dbc.Input(
+                                            id="modifica-telefono",
+                                            type="tel",
+                                            value=dati_paziente.get("telefono", ""),
+                                            placeholder="Inserisci il numero di telefono",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1})
+                                ], style={'display': 'flex', 'gap': '10px', 'margin-top': '10px'}),
 
-                                dbc.Label("Data di nascita", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-data-nascita",
-                                    type="date",
-                                    value=dati_paziente.get("data_nascita", ""),
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("Sesso (M/F)", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-sesso",
-                                    type="text",
-                                    maxLength=1,
-                                    value=dati_paziente.get("sesso", ""),
-                                    placeholder="M o F",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("Indirizzo", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-indirizzo",
-                                    type="text",
-                                    value=dati_paziente.get("indirizzo", ""),
-                                    placeholder="Inserisci l'indirizzo",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("Città", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-citta",
-                                    type="text",
-                                    value=dati_paziente.get("citta", ""),
-                                    placeholder="Inserisci la città",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("CAP", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-cap",
-                                    type="text",
-                                    value=dati_paziente.get("cap", ""),
-                                    placeholder="Inserisci il CAP",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
                             ],
                             style={
                                 'flex': 1,
@@ -2586,12 +2611,12 @@ def crea_card_paziente(dati_paziente, dati_diab):
                     ),
                     dbc.ModalFooter([
                         dbc.Button("Annulla", id="btn-annulla-modifiche-paziente",
-                                style={'background-color': 'red', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                            style={'background-color': 'red', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
                         dbc.Button("Salva", id="btn-salva-modifiche-paziente", n_clicks=0,
-                                style={'background-color': 'green', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
+                            style={'background-color': 'green', 'border-radius': '25px', 'font-size': '20px', 'border': 'none'}),
                     ],
                     style={'display': 'flex', 'justify-content': 'flex-end', 'gap': '10px'}),
-                    dcc.Interval(id="interval-update-card", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
+                    dcc.Interval(id="interval-update-card-paz", interval=1500, n_intervals=0, max_intervals=1, disabled=True)
                 ],
                 id="popup-modifica-dati-paziente",
                 centered=True,
@@ -2599,7 +2624,6 @@ def crea_card_paziente(dati_paziente, dati_diab):
                 size="lg"
             ),
 
-        
 
             # Footer con pulsanti
             html.Hr(),
@@ -2647,6 +2671,7 @@ admin_patient = html.Div(
         html.Div([
             html.H4("Informazioni:", style={'color': 'gray'}),
             html.Hr(),
+            dcc.Store(id="trigger-update-paziente", data=False),
             # Genera la card di informazioni
             html.Div(id="dettagli-paziente")
         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
@@ -2880,70 +2905,66 @@ def crea_card_diabetologo(dati_diabetologo):
                     dbc.ModalBody(
                         html.Div([
                             html.Div([
-                                html.H5("Anagrafica:", className="mb-3"),
+                                html.H5("Informazioni account", className="mb-3"),
 
-                                dbc.Label("Nome"),
-                                dbc.Input(
-                                    id="modifica-nome-diabetologo",
-                                    type="text",
-                                    value=dati_diabetologo.get("nome", ""),
-                                    placeholder="Inserisci il nome",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
+                                # Indirizzo + Città + CAP
+                                html.Div([
+                                    html.Div([
+                                        dbc.Label("Indirizzo"),
+                                        dbc.Input(
+                                            id="modifica-indirizzo-diabetologo",
+                                            type="text",
+                                            value=dati_diabetologo.get("indirizzo", ""),
+                                            placeholder="Inserisci l'indirizzo",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 2}),
+                                    html.Div([
+                                        dbc.Label("Città"),
+                                        dbc.Input(
+                                            id="modifica-citta-diabetologo",
+                                            type="text",
+                                            value=dati_diabetologo.get("citta", ""),
+                                            placeholder="Inserisci la città",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1}),
+                                    html.Div([
+                                        dbc.Label("CAP"),
+                                        dbc.Input(
+                                            id="modifica-cap-diabetologo",
+                                            type="text",
+                                            value=dati_diabetologo.get("cap", ""),
+                                            placeholder="Inserisci il CAP",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1})
+                                ], style={'display': 'flex', 'gap': '10px', 'margin-top': '10px'}),
 
-                                dbc.Label("Cognome", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-cognome-diabetologo",
-                                    type="text",
-                                    value=dati_diabetologo.get("cognome", ""),
-                                    placeholder="Inserisci il cognome",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("Email", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-email-diabetologo",
-                                    type="email",
-                                    value=dati_diabetologo.get("email", ""),
-                                    placeholder="Inserisci l'email",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("Telefono", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-telefono-diabetologo",
-                                    type="tel",
-                                    value=dati_diabetologo.get("telefono", ""),
-                                    placeholder="Inserisci il numero di telefono",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("Indirizzo", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-indirizzo-diabetologo",
-                                    type="text",
-                                    value=dati_diabetologo.get("indirizzo", ""),
-                                    placeholder="Inserisci l'indirizzo",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("Città", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-citta-diabetologo",
-                                    type="text",
-                                    value=dati_diabetologo.get("citta", ""),
-                                    placeholder="Inserisci la città",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
-
-                                dbc.Label("CAP", className="mt-3"),
-                                dbc.Input(
-                                    id="modifica-cap-diabetologo",
-                                    type="text",
-                                    value=dati_diabetologo.get("cap", ""),
-                                    placeholder="Inserisci il CAP",
-                                    style={"border": "none", "border-radius": "15px"},
-                                ),
+                                # Email + Telefono
+                                html.Div([
+                                    html.Div([
+                                        dbc.Label("Email"),
+                                        dbc.Input(
+                                            id="modifica-email-diabetologo",
+                                            type="email",
+                                            value=dati_diabetologo.get("email", ""),
+                                            placeholder="Inserisci l'email",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1}),
+                                    html.Div([
+                                        dbc.Label("Telefono"),
+                                        dbc.Input(
+                                            id="modifica-telefono-diabetologo",
+                                            type="tel",
+                                            value=dati_diabetologo.get("telefono", ""),
+                                            placeholder="Inserisci il numero di telefono",
+                                            style={"border": "none", "border-radius": "15px"}
+                                        )
+                                    ], style={'flex': 1})
+                                ], style={'display': 'flex', 'gap': '10px', 'margin-top': '10px'}),
+                                
                             ],
                             style={
                                 'flex': 1,
@@ -2971,7 +2992,7 @@ def crea_card_diabetologo(dati_diabetologo):
                 id="popup-modifica-dati-diabetologo",
                 centered=True,
                 is_open=False,
-                size="md"
+                size="lg"
             ),
 
 
@@ -3054,6 +3075,7 @@ admin_doctor = html.Div(
         html.Div([
             html.H4("Informazioni:", style={'color': 'gray'}),
             html.Hr(),
+            dcc.Store(id="trigger-update-diabetologo", data=False),
             # Genera la card di informazioni
             html.Div(id="dettagli-diabetologo")
         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
