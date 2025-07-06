@@ -2366,7 +2366,7 @@ def layout_lista_pazienti():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, id="contenitore-lista-pazienti", style={"overflowY": "auto", 'height': '80vh'})  
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", 'height': '80vh'})  
 
 #*****************************************************************************************************
 
@@ -2668,35 +2668,31 @@ def crea_card_paziente(dati_paziente, dati_diab):
 #************************************************************************************************************************************************************
 
 # PAZIENTI ADMIN:
-admin_patient = html.Div(
-    style={
-        'flex': 1,
-        'display': 'flex',
-        # "row" = da sinistra a destra
-        'flex-direction': 'row',
-        # sazio dai margini esterni
-        'padding': '20px',
-        # spazio interno tra le colonne
-        'gap': '20px',      
-    },
-    children=[
-        # Lista dei pazienti
-        html.Div([
-            html.H4("Pazienti:", style={'color': 'gray'}),
-            html.Hr(),
-            # Genera la lista dei pazienti
-            html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
-        ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
-        # Info dei pazienti:
-        html.Div([
-            html.H4("Informazioni:", style={'color': 'gray'}),
-            html.Hr(),
-            dcc.Store(id="trigger-update-paziente", data=False),
-            # Genera la card di informazioni
-            html.Div(id="dettagli-paziente")
-        ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
-    ]
-)
+def admin_patient():
+    return html.Div(
+        style={
+            'flex': 1,
+            'display': 'flex',
+            'flex-direction': 'row',
+            'padding': '20px',
+            'gap': '20px',      
+        },
+        children=[
+            html.Div([
+                html.H4("Pazienti:", style={'color': 'gray'}),
+                html.Hr(),
+                # Genera la lista dei pazienti freschissima
+                html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
+            ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
+
+            html.Div([
+                html.H4("Informazioni:", style={'color': 'gray'}),
+                html.Hr(),
+                dcc.Store(id="trigger-update-paziente", data=False),
+                html.Div(id="dettagli-paziente")
+            ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
+        ]
+    )
 
 #************************************************************************************************************************************************************
 # renderizza in modo corretto e uguale alla pagina dei pazienti, il layout.
@@ -3071,36 +3067,32 @@ def genera_lista_pazienti_associati(lista_pazienti):
     )
 
 # LAYOUT DIABETOLOGI ADMIN:
-admin_doctor = html.Div(
-    style={
-        'flex': 1,
-        'display': 'flex',
-        # "row" = da sinistra a destra
-        'flex-direction': 'row',
-        # sazio dai margini esterni
-        'padding': '20px',
-        # spazio interno tra le colonne
-        'gap': '20px',      
-    },
-    children=[
-        # Lista dei pazienti
-        html.Div([
-            html.H4("Diabetologi:", style={'color': 'gray'}),
-            html.Hr(),
-            # Genera la lista dei diabetologi
-            html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
-            
-        ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
-        # Info dei pazienti:
-        html.Div([
-            html.H4("Informazioni:", style={'color': 'gray'}),
-            html.Hr(),
-            dcc.Store(id="trigger-update-diabetologo", data=False),
-            # Genera la card di informazioni
-            html.Div(id="dettagli-diabetologo")
-        ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
-    ]
-)
+def admin_doctor():
+    return html.Div(
+        style={
+            'flex': 1,
+            'display': 'flex',
+            'flex-direction': 'row',
+            'padding': '20px',
+            'gap': '20px',      
+        },
+        children=[
+            html.Div([
+                html.H4("Diabetologi:", style={'color': 'gray'}),
+                html.Hr(),
+                # Genera la lista dei diabetologi fresca
+                html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
+            ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100%'}, className='card'),
+
+            html.Div([
+                html.H4("Informazioni:", style={'color': 'gray'}),
+                html.Hr(),
+                dcc.Store(id="trigger-update-diabetologo", data=False),
+                html.Div(id="dettagli-diabetologo")
+            ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
+        ]
+    )
+
 
 #******************************************************************************************************
 # FUNZIONE CHE GENERA LE BUBBLES DEI MESSAGGI

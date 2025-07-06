@@ -4,6 +4,7 @@ from dash import MATCH, callback_context, html, dcc, Input, Output, State, ALL, 
 from flask_login import login_user, logout_user, current_user
 from werkzeug.security import check_password_hash 
 from datetime import date
+import time
 import dash
 import model
 import view
@@ -248,10 +249,10 @@ def registra_callbacks(app):
                 return view.admin_navlinks, view.admin_request, "/request"
             # Se admin nella lista dei pazienti
             elif pathname == "/admin-patient":
-                return view.admin_navlinks, view.admin_patient, "/admin-patient"
+                return view.admin_navlinks, view.admin_patient(), "/admin-patient"
             # Se admin nella lista dei diabetologi
             elif pathname == "/admin-doctor":
-                return view.admin_navlinks, view.admin_doctor, "/admin-doctor"
+                return view.admin_navlinks, view.admin_doctor(), "/admin-doctor"
             # Logout dell'admin
             elif pathname == "/logout":
                 logout_user()
@@ -1320,26 +1321,25 @@ def registra_callbacks(app):
 
     # callback dei pulsanti dentro il popup per confermare o meno la cancellazione di un paziente
     @app.callback(
-    Output("lista-pazienti-admin", "children"),
-    Output("pop-admin-delete-patient", "is_open"),
-    Input("btn-delete-paz-confirm-YES", "n_clicks"),
-    Input("btn-delete-paz-confirm-NO", "n_clicks"),
-    State("store-id-paziente", "data"),
-    prevent_initial_call=True
+        Output("page-content", "children", allow_duplicate=True),
+        Output("pop-admin-delete-patient", "is_open"),
+        Input("btn-delete-paz-confirm-YES", "n_clicks"),
+        Input("btn-delete-paz-confirm-NO", "n_clicks"),
+        State("store-id-paziente", "data"),
+        prevent_initial_call=True
     )
-    def rimozione_aggiornamento_lista_popup(n_clicks_yes, n_clicks_no, id_paziente):
-        """gestisce la rimozione del paziente, aggiornando la lista."""
-
-        # click sul pulsante "No"
+    def elimina_paziente_admin(n_clicks_yes, n_clicks_no, id_paziente):
+        '''elimina il paziente e aggiorna la pagina'''
         if n_clicks_no:
             return dash.no_update, False
 
-        # click sul pulsante "Sì"
         if n_clicks_yes:
-                model.Admin.elimina_paziente(id_paziente)                           # elimina dal DB
-                nuova_lista = view.layout_lista_pazienti()  # aggiorna la lista in modo da togliere l'eliminato. N.B. Manca togliere l'eliminato anche dalla card a destra!
-                return nuova_lista, False
-        
+            model.Admin.elimina_paziente(id_paziente)
+            # ritorna layout intero con lista aggiornata
+            time.sleep(1.5)   # per aspettare un sec
+
+            return view.admin_patient(), False
+
         return dash.no_update, False
         
      
@@ -1612,26 +1612,28 @@ def registra_callbacks(app):
 
 
     @app.callback(
-    Output("lista-diabetologi-admin", "children"),
-    Output("pop-admin-delete-diab", "is_open"),
-    Input("btn-delete-diab-confirm-YES", "n_clicks"),
-    Input("btn-delete-diab-confirm-NO", "n_clicks"),
-    State("store-id-diabetologo", "data"),
-    prevent_initial_call=True
+        Output("page-content", "children", allow_duplicate=True),
+        Output("pop-admin-delete-diab", "is_open"),
+        Input("btn-delete-diab-confirm-YES", "n_clicks"),
+        Input("btn-delete-diab-confirm-NO", "n_clicks"),
+        State("store-id-diabetologo", "data"),
+        prevent_initial_call=True
     )
-    def rimozione_aggiornamento_lista_popup_diab(n_clicks_yes, n_clicks_no, id_diabetologo):
-        """Rimuove il diabetologo dal database e aggiorna la lista."""
-        # Click su "No"
+    def elimina_diabetologo_admin(n_clicks_yes, n_clicks_no, id_diabetologo):
+        """rimuove il diabetologo dal database e aggiorna l'intera pagina."""
         if n_clicks_no:
             return dash.no_update, False
 
-        # Click su "Sì"
         if n_clicks_yes:
             model.Admin.elimina_diabetologo(id_diabetologo)
-            nuova_lista = view.layout_lista_diabetologi()
-            return nuova_lista, False
+            # Ricostruisco tutta la pagina dei diabetologi, lista aggiornata
+
+            time.sleep(1.5)   # per aspettare un sec
+            
+            return view.admin_doctor(), False
 
         return dash.no_update, False
+
     
 
     @app.callback(
