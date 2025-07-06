@@ -246,7 +246,7 @@ def registra_callbacks(app):
                 return view.admin_navlinks, view.admin_dashboard, "/admin-dashboard"
             # Se admin nella lista delle richieste
             elif pathname == "/request":
-                return view.admin_navlinks, view.admin_request, "/request"
+                return view.admin_navlinks, view.admin_request(), "/request"
             # Se admin nella lista dei pazienti
             elif pathname == "/admin-patient":
                 return view.admin_navlinks, view.admin_patient(), "/admin-patient"
@@ -331,35 +331,53 @@ def registra_callbacks(app):
 
     # callback che gestisce l'accettazione/rifiuto richiesta di inserimento. Versione aggiustata 28/06/25
     @app.callback(
-        Output({"type": "alert-richiesta", "codice_fiscale": ALL}, "children"),
+        [
+            Output({"type": "alert-richiesta", "codice_fiscale": ALL}, "children"),
+            Output("page-content", "children", allow_duplicate=True),
+        ],
         [
             Input({"type": "btn-accetta-richiesta", "codice_fiscale": ALL}, "n_clicks"),
-            Input({"type": "btn-rifiuta-richiesta", "codice_fiscale": ALL}, "n_clicks")
+            Input({"type": "btn-rifiuta-richiesta", "codice_fiscale": ALL}, "n_clicks"),
         ],
         prevent_initial_call=True
     )
     def gestisci_richieste(n_clicks_accetta, n_clicks_rifiuta):
         triggered = ctx.triggered_id
         if not triggered:
-            return dash.no_update
+            # ATTENZIONE: ritorna lista di dash.no_update per il wildcard output
+            return [dash.no_update] * len(ctx.outputs_list[0]), dash.no_update
 
         codice_fiscale = triggered["codice_fiscale"]
         tipo = triggered["type"]
 
         if tipo == "btn-accetta-richiesta":
+            idx = [i for i, inp in enumerate(ctx.inputs_list[0]) if inp['id'] == triggered][0]
+            if not n_clicks_accetta[idx] or n_clicks_accetta[idx] <= 0:
+                return [dash.no_update] * len(ctx.outputs_list[0]), dash.no_update
+
             model.Admin.approva_richiesta_cf(codice_fiscale)
             messaggio = dbc.Alert("Richiesta approvata con successo!", color="success", dismissable=True)
+
         elif tipo == "btn-rifiuta-richiesta":
+            idx = [i for i, inp in enumerate(ctx.inputs_list[1]) if inp['id'] == triggered][0]
+            if not n_clicks_rifiuta[idx] or n_clicks_rifiuta[idx] <= 0:
+                return [dash.no_update] * len(ctx.outputs_list[0]), dash.no_update
+
             model.Admin.rifiuta_richiesta_cf(codice_fiscale)
             messaggio = dbc.Alert("Richiesta rifiutata.", color="danger", dismissable=True)
+
         else:
             messaggio = None
 
-        # Ritorna un messaggio solo per il componente con il codice fiscale corrispondente
-        return [
+        alert_list = [
             messaggio if codice_fiscale == output["id"]["codice_fiscale"] else dash.no_update
-            for output in ctx.outputs_list
+            for output in ctx.outputs_list[0]
         ]
+
+        nuovo_contenuto = view.admin_request()
+
+        return alert_list, nuovo_contenuto
+
 
 
 
@@ -1336,7 +1354,7 @@ def registra_callbacks(app):
         if n_clicks_yes:
             model.Admin.elimina_paziente(id_paziente)
             # ritorna layout intero con lista aggiornata
-            time.sleep(1.5)   # per aspettare un sec
+            time.sleep(1)   # per aspettare un sec
 
             return view.admin_patient(), False
 
@@ -1628,7 +1646,7 @@ def registra_callbacks(app):
             model.Admin.elimina_diabetologo(id_diabetologo)
             # Ricostruisco tutta la pagina dei diabetologi, lista aggiornata
 
-            time.sleep(1.5)   # per aspettare un sec
+            time.sleep(1)   # per aspettare un sec
             
             return view.admin_doctor(), False
 

@@ -2218,22 +2218,23 @@ def render_richieste_account():
 
 
 # layout principale della pagina della richiesta di inserimento nella piattaforma
-admin_request = html.Div(
-    style={ 
-        "flex": "1",
-        "display": "flex",
-        "flexDirection": "column",
-        "height": "100vh",
-        "boxSizing": "border-box",
-        "margin": "0",
-        "padding": "40px",
-        "gap": "20px",
-        "overflow": "auto"
-    },
-    children=[
-        render_richieste_account()
-    ]
-)
+def admin_request(): 
+    return html.Div(
+        style={ 
+            "flex": "1",
+            "display": "flex",
+            "flexDirection": "column",
+            "height": "100vh",
+            "boxSizing": "border-box",
+            "margin": "0",
+            "padding": "40px",
+            "gap": "20px",
+            "overflow": "auto"
+        },
+        children=[
+            render_richieste_account()
+        ]
+    )
 
 
 
