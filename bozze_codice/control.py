@@ -998,8 +998,7 @@ def registra_callbacks(app):
             return not is_open
         return is_open
 # ******************************************************************************************************************
-#callback per modificare dati terapia o per eliminarne una dopo la conferma
-
+    #callback per modificare dati terapia o per eliminarne una dopo la conferma
     @app.callback(
         Output("modifica-terapia-output", "children"),
         Output("modifica-terapia-output", "color"),
