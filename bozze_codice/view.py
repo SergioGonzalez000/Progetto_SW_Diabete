@@ -17,9 +17,10 @@ def getLayout():
             dcc.Store(id="selected-patient-id",data=None),
             dcc.Store(id="terapia-selezionata", data=None),
 
+            # interval per attendere post modifica terapia
             dcc.Interval(
                 id='interval-chiudi-modal-terapia',
-                interval=1500,  # 1 secondo, puoi anche meno (es. 500 ms)
+                interval=2500,  
                 n_intervals=0,
                 disabled=True,
                 max_intervals=1
