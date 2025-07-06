@@ -16,6 +16,15 @@ def getLayout():
             #fil-serve per non far fallire una callback -> forse si può risolvere in un altro modo
             dcc.Store(id="selected-patient-id",data=None),
             dcc.Store(id="terapia-selezionata", data=None),
+
+            dcc.Interval(
+                id='interval-chiudi-modal-terapia',
+                interval=1500,  # 1 secondo, puoi anche meno (es. 500 ms)
+                n_intervals=0,
+                disabled=True,
+                max_intervals=1
+            ),
+            
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
             # patient_dashboard,
@@ -1865,7 +1874,7 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
 
                             # Box per gli alert:
-                            dbc.Alert(id="modifica-terapia-output", is_open=False),
+                            dbc.Alert(id="modifica-terapia-output", is_open=False, duration=1500),
 
                             # Modal di eliminazione terapia:
                             dbc.Modal([

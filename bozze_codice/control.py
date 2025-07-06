@@ -1003,6 +1003,8 @@ def registra_callbacks(app):
         Output("modifica-terapia-output", "children"),
         Output("modifica-terapia-output", "color"),
         Output("modifica-terapia-output", "is_open"),
+        Output("interval-chiudi-modal-terapia", "disabled", allow_duplicate=True),
+        Output("interval-chiudi-modal-terapia", "n_intervals", allow_duplicate=True),
         Input("url", "pathname"),
         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
         Input("btn-salva-modifiche-terapia", "n_clicks"),
@@ -1020,38 +1022,58 @@ def registra_callbacks(app):
     def modifica_terapia(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, conferma, id_paz, id_terapia):
         trigger_id = ctx.triggered_id
 
+        # Default per non attivare interval
+        disable_interval = True
+        reset_interval = 0
+
         if trigger_id == "conferma-elimina-terapia" and conferma > 0:
-            # Azione di eliminazione terapia
             with model.DBSingleton.get_cursor() as cur:
                 cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
-            return "Terapia eliminata con successo!", "success", True
+            return "Terapia eliminata con successo!", "success", True, False, 0  # Attiva interval
 
         if trigger_id == "btn-salva-modifiche-terapia":
-            # Gestione modifica terapia
             farmaco = farmaco or None
             dosaggio = dosaggio or None
             assunzioni = assunzioni or None
             indicazioni = indicazioni or None
             data_i = data_i or None
             data_f = data_f or None
-            #controlla se sono tutte nulle, in tal caso ritorna informazioni mancanti
+
             if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni, data_i, data_f]):
-                return "Informazioni mancanti", "danger", True
+                return "Informazioni mancanti", "danger", True, disable_interval, reset_interval
 
             if data_i and data_f and data_f < data_i:
-                return "Data fine non valida", "danger", True
+                return "Data fine non valida", "danger", True, disable_interval, reset_interval
 
             if path == "/doctor-patient" and modifybtn > 0:
                 if not any(n_clicks):
-                    return "Seleziona un paziente!", "danger", True
+                    return "Seleziona un paziente!", "danger", True, disable_interval, reset_interval
 
                 current_user.modifica_terapia_paziente(
                     id_paz, id_terapia, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni
                 )
-                return "Modifica avvenuta con successo", "success", True
+                return (
+                    "Terapia aggiornata con successo!",
+                    "success",
+                    True,       # apre l'alert
+                    False,      # abilita il timer
+                    0           # resetta n_intervals
+                )
 
-        # Se non è né il bottone salva né quello conferma, non aggiornare nulla
         raise dash.exceptions.PreventUpdate
+    
+    @app.callback(
+        Output("popup-modifica-terapia", "is_open", allow_duplicate=True),
+        Output("interval-chiudi-modal-terapia", "disabled", allow_duplicate=True),
+        Input("interval-chiudi-modal-terapia", "n_intervals"),
+        State("popup-modifica-terapia", "is_open"),
+        prevent_initial_call=True
+    )
+    def chiudi_popup_modifica_terapia(n_intervals, is_open):
+        if n_intervals and is_open:
+            return False, True  # chiude il modal e disabilita l'intervallo
+        return dash.no_update, dash.no_update
+
 
 #******************************************************************************************************************
     #callback per aprire il pop up aggiungi terapia
