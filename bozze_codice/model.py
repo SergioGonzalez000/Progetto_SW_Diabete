@@ -7,6 +7,11 @@ import plotly.graph_objects as go
 import pandas as pd
 import calendar
 from contextlib import contextmanager
+
+from abc import ABC, abstractmethod
+from typing import List
+from datetime import datetime
+
 # Eseguito una sola volta all'avvio
 
 class DBSingleton:
@@ -238,13 +243,11 @@ class Paziente(Persona):
     
 
 
-from abc import ABC, abstractmethod
-from typing import List
-from datetime import datetime
-
 # Interfaccia Observer
 class DiabetologoDeletionObserver(ABC):
     @abstractmethod
+    #metodo implementato negli observer che quando viene chiamato esegue la sequenza:
+    #trova nuovi diab, elimina diab, notifica pazienti con alert
     def on_diabetologo_deleted(self, deleted_diabetologo_id: int, deleted_diabetologo_name: str):
         pass
 
@@ -252,23 +255,22 @@ class DiabetologoDeletionObserver(ABC):
 class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
     def __init__(self, paziente: Paziente):
         self.paziente = paziente
-    
+    #implementazione del metodo degli observer
     def on_diabetologo_deleted(self, deleted_diabetologo_id: int, deleted_diabetologo_name: str):
         try:
-            # 1. Trova nuovo diabetologo (escludendo quello eliminato)
+            #Trova nuovo diabetologo (escludendo quello eliminato)
             nuovo_diabetologo_id = self._trova_nuovo_diabetologo(excluded_id=deleted_diabetologo_id)
             
-            # 2. Riassegna il paziente
+            #Riassegna il paziente
             self._riassegna_paziente(nuovo_diabetologo_id)
             
-            # 3. Crea alert per il paziente
+            #Crea alert per il paziente
             self._crea_alert(deleted_diabetologo_name, nuovo_diabetologo_id)
-            
         except Exception as e:
             print(f"Errore durante la riassegnazione del paziente {self.paziente.get_id_paziente()}: {str(e)}")
             self._crea_alert_fallback(deleted_diabetologo_name)
 
-    def _trova_nuovo_diabetologo(self, excluded_id: int) -> int:
+    def _trova_nuovo_diabetologo(self, excluded_id):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("""
                 SELECT d.id_diabetologo
@@ -285,7 +287,7 @@ class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
                 raise ValueError("Nessun altro diabetologo disponibile per la riassegnazione")
             return result[0]
 
-    def _riassegna_paziente(self, nuovo_diabetologo_id: int):
+    def _riassegna_paziente(self, nuovo_diabetologo_id):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("""
                 UPDATE Paziente
@@ -293,7 +295,7 @@ class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
                 WHERE id_paziente = %s
             """, (nuovo_diabetologo_id, self.paziente.get_id_paziente()))
 
-    def _crea_alert(self, old_diabetologo_name: str, new_diabetologo_id: int):
+    def _crea_alert(self, old_diabetologo_name, new_diabetologo_id):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("SELECT nome, cognome FROM Diabetologo WHERE id_diabetologo = %s", (new_diabetologo_id,))
             new_doc = cursore.fetchone()
@@ -305,7 +307,7 @@ class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
                 VALUES (%s, %s, %s)
             """, (self.paziente.get_id_paziente(),datetime.now(), messaggio))
 
-    def _crea_alert_fallback(self, old_diabetologo_name: str):
+    def _crea_alert_fallback(self, old_diabetologo_name):
         with DBSingleton.get_cursor() as cursore:
             messaggio = f"Il tuo diabetologo {old_diabetologo_name} non è più disponibile. Contatta l'amministrazione per la riassegnazione."
             cursore.execute("""
@@ -600,7 +602,7 @@ class Admin(Persona):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("DELETE FROM Paziente WHERE id_paziente = %s", (id_paziente,))
 
-    def get_pazienti_associati(self, id_diabetologo) -> List[Paziente]:
+    def get_pazienti_associati(self, id_diabetologo):
         """Helper method per ottenere i pazienti associati"""
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("""
@@ -615,7 +617,8 @@ class Admin(Persona):
                 p = Paziente(*row)
                 pazienti.append(p)
             return pazienti
-    # funzione che elimina un diabetologo nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
+        
+    # funzione che elimina un diabetologo nel database. crea il subject che deve notificare gli observer 
     def elimina_diabetologo(self, id_diabetologo):
         """Versione semplificata che usa direttamente gli Observer"""
         
@@ -628,13 +631,13 @@ class Admin(Persona):
             nome, cognome = result
             diabetologo_name = f"{nome} {cognome}"
             
-            # 2. Ottieni pazienti associati
+            # Ottieni pazienti associati
             pazienti = self.get_pazienti_associati(id_diabetologo)
             
-            # 3. Crea e notifica gli Observer direttamente
+            # Crea e notifica gli Observer (uno per paziente) direttamente
             observers = [PazienteDiabetologoObserver(p) for p in pazienti]
             
-            # 4. PRIMA notifica gli observer (così possono accedere al diabetologo)
+            # PRIMA notifica gli observer (così possono accedere al diabetologo)
             for observer in observers:
                 observer.on_diabetologo_deleted(id_diabetologo, diabetologo_name)
             
