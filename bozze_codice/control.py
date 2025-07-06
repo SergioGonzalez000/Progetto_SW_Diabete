@@ -1627,7 +1627,7 @@ def registra_callbacks(app):
 
         # Click su "Sì"
         if n_clicks_yes:
-            model.Admin.elimina_diabetologo(id_diabetologo)
+            current_user.elimina_diabetologo(id_diabetologo)
             nuova_lista = view.layout_lista_diabetologi()
             return nuova_lista, False
 
