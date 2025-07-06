@@ -288,7 +288,7 @@ def registra_callbacks(app):
         Output("dettagli-richiesta-paziente", "children"),
         Input("dropdown-richieste-pazienti", "value")
     )
-    def mostra_dettagli_paziente(id_richiesta):
+    def mostra_dettagli_paziente_richiesta(id_richiesta):
         if not id_richiesta:
             return None
         dati = model.get_dati_richiesta_account_by_id(id_richiesta)
@@ -313,7 +313,7 @@ def registra_callbacks(app):
         Output("dettagli-richiesta-diabetologo", "children"),
         Input("dropdown-richieste-diabetologi", "value")
     )
-    def mostra_dettagli_diabetologo(id_richiesta):
+    def mostra_dettagli_diabetologo_richiesta(id_richiesta):
         if not id_richiesta:
             return None
         dati = model.get_dati_richiesta_account_by_id(id_richiesta)

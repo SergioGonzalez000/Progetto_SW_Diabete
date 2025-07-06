@@ -2378,6 +2378,21 @@ def crea_card_paziente(dati_paziente, dati_diab):
     # Data di nascita formattata in %d/%m/%Y
     formatted_date = dati_paziente['data_nascita'].strftime("%d/%m/%Y")
 
+    # Gestione del diabetologo (se non presente)
+    diab_info = {
+        'nome': "Nessun diabetologo associato",
+        'cognome': "",
+        'id_diabetologo': ""
+    }
+    
+    if dati_diab:  # Se esiste un diabetologo associato
+        diab_info = {
+            'nome': dati_diab.get('nome', ''),
+            'cognome': dati_diab.get('cognome', ''),
+            'id_diabetologo': dati_diab.get('id_diabetologo', '')
+        }
+
+
     card_paziente = html.Div([
 
         # Header con info principali
@@ -2391,7 +2406,12 @@ def crea_card_paziente(dati_paziente, dati_diab):
             # Diabetologo associato
             html.Div([
                 html.H4("Diabetologo associato:", style={'color': 'gray'}),
-                html.H4(f"{dati_diab['nome']} {dati_diab['cognome']} (ID: {dati_diab['id_diabetologo']})")
+                # html.H4(f"{dati_diab['nome']} {dati_diab['cognome']} (ID: {dati_diab['id_diabetologo']})")
+                html.H4(
+                    f"{dati_diab['nome']} {dati_diab['cognome']} (ID: {dati_diab['id_diabetologo']})" 
+                    if dati_diab 
+                    else "Nessun diabetologo associato"
+                )
             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justify-content': 'center'})
         ], style={'display': 'flex', 'flexDirection': 'row'}),
 
