@@ -1142,6 +1142,9 @@ def registra_callbacks(app):
         if not n_clicks:
                 # non aggiornare nulla:
                 return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
+        if valore<0:
+            return dash.no_update,dash.no_update,"Valore glicemico sbagliato!",True,"danger",trigger
+        
         if n_clicks and valore:
             current_user.inserisci_glicemia(valore, sintomi, flag_pasto)
             model.check_glicemia(model.get_user_id(),valore,flag_pasto) #notifica il medico se è troppo alta

@@ -709,7 +709,6 @@ patient_dashboard = html.Div(
                 dcc.Input(
                     placeholder="Inserisci glicemia...",
                     type="number",
-                    value=0,
                     id="input-glicemia",
                     debounce=True,
                     n_submit=0,
