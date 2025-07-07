@@ -1067,14 +1067,50 @@ def registra_callbacks(app):
     @app.callback(
         Output("popup-modifica-terapia", "is_open", allow_duplicate=True),
         Output("interval-chiudi-modal-terapia", "disabled", allow_duplicate=True),
+        Output("store-reset-attivo", "data"),
         Input("interval-chiudi-modal-terapia", "n_intervals"),
         State("popup-modifica-terapia", "is_open"),
         prevent_initial_call=True
     )
     def chiudi_popup_modifica_terapia(n_intervals, is_open):
         if n_intervals and is_open:
-            return False, True  # chiude il modal e disabilita l'intervallo
-        return dash.no_update, dash.no_update
+            return False, True, True  # chiude il modal, disabilita l'intervallo e permettere il reset del dropdown
+        return dash.no_update, dash.no_update, dash.no_update
+    
+
+    # callbacks di aggiornamento automatico della terapia. Funziona in un modo macchinoso ma ok.
+    # Praticamente modifico il valore del dropdown manualmente due volte: prima tolgo il value, poi rimetto quello precedente.
+    @app.callback(
+        Output("store-valore-dropdown", "data"),
+        Input("dropdown-terapia-selezionata", "value"),
+    )
+    def salva_valore_corrente(val):
+        return val
+    
+    @app.callback(
+        Output("dropdown-terapia-selezionata", "value", allow_duplicate=True),
+        Input("store-reset-attivo", "data"),
+        State("store-valore-dropdown", "data"),
+        prevent_initial_call=True
+    )
+    def resetta_e_ripristina_dropdown(reset_attivo, valore_salvato):
+        if reset_attivo and valore_salvato is not None:
+            return None  # prima azzeriamo
+        raise dash.exceptions.PreventUpdate
+
+
+    @app.callback(
+        Output("dropdown-terapia-selezionata", "value", allow_duplicate=True),
+        Output("store-reset-attivo", "data", allow_duplicate=True),  # lo resetti a False
+        Input("dropdown-terapia-selezionata", "value"),
+        State("store-valore-dropdown", "data"),
+        State("store-reset-attivo", "data"),
+        prevent_initial_call=True
+    )
+    def ripristina_valore_dropdown(val, val_salvato, reset_attivo):
+        if val is None and val_salvato is not None and reset_attivo:
+            return val_salvato, False
+        return dash.no_update, reset_attivo
 
 
 #******************************************************************************************************************

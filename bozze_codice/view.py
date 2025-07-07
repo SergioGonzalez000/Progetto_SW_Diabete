@@ -20,11 +20,13 @@ def getLayout():
             # interval per attendere post modifica terapia
             dcc.Interval(
                 id='interval-chiudi-modal-terapia',
-                interval=2500,  
+                interval=2000,  
                 n_intervals=0,
                 disabled=True,
                 max_intervals=1
             ),
+            dcc.Store(id="store-valore-dropdown"),
+            dcc.Store(id="store-reset-attivo", data=False),
             
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
@@ -1875,7 +1877,7 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
 
                             # Box per gli alert:
-                            dbc.Alert(id="modifica-terapia-output", is_open=False, duration=1500),
+                            dbc.Alert(id="modifica-terapia-output", is_open=False, duration=2000),
 
                             # Modal di eliminazione terapia:
                             dbc.Modal([
