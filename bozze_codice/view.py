@@ -17,7 +17,7 @@ def getLayout():
             dcc.Store(id="selected-patient-id",data=None),
             dcc.Store(id="terapia-selezionata", data=None),
 
-            # interval per attendere post modifica terapia
+            # interval per il modal "modifica terapia"
             dcc.Interval(
                 id='interval-chiudi-modal-terapia',
                 interval=2000,  
@@ -27,6 +27,16 @@ def getLayout():
             ),
             dcc.Store(id="store-valore-dropdown"),
             dcc.Store(id="store-reset-attivo", data=False),
+
+            # interval per il modal "nuova terapia"
+            dcc.Interval(
+                id="interval-chiudi-modal-nuova-terapia",
+                interval=1500,  
+                n_intervals=0,
+                disabled=True,
+                max_intervals=1
+            ),
+            dcc.Store(id='store-refresh-terapie', data=0),
             
             # Contenuto della pagina:
             # Per testare c'è la patient dashboard
@@ -1246,7 +1256,7 @@ doctor_patient = html.Div(
                                                 ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'gap': '20px'}, className='mb-3'),
 
                                                 # Box per gli alert:
-                                                dbc.Alert(id="aggiungi-terapia-output", is_open=False)
+                                                dbc.Alert(id="aggiungi-terapia-output", is_open=False, duration= 1500)
                                             ],
                                             style={
                                                 'flex': 3,

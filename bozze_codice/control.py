@@ -849,62 +849,66 @@ def registra_callbacks(app):
 # ******************************************************************************************************************
     # CALLBACK PER DROPDOWN TERAPIE
     @app.callback(
-         Output("patient-therapy","children"),
-         Input("url","pathname"),
-         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        Output("patient-therapy", "children"),
+        Input("url", "pathname"),
+        Input("selected-patient-id", "data"),
+        Input("store-refresh-terapie", "data"),
     )
-    def visualizza_dropdown_terapie(path,n_clicks):
-        # id dell'ultimo elemento triggerato nel context (pagina)
-        trigger_id = ctx.triggered_id
-
-        if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
+    def visualizza_dropdown_terapie(path, id_paz, refresh_count):
+        if not id_paz and path == "/doctor-patient":
             return html.H5("Seleziona un paziente.", style={'color': 'gray'})
-        
-        # Id paziente             
-        id_paz = trigger_id.get('index')
-        
-        if path=="/doctor-patient":
-            id_diab=current_user.get_id_diabetologo()
-            terapie=model.get_terapie_paziente(id_diab,id_paz)
-            # Se la lista delle terapie è vuota: mostra solo il pulsante "Nuova terapia"
+
+        if path == "/doctor-patient":
+            id_diab = current_user.get_id_diabetologo()
+            terapie = model.get_terapie_paziente(id_diab, id_paz)
             if not terapie:
-                return html.Div([  
-                    html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom':'80px'}),
-                    dbc.Button(
-                        "Nuova Terapia",
-                        id='aggiungi-terapia-btn',
-                        n_clicks=0,
-                        style={
-                            'width': '100%',
-                            'border':'none',
-                            'margin-top': 'auto',
-                            'border-radius': '25px',
-                            'padding': '10px 25px',
-                            'font-size':'20px'                
-                            }
-                        )
-                    ],
-                    style={
-                        'flex': 1,
-                        'height': '100%',   
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                    }
-                )
-            # Altrimenti:   
+                return html.Div([
+                    html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom': '80px'}),
+                    dbc.Button("Nuova Terapia", id='aggiungi-terapia-btn', n_clicks=0,
+                            style={'width': '100%', 'border': 'none', 'margin-top': 'auto', 'border-radius': '25px',
+                                    'padding': '10px 25px', 'font-size': '20px'})
+                ], style={'flex': 1, 'height': '100%', 'display': 'flex', 'flexDirection': 'column'})
             return view.crea_div_terapia_dropdown(terapie)
-        elif path=="/patient-dashboard":
-            id_paz=current_user.get_id_paziente()
-            diab= current_user.get_diabetologo()[0]
-            id_diab=diab["id"]
-            terapie=model.get_terapie_paziente(id_diab,id_paz)
-            # Se la lista delle terapie è vuota: mostra solo il pulsante "Nuova terapia"
+
+        elif path == "/patient-dashboard":
+            id_paz = current_user.get_id_paziente()
+            diab = current_user.get_diabetologo()[0]
+            id_diab = diab["id"]
+            terapie = model.get_terapie_paziente(id_diab, id_paz)
             if not terapie:
-                return html.Div([html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom':'80px'}),])
+                return html.Div([
+                    html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom': '80px'}),
+                ])
             return view.crea_div_terapia_dropdown(terapie)
+
         else:
             return dash.no_update
+
         
+    @app.callback(
+        Output('selected-patient-id', 'data', allow_duplicate=True),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        prevent_initial_call=True
+    )
+    def salva_id_paziente(n_clicks_list):
+        ctx_trigger = ctx.triggered_id
+        if ctx_trigger and isinstance(ctx_trigger, dict):
+            return ctx_trigger.get('index')
+        raise dash.exceptions.PreventUpdate
+    
+    @app.callback(
+        Output('store-refresh-terapie', 'data'),
+        Input('salva-nuova-terapia-btn', 'n_clicks'),
+        State('store-refresh-terapie', 'data'),
+        prevent_initial_call=True
+    )
+    def aggiorna_refresh_terapie(n_clicks, current_value):
+        if n_clicks:
+            # Incrementa il contatore per forzare refresh
+            return (current_value or 0) + 1
+        raise dash.exceptions.PreventUpdate
+
+            
 # ******************************************************************************************************************
     #mostra al paziente la div col dropdown che contiene tutte le terapie
     @app.callback(
@@ -1114,17 +1118,17 @@ def registra_callbacks(app):
 
 
 #******************************************************************************************************************
-    #callback per aprire il pop up aggiungi terapia
-    @app.callback(
-        Output("popup-nuova-terapia", "is_open"),
-        [Input("aggiungi-terapia-btn", "n_clicks"), Input("chiudi-nuova-terapia", "n_clicks")],
-        [State("popup-nuova-terapia", "is_open")],
-        prevent_initial_call=True
-    )
-    def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
-        if n_apri or n_chiudi:
-            return not is_open
-        return is_open
+    # #callback per aprire il pop up aggiungi terapia
+    # @app.callback(
+    #     Output("popup-nuova-terapia", "is_open"),
+    #     [Input("aggiungi-terapia-btn", "n_clicks"), Input("chiudi-nuova-terapia", "n_clicks")],
+    #     [State("popup-nuova-terapia", "is_open")],
+    #     prevent_initial_call=True
+    # )
+    # def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
+    #     if n_apri or n_chiudi:
+    #         return not is_open
+    #     return is_open
 
 
 #******************************************************************************************************************
@@ -1169,6 +1173,44 @@ def registra_callbacks(app):
             return "Terapia inserita con successo", "success", True
         else:
             return dash.no_update
+        
+
+    ## merda
+
+    @app.callback(
+        Output("popup-nuova-terapia", "is_open"),
+        Input("aggiungi-terapia-btn", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def apri_popup_nuova_terapia(n_clicks):
+        if n_clicks:
+            return True  # solo apertura, senza toccare l'intervallo
+        raise dash.exceptions.PreventUpdate
+    
+    @app.callback(
+        Output("interval-chiudi-modal-nuova-terapia", "disabled"),
+        Input("salva-nuova-terapia-btn", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def abilita_interval(n_clicks):
+        if n_clicks:
+            return False  # abilita l'intervallo per far partire il timer
+        raise dash.exceptions.PreventUpdate
+
+    
+    @app.callback(
+        Output("popup-nuova-terapia", "is_open", allow_duplicate=True),
+        Output("interval-chiudi-modal-nuova-terapia", "disabled", allow_duplicate=True),
+        Input("interval-chiudi-modal-nuova-terapia", "n_intervals"),
+        State("popup-nuova-terapia", "is_open"),
+        prevent_initial_call=True
+    )
+    def chiudi_popup_nuova_terapia(n_intervals, is_open):
+        if n_intervals and is_open:
+            return False, True
+        return dash.no_update, dash.no_update
+
+    ## merda
 
 #******************************************************************************************************************
     #callback per far partire correttamente la scelta della data fine terapia
