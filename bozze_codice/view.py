@@ -44,7 +44,7 @@ guest_navlinks = dbc.Nav(
         # Link della pagina della chat
         dbc.NavLink("Login", href="/login", active="exact", style={"fontSize": "25px"}, className="mb-4"), 
         # Link per la pagina dei pazienti
-        dbc.NavLink("Registration", href="/registration", active="exact", style={"fontSize": "25px"}, className="mb-1.5"),
+        dbc.NavLink("Registrazione", href="/registration", active="exact", style={"fontSize": "25px"}, className="mb-1.5"),
         html.Hr() 
     ],
     # Disposizione dei NavLink in verticale
@@ -190,7 +190,7 @@ username_box = html.Div(
             [
                 # Il placeholder è necessario per il corretto funzionamento di FormFloating() anche se non visibile
                 dbc.Input(type="text", id="username-input", placeholder="Username", className='input'),
-                dbc.Label("Enter username"),
+                dbc.Label("Inserisci username generato"),
             ]
         )
     ],
@@ -223,9 +223,9 @@ signIn_button = html.Div(
 
 # Sign Up link: Link per la pagina di registrazione qualora non si avesse ancora un account
 signUp_link = html.Div([
-    html.Span("Don't have an account? "),
+    html.Span("Non hai un account? "),
     html.A(
-        "Register",
+        "Registrati",
         # Rimanda al link "/register" dove c'è la pagina con i form di registrazione
         href="/registration",
         className="text-primary"
@@ -277,7 +277,7 @@ login = html.Div(
 
 # Titolo
 registration_title = html.H1(
-    "Registration",
+    "Registrazione",
     style={"textAlign": "center"},
     # margin bottom 3
     className="mb-3"
@@ -363,7 +363,7 @@ form1 = html.Div(
         # Link per il Login
         html.Div(
             [
-                html.Span("Already have an account? "),
+                html.Span("Hai già un account? "),
                 html.A(
                     "Login",
                     href="/login",
@@ -428,7 +428,7 @@ form2 = html.Div(
         # Link per il Login
         html.Div(
             [
-                html.Span("Already have an account? "),
+                html.Span("Hai già un acccount? "),
                 html.A(
                     "Login",
                     href="/login",
@@ -446,17 +446,6 @@ form2 = html.Div(
 # ID: "generated-username", "scelta-password", "conferma-password", "registration-input"
 form3 = html.Div(
     [
-        # Username generato
-        dbc.Card(
-            [
-                html.H5("Username:", style={'color': 'gray'}),
-                dbc.CardBody(
-                    [
-                        html.P(id="generated-username")
-                    ]
-                )
-            ], className='mb-4'
-        ),
         # Scelta password
         dbc.FormFloating(
             [
@@ -476,11 +465,22 @@ form3 = html.Div(
         html.Div(
             dbc.Button("Registrati", id="registration-input", size="lg", n_clicks=0, className='button mb-4')
         ),
+        # Username generato
+        dbc.Card(
+            [
+                html.H5("Username:", style={'color': 'gray'}),
+                dbc.CardBody(
+                    [
+                        html.P(id="generated-username")
+                    ]
+                )
+            ], className='mb-4'
+        ),
 
         # Link per il Login
         html.Div(
             [
-                html.Span("Already have an account? "),
+                html.Span("Hai gia un account? "),
                 html.A(
                     "Login",
                     href="/login",
