@@ -964,6 +964,7 @@ patient_graphs = html.Div(
 
                             # Date inizio e fine
                             dbc.Row([
+                                html.H6("Data inizio - Data fine (opzionale)", style={"color": "grey"}),
                                 dbc.Col(
                                     dbc.Input(
                                         id="data-inizio-segnalazione",
@@ -1447,6 +1448,25 @@ def render_lista_pazienti_glicemia(pazienti):
 
 def crea_div_paziente(cfanno, info, segnalazioni):
     codice_fiscale, eta, nome = cfanno[0]
+     # Visualizzazione segnalazioni
+    segnalazioni_div = []
+    # Se ci sono segnalazioni:
+    if segnalazioni:
+        # Aggiungi un titolo
+        segnalazioni_div.append(html.H5("Segnalazioni:"))
+        for tipo, descrizione, data_inizio, data_fine in segnalazioni:
+            periodo = f"Dal {data_inizio.strftime('%d/%m/%Y')}"
+            if data_fine:
+                periodo += f" al {data_fine.strftime('%d/%m/%Y')}"
+            segnalazioni_div.append(
+                html.Div([
+                    html.Span(tipo.capitalize() + ": "), html.Span(descrizione),
+                    html.Br(), html.Small(periodo),
+                ])
+            )
+    else:
+        segnalazioni_div = [html.H6("Nessuna segnalazione presente.")]
+
     # Div per quando non ci sono informazioni:
     no_info = html.Div([
             # Header:
@@ -1463,7 +1483,18 @@ def crea_div_paziente(cfanno, info, segnalazioni):
             ], style={'flex': 1, 'display': 'flex', 'flexDirection': 'row', 'margin-bottom': '5px'}),
 
             html.H5("Non ci sono informazioni.", style={'color': 'gray'}),
-
+            html.Div([
+                    *segnalazioni_div,
+                ],
+                style={
+                    'flex': 1, 
+                    'flexDirection': 'column', 
+                    'background-color': '#f8f9fa', 
+                    'border-radius': '15px', 
+                    'overflowY': 'auto',
+                    'padding': '5px',
+                }
+            ),
             dbc.Modal(
                 [
                     dbc.ModalHeader(dbc.ModalTitle("Paziente")),
@@ -1554,25 +1585,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
     fattori = f"Fattori di rischio: {', '.join(sorted(fattori_rischio))}" if fattori_rischio else ""
     comorb = f"Comorbidità: {', '.join(sorted(comorbidita))}" if comorbidita else ""
 
-    # Visualizzazione segnalazioni
-    segnalazioni_div = []
-    # Se ci sono segnalazioni:
-    if segnalazioni:
-        # Aggiungi un titolo
-        segnalazioni_div.append(html.H5("Segnalazioni:"))
-        for tipo, descrizione, data_inizio, data_fine in segnalazioni:
-            periodo = f"Dal {data_inizio.strftime('%d/%m/%Y')}"
-            if data_fine:
-                periodo += f" al {data_fine.strftime('%d/%m/%Y')}"
-            segnalazioni_div.append(
-                html.Div([
-                    html.Span(tipo.capitalize() + ": "), html.Span(descrizione),
-                    html.Br(), html.Small(periodo),
-                ])
-            )
-    else:
-        segnalazioni_div = [html.H6("Nessuna segnalazione presente.")]
-
+   
     # DIV con informazioni del paziente:
     con_info = html.Div([
             # Header:

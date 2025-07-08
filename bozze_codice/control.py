@@ -541,9 +541,6 @@ def registra_callbacks(app):
             return html.H5("Seleziona un grafico.", style={'color': 'gray', 'margin-top': '10px'})
 
         dati = model.get_eventi_basso_glucosio(id_paz) if scelta=="basso" else model.get_dati_glicemia_filtrati(id_paz,filtro,scelta) 
-        oggi = date.today()
-        mese = oggi.month     # restituisce un intero, es. 6 per giugno
-        anno = oggi.year
         if pathname == "/doctor-patient" and scelta:
             # TRY CATHC per la costruzione del grafico
             try:
@@ -1017,9 +1014,10 @@ def registra_callbacks(app):
             data_i = data_i or None
             data_f = data_f or None
             #controlla se sono tutte nulle, in tal caso ritorna informazioni mancanti
-            if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni, data_i, data_f]):
+            if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni]):
                 return "Informazioni mancanti", "danger", True
-
+            if not data_i:
+                return "Data inizio non valida", "danger", True
             if data_i and data_f and data_f < data_i:
                 return "Data fine non valida", "danger", True
 
@@ -1122,32 +1120,42 @@ def registra_callbacks(app):
         Output("inserisci-glicemia-output", "is_open"),
         Output("inserisci-glicemia-output", "color"),
         Output("trigger-aggiorna-grafico", "data"),
+        Output("input-sintomi-riscontrati", "value"),  # Resetta sintomi
+        Output("input-glicemia", "value"),            # Resetta glicemia
         Input("url", "pathname"),
         Input("inserisci-glicemia", "n_clicks"),
         Input("input-sintomi-riscontrati", "value"),
-        Input("pre-post-pasto","value"),
+        Input("pre-post-pasto", "value"),             
         State("input-glicemia", "value"),
         State("number", "children"),
         State("cerchio-colorato", "style"),
         State("trigger-aggiorna-grafico", "data"),
         prevent_initial_call=True
     )
-    def aggiorna_cerchio(path, n_clicks,  sintomi, flag_pasto, valore, number, stile_corrente, trigger):
-
-       
-        if path != "/patient-dashboard":
-            return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
-
-        # Se non è stato premuto nulla:
-        if not n_clicks:
-                # non aggiornare nulla:
-                return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
-        if valore<0:
-            return dash.no_update,dash.no_update,"Valore glicemico sbagliato!",True,"danger",trigger
+    def aggiorna_cerchio(path, n_clicks, sintomi, flag_pasto, valore, number, stile_corrente, trigger):
+        trigger_id = ctx.triggered_id
         
-        if n_clicks and valore:
+        # Default: no_update per tutti gli Output (8 elementi)
+        no_update = dash.no_update
+        default_return = (no_update, no_update, no_update, no_update, no_update, trigger, no_update, no_update)
+        
+        if path != "/patient-dashboard":
+            return default_return
+
+        if not n_clicks:
+            return default_return
+
+        if not valore:
+            return (
+                number,stile_corrente, "Tutti i campi obbligatori devono essere compilati.",True,"danger", trigger, no_update, no_update)
+        
+        if valore < 0:
+            return (no_update, no_update, "Valore glicemico sbagliato!", True, "danger", trigger, no_update, no_update)
+        
+        if trigger_id == "inserisci-glicemia" and valore:
             current_user.inserisci_glicemia(valore, sintomi, flag_pasto)
-            model.check_glicemia(model.get_user_id(),valore,flag_pasto) #notifica il medico se è troppo alta
+            model.check_glicemia(model.get_user_id(), valore, flag_pasto)
+            
             if valore < 80:
                 colore = "#FF4C4C"
             elif 80 <= valore <= 130:
@@ -1156,13 +1164,13 @@ def registra_callbacks(app):
                 colore = "#FFD93B"
             else:
                 colore = "#FF4C4C"
-            return valore, {"background-color": colore}, "Inserimento corretto", True, "success", trigger + 1
-
-
-        # Controlla che i campi obbligatori non siano vuoti o None
-        if not valore:
-            return number, stile_corrente, "Tutti i campi obbligatori devono essere compilati.", True, "danger", trigger
-    
+                
+            return (valore, {"background-color": colore}, "Inserimento corretto", True, "success", trigger + 1, 
+                "",  # Resetta sintomi
+                None   # Resetta glicemia
+            )
+        
+        return default_return
 
 
 
@@ -1173,29 +1181,30 @@ def registra_callbacks(app):
         Output("output-assunzione","children"),
         Output("output-assunzione", "is_open"),
         Output("output-assunzione", "color"),
+        Output("input-farmaco-usato","value"),
+        Output("input-dosaggio-usato","value"),
         Input("input-farmaco-usato","value"),
         Input("input-dosaggio-usato","value"),
         Input("inserisci-assfarmaco-btn","n_clicks"),
         Input("url","pathname")
     )
     def inserisci_assunzione_farmaco(farmaco,dosaggio,n_clicks,path):
+        triggered_id=ctx.triggered_id
         if path=="/patient-dashboard":
-            if farmaco and dosaggio and n_clicks>0:
+            if farmaco and dosaggio and triggered_id=="inserisci-assfarmaco-btn":
                 current_user.inserisci_assunzione_farmaco(farmaco,dosaggio)
                 model.check_farmaco(model.get_user_id(),farmaco, dosaggio)
-                return "Inserimento avvenuto correttamente", True, "success"
-            elif (not farmaco or not dosaggio) and n_clicks>0:
+                return "Inserimento avvenuto correttamente", True, "success", "", None
+            elif (not farmaco or not dosaggio) and triggered_id=="inserisci-assfarmaco-btn":
                 n_clicks=n_clicks-1
-                return "Informazioni mancanti", True, "danger"
-            elif (not farmaco or not dosaggio) and n_clicks==0:
-                return dash.no_update
+                return "Informazioni mancanti", True, "danger",dash.no_update,dash.no_update
             else:
-                return dash.no_update
+                return dash.no_update,dash.no_update,dash.no_update,dash.no_update,dash.no_update
         else:
-            return dash.no_update
-    #callback che inserisce i grafici al paziente
+            return dash.no_update,dash.no_update,dash.no_update,dash.no_update,dash.no_update
 
 #************************************************************************************************************************************
+    #callback che inserisce i grafici al paziente
 
     @app.callback(
         Output('first-graph', 'children'),
