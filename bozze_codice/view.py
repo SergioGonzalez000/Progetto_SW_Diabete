@@ -26,9 +26,8 @@ def getLayout():
             # Page content e navbar occupano l'intera altezza della pagina
             "minHeight": "100vh",
             # Colore sfondo standard fisso
-            "background-color": "#e6f2ff",
-            #fil-altezza della parte azzurra che si adatta automaticamente
-            #"height": "auto",
+            #"background-color": "#e6f2ff", #c2dfff 
+            'background': 'linear-gradient(to bottom right, #dfffe0 0%, #e6f2ff 60%, #c2dfff 100%)',
             # Nessun margine al contenuto affinché occupi tutta la pagina disponibile
             "margin": 0
         }
@@ -117,7 +116,7 @@ admin_navlinks = dbc.Nav(
 sidebar = html.Div(
     [
         # Titolo
-        html.H1("MyAPP", className="text-primary"),
+        html.H1("DiaLog", className="text-primary"),
         html.Hr(),
 
         # Per testare è fissa quella del paziente, da modificare con la callback in base al tipo di utente
@@ -166,7 +165,7 @@ home = html.Div(
         "gap": "40px" 
     },
     children=[
-        html.H2("Da fare")
+        html.Div("Da ultimare")
     ]
 )
 
@@ -175,7 +174,7 @@ home = html.Div(
 # LOGIN NUOVO:
 
 login_title = html.H1(
-    "Login",
+    "Accedi",
     style={"textAlign": "center"},
     # margin bottom 3
     className="mb-3"
@@ -217,15 +216,15 @@ password_box = html.Div(
 # Pulsante Sign In
 # ID = "login-input"
 signIn_button = html.Div(
-    dbc.Button("Accedi", id="login-input", size="lg", n_clicks=0, className='button'),
+    dbc.Button("Accedi", id="login-input", size="lg", n_clicks=0, style={'border-radius':'35px'}, className='button'),
     style={'marginTop': '30px'}
 )
 
 # Sign Up link: Link per la pagina di registrazione qualora non si avesse ancora un account
 signUp_link = html.Div([
-    html.Span("Don't have an account? "),
+    html.Span("Non hai un account? "),
     html.A(
-        "Register",
+        "Registrati",
         # Rimanda al link "/register" dove c'è la pagina con i form di registrazione
         href="/registration",
         className="text-primary"
@@ -277,7 +276,7 @@ login = html.Div(
 
 # Titolo
 registration_title = html.H1(
-    "Registration",
+    "Registrati",
     style={"textAlign": "center"},
     # margin bottom 3
     className="mb-3"
@@ -363,9 +362,9 @@ form1 = html.Div(
         # Link per il Login
         html.Div(
             [
-                html.Span("Already have an account? "),
+                html.Span("Hai già un account? "),
                 html.A(
-                    "Login",
+                    "Accedi",
                     href="/login",
                     className="text-primary"
                 )
@@ -446,17 +445,6 @@ form2 = html.Div(
 # ID: "generated-username", "scelta-password", "conferma-password", "registration-input"
 form3 = html.Div(
     [
-        # Username generato
-        dbc.Card(
-            [
-                html.H5("Username:", style={'color': 'gray'}),
-                dbc.CardBody(
-                    [
-                        html.P(id="generated-username")
-                    ]
-                )
-            ], className='mb-4'
-        ),
         # Scelta password
         dbc.FormFloating(
             [
@@ -474,7 +462,7 @@ form3 = html.Div(
 
         # Pulsante di registrazione
         html.Div(
-            dbc.Button("Registrati", id="registration-input", size="lg", n_clicks=0, className='button mb-4')
+            dbc.Button("Registrati", id="registration-input", size="lg",  style={'border-radius':'35px'}, n_clicks=0, className='button mb-3')
         ),
 
         # Link per il Login
@@ -487,6 +475,27 @@ form3 = html.Div(
                     className="text-primary"
                 )
             ],
+        ),
+
+        # Username generato
+        dbc.Card(
+            [
+                html.H5("Username generato:", style={'color': 'gray'}),
+                dbc.CardBody(
+                    [
+                        html.P(id="generated-username")
+                    ]
+                )
+            ], className='mt-3 mb-3'
+        ),
+
+        # Avviso:
+        html.Small(
+            "Attenzione: lo username apparirà solo quando la tua richiesta verrà accettata. Potrebbe volerci qualche minuto.",
+            style={
+                'color': 'red'
+            },
+            className='mb-3'
         )
     ],
     id="form3",
@@ -736,7 +745,14 @@ patient_dashboard = html.Div(
                     inputStyle={"margin-right": "5px"},
                     style={"textAlign": "center"}
                 ),
-                dbc.Button("Inserisci glicemia",id="inserisci-glicemia",n_clicks=0,style={'border': 'none', 'border-radius': '25px'}),
+                dbc.Button("Aggiorna Glicemia",id="inserisci-glicemia",n_clicks=0,
+                           style={
+                               'border': 'none', 
+                               'border-radius': '25px',
+                               'font-size': '20px'
+                            },
+                            class_name="mt-3"
+                        ),
                 dbc.Alert(id="inserisci-glicemia-output",is_open=False,duration=5000),
                 html.Hr(),
                 html.Div(
@@ -770,7 +786,14 @@ patient_dashboard = html.Div(
                         ),
                     ]
                 ),
-                dbc.Button("Inserisci assunzione", id="inserisci-assfarmaco-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
+                dbc.Button("Inserisci assunzione", id="inserisci-assfarmaco-btn", n_clicks=0, 
+                           style={
+                               'border': 'none', 
+                               'border-radius': '25px',
+                               'font-size': '20px'
+                            },
+                            class_name="mt-2"
+                        ),
                 # Feedback
                 dbc.Alert(id="output-assunzione", is_open=False,duration=5000),                           
             ]
@@ -940,7 +963,7 @@ patient_graphs = html.Div(
                     [
                         html.Div([
 
-                            html.H6("Nuova Segnalazione:", style={"color": "grey"}),
+                            html.H5("Nuova Segnalazione:", style={"color": "grey"}),
                             html.Br(),
                             # Tipo segnalazione
                             dcc.Dropdown(
@@ -986,8 +1009,8 @@ patient_graphs = html.Div(
                                 ),
                             ]),
 
-                            # Bottone di invio
-                            dbc.Button("Invia Segnalazione", id="invia-segnalazione-btn", n_clicks=0, style={'border': 'none', 'border-radius': '25px'}),
+                            # Bottone di invio 'padding-top':'20px', 'padding-bottom':'20px'
+                            dbc.Button("Invia Segnalazione", id="invia-segnalazione-btn", n_clicks=0, style={'padding-top':'10px', 'padding-bottom':'10px', 'fontSize':'20px','width':'100%', 'border': 'none', 'border-radius': '25px'}),
 
                             # Feedback
                             dbc.Alert(id="output-segnalazione", is_open=False, duration=5000),
@@ -3110,7 +3133,7 @@ def layout_lista_messaggi(messaggi):
     Args:
         messages: Lista di tuple (contenuto, orario,is_mittente). ci appendo i messaggi della query
     """
-    if not messaggi: return html.P("Non ci sono messaggi da visualizzare")
+    if not messaggi: return html.H4("Inizia a scrivere!", style={'color':'gray'})
     message_cards = []
     data_precedente = None  #variabile per capire quando si cambia giorno
     for contenuto, orario, giorno, is_mittente, is_paziente in messaggi:
@@ -3139,22 +3162,21 @@ def layout_lista_messaggi(messaggi):
         card_style = {
             'maxWidth': '65%',
             'width': 'fit-content',  # Adatta la larghezza al testo
-            'minHeight': 'auto',     # Altezza minima automatica
-            'maxHeight': 'fit-content',
+            'Height': 'fit-content',
             'marginLeft': 'auto' if is_mittente else '0',
             'marginRight': '0' if is_mittente else 'auto',
+            'marginTop': '10px',
             'marginBottom': '10px',
             'padding': '8px 12px',
             'backgroundColor': "#C6E9F9" if is_mittente else '#f8f9fa',
             'border': 'none',
             'borderRadius': '25px',
             'wordBreak': 'break-word',  #Forza a capo per parole lunghe
-            'fontSize': '1.2em'
+            'fontSize': '1.2em',
         }        
         card = dbc.Card(
             dbc.CardBody([
                 contenuto,
-                html.Br(),
                 # Orario:
                 html.Small(
                     orario.strftime("%H:%M"), 
@@ -3172,7 +3194,7 @@ def layout_lista_messaggi(messaggi):
         )
         message_cards.append(card)
     
-    return html.Div(message_cards, className = "messages-container")
+    return html.Div(message_cards)
 
 #************************************************************************************************************
 # GENERA LA LISTA DI PULSANTI DEI CONTATTI
@@ -3268,53 +3290,68 @@ chat_content = html.Div(
                         "height": "10%",
                         # sfondo bianco
                         "background-color": "#ffffff",
-                        "padding": "2rem 2rem",
                         "borderBottom": "2px solid #dee2e6",
-                        
+                        'display': 'flex',
+                        'flexDirection': 'row'
                     },
                     children=[
-                        html.Div(id="nome-contatto", className="chat-header",   style={
-                                        "float": "left",  # Allinea a sinistra
-                                        "margin-left": "0",
-                                        "align-self": "flex-start"  # Per flexbox
-                                    }),  # Aggiungi questo
-                        dcc.Store(id="id-contatto-store", storage_type="memory"), #memorizza l'id del contatto
+
+                        # Colonna Nome del contatto
+                        html.Div(
+                            id="nome-contatto",
+                            style={
+                                'flex':1,
+                                "float": "left",  # Allinea a sinistra
+                                "margin-left": "0",
+                                "align-self": "flex-start",  # Per flexbox
+                                "padding": "2rem 2rem"
+                            }
+                        ),
+
+                        # Colonna Pulsante per gli avvisi
                         html.Div([
-                                # Bottone per aprire gli avvisi
-                                dbc.Button(
-                                    "Avvisi", 
-                                    id="open-alert-btn",
-                                    className = "btn-avvisi"
-                                ),
-                                
-                                # Modal con body vuoto inizialmente
-                                dbc.Modal(
-                                    [
-                                        dbc.ModalHeader("Avvisi: ", 
-                                                        style={
-                                                            'position': 'margin-left',
-                                                            'right': '15px',
-                                                            'bottom': '5px',
-                                                            'color': '#999',
-                                                            'fontSize': '1.2rem'
-                                                        }),
-                                        dbc.ModalBody(id="alert-body-content",
-                                                    style={
-                                                        "background-color":"#e6f2ff"    
-                                                    }
-                                                    ),  
-                                        dbc.ModalFooter(
-                                            dbc.Button("Chiudi", id="close-alert-btn")
-                                        )
-                                    ],
-                                    id="alert-modal",
-                                    is_open=False,
-                                    size="lg"
-                                ),
-                                
-                                # Store per mantenere i dati
-                                dcc.Store(id="alert-data-store")
-                            ]),
+                            # Bottone per aprire gli avvisi
+                            dbc.Button(
+                                "Avvisi", 
+                                id="open-alert-btn",
+                                className = "btn-avvisi"
+                            ),
+                            
+                            # Modal con body vuoto inizialmente:
+                            # Qui vengono visualizzati gli alert
+                            dbc.Modal(
+                                [
+                                    dbc.ModalHeader(
+                                                    html.H4("Avvisi", style={'color':'gray'}), 
+                                                ),
+                                    dbc.ModalBody(id="alert-body-content",
+                                                style={
+                                                    "background-color":"#e6f2ff",
+                                                    'height': '80vh',
+                                                    'overflowY': 'auto',
+                                                }
+                                                ),  
+                                    dbc.ModalFooter( #'border':'none',
+                                        dbc.Button("Chiudi", id="close-alert-btn", style={'border':'none','border-radius':'25px'})
+                                    )
+                                ],
+                                id="alert-modal",
+                                is_open=False,
+                                centered=True,
+                                size="lg"
+                            ),
+
+                            dcc.Store(id="id-contatto-store", storage_type="memory"), #memorizza l'id del contatto                     
+                            dcc.Store(id="alert-data-store")
+                        ], 
+                        style={
+                            'flex': 1,
+                            'display':'flex',
+                            'justify-content':'flex-end',
+                            'align-items': 'center',
+                            'height': '100%',
+                            'align-items':'center',
+                        })
                     ]
                 ),
 
@@ -3336,7 +3373,8 @@ chat_content = html.Div(
                         'scrollbarColor': '#cccccc transparent',
                         'overflowY': 'auto',
                         'padding': '20px',
-                        # Nessuno sfondo inserito
+                        # sfondo della chat
+                        'background': 'linear-gradient(to top left, #e6f2ff 0%, #c2dfff 100%)'
                     }, 
                 ),
                 dcc.Interval(
@@ -3375,8 +3413,8 @@ chat_content = html.Div(
         )
     ]
 )
-#DIV PER VISUALIZZARE LE ALERTS:
 
+#DIV PER VISUALIZZARE LE ALERTS:
 def layout_lista_alerts(alerts):
     if not alerts: 
         return html.P("Il paziente sta seguendo correttamente la terapia.")
@@ -3388,33 +3426,30 @@ def layout_lista_alerts(alerts):
                 html.H1(contenuto,
                         className = "text-muted mt-1",
                         style={
-                        'position': 'center',
                         'right': '15px',
                         'bottom': '5px',
-                        'color': '#999',
+                        'color': 'gray',
                         'fontSize': '1.7rem'
                     }),
-                html.Br(),
-                html.H1(
+                html.H2(
                     orario,
                     className="text-muted mt-1", 
                     style={
-                        'position': 'center',
                         'right': '15px',
                         'bottom': '5px',
-                        'color': '#999',
+                        'color': 'gray',
                         'fontSize': '1.2rem'
                     }
                 )
             ]),
             style={  
-                'marginBottom': '100px',
-                'position': 'central'
+                'marginBottom': '20px',
+                'position': 'central',
             }
         )
         alert_cards.append(card)
     
-    return html.Div(alert_cards)
+    return html.Div(alert_cards, style={'display':'flex', 'flexDirection':'column'})
 
 
 

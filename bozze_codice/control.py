@@ -1386,7 +1386,7 @@ def registra_callbacks(app):
         # Caso 1: Click su contatto (gestione JSON per ID complesso)
         if isinstance(triggered_id,dict) and triggered_id.get("type") == "btn-contatto"and id_contatto:
                 contatto = model.get_nomecognome(id_contatto)
-                nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
+                nome_contatto = html.H4(f"👤 {contatto.nome} {contatto.cognome}", style={'color': 'gray'})
                 if isinstance(current_user, model.Diabetologo):
                     return (
                     view.layout_lista_messaggi(model.get_messaggi(id_contatto)),
@@ -1426,7 +1426,6 @@ def registra_callbacks(app):
 
         # Caso 3: aggiornamento automatico
         elif n_intervals and id_contatto:
-          
             if isinstance(current_user, model.Diabetologo):
                 return (
                 view.layout_lista_messaggi(model.get_messaggi(id_contatto)),
