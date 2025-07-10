@@ -7,6 +7,11 @@ import plotly.graph_objects as go
 import pandas as pd
 import calendar
 from contextlib import contextmanager
+
+from abc import ABC, abstractmethod
+from typing import List
+from datetime import datetime
+
 # Eseguito una sola volta all'avvio
 
 class DBSingleton:
@@ -188,7 +193,7 @@ class Paziente(Persona):
     def inserisci_glicemia(self, valore, flag_pasto, sintomi=None ):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO Glicemia 
-                        (paziente, pasto, sintomo, valore) 
+                        (paziente, pasto, sintomi, valore) 
                         VALUES (%s, %s, %s, %s)""", 
                         (self.get_id_paziente(), flag_pasto, sintomi, valore))
 
@@ -236,6 +241,79 @@ class Paziente(Persona):
             id=self.get_id_paziente()
             cursore.execute("INSERT INTO SegnalazioniPaziente (paziente,tipo_segnalazione,descrizione,data_inizio,data_fine) VALUES (%s,%s,%s,%s,%s)",(id,tipo,descrizione,data_i,data_f))
     
+
+
+# Interfaccia Observer
+class DiabetologoDeletionObserver(ABC):
+    @abstractmethod
+    #metodo implementato negli observer che quando viene chiamato esegue la sequenza:
+    #trova nuovi diab, elimina diab, notifica pazienti con alert
+    def on_diabetologo_deleted(self, deleted_diabetologo_id: int, deleted_diabetologo_name: str):
+        pass
+
+# Concrete Observer per i Pazienti
+class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
+    def __init__(self, paziente: Paziente):
+        self.paziente = paziente
+    #implementazione del metodo degli observer
+    def on_diabetologo_deleted(self, deleted_diabetologo_id: int, deleted_diabetologo_name: str):
+        try:
+            #Trova nuovo diabetologo (escludendo quello eliminato)
+            nuovo_diabetologo_id = self._trova_nuovo_diabetologo(excluded_id=deleted_diabetologo_id)
+            
+            #Riassegna il paziente
+            self._riassegna_paziente(nuovo_diabetologo_id)
+            
+            #Crea alert per il paziente
+            self._crea_alert(deleted_diabetologo_name, nuovo_diabetologo_id)
+        except Exception as e:
+            print(f"Errore durante la riassegnazione del paziente {self.paziente.get_id_paziente()}: {str(e)}")
+            self._crea_alert_fallback(deleted_diabetologo_name)
+
+    def _trova_nuovo_diabetologo(self, excluded_id):
+        with DBSingleton.get_cursor() as cursore:
+            cursore.execute("""
+                SELECT d.id_diabetologo
+                FROM Diabetologo d
+                LEFT JOIN Paziente p ON d.id_diabetologo = p.diabetologo_associato
+                WHERE d.id_diabetologo != %s
+                GROUP BY d.id_diabetologo
+                ORDER BY COUNT(p.id_paziente) ASC
+                LIMIT 1
+            """, (excluded_id,))
+            
+            result = cursore.fetchone()
+            if not result:
+                raise ValueError("Nessun altro diabetologo disponibile per la riassegnazione")
+            return result[0]
+
+    def _riassegna_paziente(self, nuovo_diabetologo_id):
+        with DBSingleton.get_cursor() as cursore:
+            cursore.execute("""
+                UPDATE Paziente
+                SET diabetologo_associato = %s
+                WHERE id_paziente = %s
+            """, (nuovo_diabetologo_id, self.paziente.get_id_paziente()))
+
+    def _crea_alert(self, old_diabetologo_name, new_diabetologo_id):
+        with DBSingleton.get_cursor() as cursore:
+            cursore.execute("SELECT nome, cognome FROM Diabetologo WHERE id_diabetologo = %s", (new_diabetologo_id,))
+            new_doc = cursore.fetchone()
+            new_name = f"{new_doc[0]} {new_doc[1]}" if new_doc else "un nuovo specialista"
+            
+            messaggio = f"Il tuo diabetologo {old_diabetologo_name} non è più disponibile. Sei stato riassegnato al Dr. {new_name}."
+            cursore.execute("""
+                INSERT INTO alerts (id_paziente, orario, alert_case)
+                VALUES (%s, %s, %s)
+            """, (self.paziente.get_id_paziente(),datetime.now(), messaggio))
+
+    def _crea_alert_fallback(self, old_diabetologo_name):
+        with DBSingleton.get_cursor() as cursore:
+            messaggio = f"Il tuo diabetologo {old_diabetologo_name} non è più disponibile. Contatta l'amministrazione per la riassegnazione."
+            cursore.execute("""
+                INSERT INTO alerts (id_paziente, orario, alert_case)
+                VALUES (%s, %s, %s)
+            """, (self.paziente.get_id_paziente(),datetime.now(), messaggio))
 
 
     
@@ -301,9 +379,9 @@ class Diabetologo(Persona):
     def inserisci_info_paziente(self,id_paz, patologie=None, fattori=None, comorbidita=None):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO InfoPaziente 
-                        (paziente, diabetologo, patologie_pregresse, fattori_rischio, comorbidita) 
+                        (paziente, diabetologo,fattori_rischio, patologie_pregresse, comorbidita) 
                         VALUES (%s, %s, %s, %s, %s)""", 
-                        (id_paz, self.get_id_diabetologo(), patologie, fattori, comorbidita))
+                        (id_paz, self.get_id_diabetologo(), fattori, patologie, comorbidita))
 
     # Funzione che permetta al medico di modificare i dati rilevanti del paziente,
     # insieme alle informazioni cliniche. 
@@ -524,14 +602,47 @@ class Admin(Persona):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("DELETE FROM Paziente WHERE id_paziente = %s", (id_paziente,))
 
-    # funzione che elimina un diabetologo nel database. Da problemi in quanto ci sono foreign key che vanno messe ON CASCADE
-    def elimina_diabetologo(id_diabetologo):
-        """elimina un diabetologo dal DB dato il suo id_diabetologo"""
-
+    def get_pazienti_associati(self, id_diabetologo):
+        """Helper method per ottenere i pazienti associati"""
         with DBSingleton.get_cursor() as cursore:
-            cursore.execute("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
-
+            cursore.execute("""
+                SELECT nome, cognome, data_nascita, sesso, codice_fiscale, 
+                       indirizzo, citta, cap, telefono, email, username, pw
+                FROM Paziente
+                WHERE diabetologo_associato = %s
+            """, (id_diabetologo,))
+            
+            pazienti = []
+            for row in cursore.fetchall():
+                p = Paziente(*row)
+                pazienti.append(p)
+            return pazienti
         
+    # funzione che elimina un diabetologo nel database. crea il subject che deve notificare gli observer 
+    def elimina_diabetologo(self, id_diabetologo):
+        """Versione semplificata che usa direttamente gli Observer"""
+        
+        # 1. Recupera info del diabetologo
+        with DBSingleton.get_cursor() as cursore:
+            cursore.execute("SELECT nome, cognome FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
+            result = cursore.fetchone()
+            if not result:
+                raise ValueError(f"Diabetologo con ID {id_diabetologo} non trovato")
+            nome, cognome = result
+            diabetologo_name = f"{nome} {cognome}"
+            
+            # Ottieni pazienti associati
+            pazienti = self.get_pazienti_associati(id_diabetologo)
+            
+            # Crea e notifica gli Observer (uno per paziente) direttamente
+            observers = [PazienteDiabetologoObserver(p) for p in pazienti]
+            
+            # PRIMA notifica gli observer (così possono accedere al diabetologo)
+            for observer in observers:
+                observer.on_diabetologo_deleted(id_diabetologo, diabetologo_name)
+            
+            # 5. POI elimina il diabetologo
+            cursore.execute("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
 
 #fil - design pattern factory, per rendere la creazione di oggetti riguardanti gli attori principali più 'elegante'
 #rende anche il codice più manutenibile (in teoria)
@@ -1072,7 +1183,7 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     with DBSingleton.get_cursor() as cursore:
         if filtro_grafico == "andamento":
             query_base = """
-                SELECT valore, data_inserimento, sintomo
+                SELECT valore, data_inserimento, sintomi
                 FROM Glicemia
                 WHERE paziente = %s
             """
@@ -1117,7 +1228,6 @@ def visualizza_andamento_glicemia(dati):
         valori = [r[0] for r in dati]
         date = [r[1] for r in dati]
         sintomi= [r[2] for r in dati]
-        
 
         sintomi_formattati = [formatta_sintomo(s) for s in sintomi]
 
