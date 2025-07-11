@@ -1142,6 +1142,9 @@ def registra_callbacks(app):
         if not n_clicks:
                 # non aggiornare nulla:
                 return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
+        if valore<0:
+            return dash.no_update,dash.no_update,"Valore glicemico sbagliato!",True,"danger",trigger
+        
         if n_clicks and valore:
             current_user.inserisci_glicemia(valore, sintomi, flag_pasto)
             model.check_glicemia(model.get_user_id(),valore,flag_pasto) #notifica il medico se è troppo alta
@@ -1383,7 +1386,7 @@ def registra_callbacks(app):
         # Caso 1: Click su contatto (gestione JSON per ID complesso)
         if isinstance(triggered_id,dict) and triggered_id.get("type") == "btn-contatto"and id_contatto:
                 contatto = model.get_nomecognome(id_contatto)
-                nome_contatto = html.H4(f"{contatto.nome} {contatto.cognome}", style={'color': 'gray'})
+                nome_contatto = html.H4(f"👤 {contatto.nome} {contatto.cognome}", style={'color': 'gray'})
                 if isinstance(current_user, model.Diabetologo):
                     return (
                     view.layout_lista_messaggi(model.get_messaggi(id_contatto)),
@@ -1423,7 +1426,6 @@ def registra_callbacks(app):
 
         # Caso 3: aggiornamento automatico
         elif n_intervals and id_contatto:
-          
             if isinstance(current_user, model.Diabetologo):
                 return (
                 view.layout_lista_messaggi(model.get_messaggi(id_contatto)),
@@ -1627,7 +1629,7 @@ def registra_callbacks(app):
 
         # Click su "Sì"
         if n_clicks_yes:
-            model.Admin.elimina_diabetologo(id_diabetologo)
+            current_user.elimina_diabetologo(id_diabetologo)
             nuova_lista = view.layout_lista_diabetologi()
             return nuova_lista, False
 

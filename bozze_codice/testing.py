@@ -1,10 +1,14 @@
+from datetime import date
+import datetime
 import unittest
 from unittest.mock import patch, MagicMock
-from model import Persona, Paziente  # Sostituisci con il tuo nome file/module
+import model
+import plotly.graph_objects as go
+
 
 class TestPersona(unittest.TestCase):
     def setUp(self):
-        self.persona = Persona(
+        self.persona = model.Persona(
             nome="Mario", cognome="Rossi", data_nascita="1990-01-01", sesso="M",
             codice_fiscale="RSSMRA90A01H501U", indirizzo="Via Roma 1", citta="Roma", cap="00100",
             telefono="1234567890", email="mario.rossi@example.com", username="mario.rossi", password="password123"
@@ -19,7 +23,7 @@ class TestPersona(unittest.TestCase):
 
 class TestPaziente(unittest.TestCase):
     def setUp(self):
-        self.paziente = Paziente(
+        self.paziente = model.Paziente(
             nome="Luca", cognome="Bianchi", data_nascita="1985-05-20", sesso="M",
             codice_fiscale="BNCLCU85E20H501Y", indirizzo="Via Milano 10", citta="Milano", cap="20100",
             telefono="0987654321", email="luca.bianchi@example.com", username="luca.bianchi", pw="securepass"
@@ -232,7 +236,10 @@ class TestAdmin(unittest.TestCase):
         mock_cursor = MagicMock()
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
 
-        model.Admin.elimina_diabetologo(24)
+        admin = model.Admin(nome="Giovanni", cognome="Verdi", data_nascita="1970-10-10", sesso="M",
+                codice_fiscale="VRDGVN70R10H501Z", indirizzo="Via Firenze 5", citta="Torino", cap="10100",
+                telefono="1231231234", email="giovanni.verdi@example.com", username="giovanni.verdi", pw="admin123")  # Crea un'istanza
+        admin.elimina_diabetologo(24)
         mock_cursor.execute.assert_called_with("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (24,))
 
     @patch("model.DBSingleton.get_cursor")
@@ -717,7 +724,7 @@ class TestRemainingFunctions(unittest.TestCase):
         ]
         mock_cursor.fetchall.return_value = test_data
         
-        result = model.get_messaggi(1, 2)
+        result = model.get_messaggi(1)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].contenuto, "Ciao come stai?")
         self.assertEqual(result[1].user_is_diabetologo, True)# mittente=diabetologo
@@ -729,19 +736,19 @@ class TestRemainingFunctions(unittest.TestCase):
         mock_get_cursor.return_value.__enter__.return_value = mock_cursor
         
         # Test con diabetologo come mittente
-        model.insert_messaggio(1, 2, "Ciao paziente")
+        model.insert_messaggio(1, "Ciao paziente", True)
         mock_cursor.execute.assert_called_with(
-            "Insert into messaggio values (%s,%s,%s,current_timestamp,%s)",
-            (1, 2, "Ciao paziente", True) #si aspetta che il mittente sia un diabetologo
+            "Insert into messaggio values (%s,current_timestamp,%s,%s)",
+            (1, True,"Ciao paziente") #si aspetta che il mittente sia un diabetologo
         )
         
         # Test con paziente come mittente
         mock_cursor.reset_mock()
         mock_cursor.fetchone.return_value = None  # Simula che l'utente non è diabetologo
-        model.insert_messaggio(2, 1, "Ciao dottore")
+        model.insert_messaggio(2, "Ciao dottore",True)
         mock_cursor.execute.assert_called_with(
-            "Insert into messaggio values (%s,%s,%s,current_timestamp,%s)",
-            (1, 2, "Ciao dottore", False)
+            "Insert into messaggio values (%s,current_timestamp,%s,%s)",
+            (2,True,"Ciao dottore")
         )
 
     @patch('model.DBSingleton.get_cursor')
@@ -763,7 +770,7 @@ class TestRemainingFunctions(unittest.TestCase):
         
         # Test con alcuni campi
         model.modifica_dati_paziente_db(
-            1, nome="Mario", cognome="Rossi", indirizzo="Via Roma 1"
+             nome="Mario", cognome="Rossi", indirizzo="Via Roma 1"
         )
         
         # Verifica che la query sia corretta
@@ -783,7 +790,7 @@ class TestRemainingFunctions(unittest.TestCase):
         
         # Test con alcuni campi
         model.modifica_dati_diabetologo_db(
-            1, nome="Giovanni", email="giovanni@example.com", telefono="1234567890"
+             nome="Giovanni", email="giovanni@example.com", telefono="1234567890"
         )
         
         # Verifica che la query sia corretta
@@ -813,6 +820,138 @@ class TestRemainingFunctions(unittest.TestCase):
         result = model.get_numero_pazienti_associati_by_id(1)
         self.assertEqual(result, 5)
         mock_cursor.execute.assert_called_once()
+
+import pytest
+from unittest.mock import Mock, patch, MagicMock
+from datetime import datetime
+
+class TestDiabetologoObserver:
+    @pytest.fixture
+    def mock_paziente(self):
+        paziente = Mock()
+        paziente.get_id_paziente.return_value = 123
+        return paziente
+
+    @pytest.fixture
+    def mock_db_cursor(self):
+        with patch('DBSingleton.get_cursor') as mock_cursor:
+            yield mock_cursor
+
+    def test_observer_interface(self):
+        """Test che verifica l'interfaccia astratta"""
+        with pytest.raises(TypeError):
+            observer = model.DiabetologoDeletionObserver()  # Non dovrebbe poter essere istanziato
+
+    def test_on_delete_happy_path(self, mock_paziente, mock_db_cursor):
+        """Test il flusso principale con tutto che funziona"""
+        # Configura mock del database
+        mock_cursor_instance = MagicMock()
+        mock_db_cursor.return_value.__enter__.return_value = mock_cursor_instance
+        
+        # Configura risultati delle query
+        mock_cursor_instance.fetchone.side_effect = [
+            (456,),  # Nuovo diabetologo
+            ("Mario", "Rossi"),  # Nome nuovo diabetologo
+        ]
+        
+        observer = model.PazienteDiabetologoObserver(mock_paziente)
+        observer.on_diabetologo_deleted(111, "Luigi Bianchi")
+        
+        # Verifica che sia stata chiamata la query per trovare nuovo diabetologo
+        mock_cursor_instance.execute.assert_any_call(
+            "SELECT d.id_diabetologo FROM Diabetologo d LEFT JOIN Paziente p ON d.id_diabetologo = p.diabetologo_associato WHERE d.id_diabetologo != %s GROUP BY d.id_diabetologo ORDER BY COUNT(p.id_paziente) ASC LIMIT 1",
+            (111,)
+        )
+        
+        # Verifica l'update del paziente
+        mock_cursor_instance.execute.assert_any_call(
+            "UPDATE Paziente SET diabetologo_associato = %s WHERE id_paziente = %s",
+            (456, 123)
+        )
+        
+        # Verifica l'inserimento dell'alert
+        mock_cursor_instance.execute.assert_any_call(
+            "INSERT INTO alerts (id_paziente, orario, alert_case) VALUES (%s, %s, %s)",
+            (123, datetime.now(), "Il tuo diabetologo Luigi Bianchi non è più disponibile. Sei stato riassegnato al Dr. Mario Rossi.")
+        )
+
+    def test_on_delete_no_available_doctors(self, mock_paziente, mock_db_cursor):
+        """Test quando non ci sono altri diabetologi disponibili"""
+        mock_cursor_instance = MagicMock()
+        mock_db_cursor.return_value.__enter__.return_value = mock_cursor_instance
+        
+        # Simula nessun risultato dalla query
+        mock_cursor_instance.fetchone.return_value = None
+        
+        observer = model.PazienteDiabetologoObserver(mock_paziente)
+        observer.on_diabetologo_deleted(111, "Luigi Bianchi")
+        
+        # Verifica che sia stato creato l'alert di fallback
+        mock_cursor_instance.execute.assert_called_with(
+            "INSERT INTO alerts (id_paziente, orario, alert_case) VALUES (%s, %s, %s)",
+            (123, datetime.now(), "Il tuo diabetologo Luigi Bianchi non è più disponibile. Contatta l'amministrazione per la riassegnazione.")
+        )
+
+    def test_on_delete_db_error(self, mock_paziente, mock_db_cursor):
+        """Test gestione errori del database"""
+        mock_cursor_instance = MagicMock()
+        mock_db_cursor.return_value.__enter__.return_value = mock_cursor_instance
+        
+        # Simula un errore durante l'esecuzione
+        mock_cursor_instance.execute.side_effect = Exception("DB Error")
+        
+        observer = model.PazienteDiabetologoObserver(mock_paziente)
+        
+        # Verifica che non sollevi eccezioni ma crei l'alert di fallback
+        observer.on_diabetologo_deleted(111, "Luigi Bianchi")
+        
+        mock_cursor_instance.execute.assert_called_with(
+            "INSERT INTO alerts (id_paziente, orario, alert_case) VALUES (%s, %s, %s)",
+            (123, datetime.now(), "Il tuo diabetologo Luigi Bianchi non è più disponibile. Contatta l'amministrazione per la riassegnazione.")
+        )
+
+    def test_trova_nuovo_diabetologo(self, mock_paziente, mock_db_cursor):
+        """Test unitario per _trova_nuovo_diabetologo"""
+        mock_cursor_instance = MagicMock()
+        mock_db_cursor.return_value.__enter__.return_value = mock_cursor_instance
+        mock_cursor_instance.fetchone.return_value = (789,)
+        
+        observer = model.PazienteDiabetologoObserver(mock_paziente)
+        result = observer._trova_nuovo_diabetologo(111)
+        
+        assert result == 789
+        mock_cursor_instance.execute.assert_called_once()
+
+    def test_riassegna_paziente(self, mock_paziente, mock_db_cursor):
+        """Test unitario per _riassegna_paziente"""
+        mock_cursor_instance = MagicMock()
+        mock_db_cursor.return_value.__enter__.return_value = mock_cursor_instance
+        
+        observer = model.PazienteDiabetologoObserver(mock_paziente)
+        observer._riassegna_paziente(456)
+        
+        mock_cursor_instance.execute.assert_called_with(
+            "UPDATE Paziente SET diabetologo_associato = %s WHERE id_paziente = %s",
+            (456, 123)
+        )
+
+    @patch('datetime.datetime')
+    def test_crea_alert(self, mock_datetime, mock_paziente, mock_db_cursor):
+        """Test unitario per _crea_alert"""
+        fixed_time = datetime(2023, 1, 1, 12, 0)
+        mock_datetime.now.return_value = fixed_time
+        
+        mock_cursor_instance = MagicMock()
+        mock_db_cursor.return_value.__enter__.return_value = mock_cursor_instance
+        mock_cursor_instance.fetchone.return_value = ("Carlo", "Verdi")
+        
+        observer = model.PazienteDiabetologoObserver(mock_paziente)
+        observer._crea_alert("Luigi Bianchi", 456)
+        
+        mock_cursor_instance.execute.assert_called_with(
+            "INSERT INTO alerts (id_paziente, orario, alert_case) VALUES (%s, %s, %s)",
+            (123, fixed_time, "Il tuo diabetologo Luigi Bianchi non è più disponibile. Sei stato riassegnato al Dr. Carlo Verdi.")
+        )
 
 if __name__ == '__main__':
     unittest.main()
