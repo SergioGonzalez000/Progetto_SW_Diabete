@@ -16,6 +16,28 @@ def getLayout():
             #fil-serve per non far fallire una callback -> forse si può risolvere in un altro modo
             dcc.Store(id="selected-patient-id",data=None),
             dcc.Store(id="terapia-selezionata", data=None),
+
+            # interval per il modal "modifica terapia"
+            dcc.Interval(
+                id='interval-chiudi-modal-terapia',
+                interval=2000,  
+                n_intervals=0,
+                disabled=True,
+                max_intervals=1
+            ),
+            dcc.Store(id="store-valore-dropdown"),
+            dcc.Store(id="store-reset-attivo", data=False),
+
+            # interval per il modal "nuova terapia"
+            dcc.Interval(
+                id="interval-chiudi-modal-nuova-terapia",
+                interval=1500,  
+                n_intervals=0,
+                disabled=True,
+                max_intervals=1
+            ),
+            dcc.Store(id='store-refresh-terapie', data=0),
+            
             # Contenuto della pagina:
             html.Div(id="page-content", style={"display" : "flex", "width" : "100vw", "height" : "auto"})
         ],
@@ -1189,7 +1211,7 @@ doctor_patient = html.Div(
                                                 ], className='f-1 flex-row mb-3 g-20'),
 
                                                 # Box per gli alert:
-                                                dbc.Alert(id="aggiungi-terapia-output", is_open=False)
+                                                dbc.Alert(id="aggiungi-terapia-output", is_open=False, duration= 1500)
                                             ],
                                             style={'padding': '5px'},
                                             className= 'f-3 flex-col rounded-15 l-gray'),
@@ -1316,13 +1338,13 @@ def render_lista_pazienti_glicemia(pazienti):
         if media == 0 or media is None:
             return "#D0D3DD"
         # Se la media è nella norma: verde
-        elif 70 <= media <= 130:
+        elif 80 <= media <= 130:
             return '#08ff46'
         # Se la media è alta: giallo
         elif 131 <= media <= 180:
             return '#FFD93B'
         # Se la media è troppo alta o troppo bassa: rosso
-        elif media > 180 or media < 70:
+        elif media > 180 or media < 80:
             return '#FF4C4C'
         
 
@@ -1750,7 +1772,7 @@ def crea_div_terapia_selezionata(terapia,is_diabetologo):
                             ], className='f-1 flex-row mb-3 g-20'),
 
                             # Box per gli alert:
-                            dbc.Alert(id="modifica-terapia-output", is_open=False),
+                            dbc.Alert(id="modifica-terapia-output", is_open=False, duration=2000),
 
                             # Modal di eliminazione terapia:
                             dbc.Modal([
@@ -2038,7 +2060,8 @@ def render_richieste_account():
 
 
 # layout principale della pagina della richiesta di inserimento nella piattaforma
-admin_request = html.Div(
+def admin_request(): 
+    return html.Div(
     style={ 
         "height": "100vh",
         "boxSizing": "border-box",
@@ -2174,7 +2197,7 @@ def layout_lista_pazienti():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, id="contenitore-lista-pazienti", style={"overflowY": "auto", 'height': '80vh'})  
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", 'height': '80vh'})  
 
 #*****************************************************************************************************
 
@@ -2469,26 +2492,36 @@ def crea_card_paziente(dati_paziente, dati_diab):
 #************************************************************************************************************************************************************
 
 # PAZIENTI ADMIN:
-admin_patient = html.Div(
-    className='f-1 flex-row g-20 p-20',
-    children=[
-        # Lista dei pazienti
-        html.Div([
-            html.H4("Pazienti:", className='gray'),
-            html.Hr(),
-            # Genera la lista dei pazienti
-            html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
-        ], style={'height': '100%'}, className='flex-col card'),
-        # Info dei pazienti:
-        html.Div([
-            html.H4("Informazioni:", className='gray'),
-            html.Hr(),
-            dcc.Store(id="trigger-update-paziente", data=False),
-            # Genera la card di informazioni
-            html.Div(id="dettagli-paziente")
-        ], className='f-2 flex-col card')   
-    ]
+def admin_patient():
+    return html.Div(
+        className='f-1 flex-row g-20 p-20',
+        children=[
+            # Lista dei pazienti
+            html.Div([
+                html.H4("Pazienti:", className='gray'),
+                html.Hr(),
+                # Genera la lista dei pazienti
+                html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
+            ], style={'height': '100%'}, className='flex-col card'),
+            # Info dei pazienti:
+            html.Div([
+                html.H4("Informazioni:", className='gray'),
+                html.Hr(),
+                dcc.Store(id="trigger-update-paziente", data=False),
+                # Genera la card di informazioni
+                html.Div(id="dettagli-paziente")
+            ], className='f-2 flex-col card')   
+        ]
 )
+
+    #         html.Div([
+    #             html.H4("Informazioni:", style={'color': 'gray'}),
+    #             html.Hr(),
+    #             dcc.Store(id="trigger-update-paziente", data=False),
+    #             html.Div(id="dettagli-paziente")
+    #         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
+    #     ]
+    # )
 
 #************************************************************************************************************************************************************
 # renderizza in modo corretto e uguale alla pagina dei pazienti, il layout.
@@ -2853,27 +2886,38 @@ def genera_lista_pazienti_associati(lista_pazienti):
     )
 
 # LAYOUT DIABETOLOGI ADMIN:
-admin_doctor = html.Div(
-    className='f-1 flex-row g-20 p-20',
-    children=[
-        # Lista dei pazienti
-        html.Div([
-            html.H4("Diabetologi:", className='gray'),
-            html.Hr(),
-            # Genera la lista dei diabetologi
-            html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
-            
-        ], style={'height': '100%'}, className='flex-col card'),
-        # Info dei pazienti:
-        html.Div([
-            html.H4("Informazioni:", className='gray'),
-            html.Hr(),
-            dcc.Store(id="trigger-update-diabetologo", data=False),
-            # Genera la card di informazioni
-            html.Div(id="dettagli-diabetologo")
-        ], className='f-2 flex-col card')   
-    ]
+def admin_doctor():
+    return html.Div(
+        className='f-1 flex-row g-20 p-20',
+        children=[
+            # Lista dei pazienti
+            html.Div([
+                html.H4("Diabetologi:", className='gray'),
+                html.Hr(),
+                # Genera la lista dei diabetologi
+                html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
+                
+            ], style={'height': '100%'}, className='flex-col card'),
+            # Info dei pazienti:
+            html.Div([
+                html.H4("Informazioni:", className='gray'),
+                html.Hr(),
+                dcc.Store(id="trigger-update-diabetologo", data=False),
+                # Genera la card di informazioni
+                html.Div(id="dettagli-diabetologo")
+            ], className='f-2 flex-col card')   
+        ]
 )
+
+    #         html.Div([
+    #             html.H4("Informazioni:", style={'color': 'gray'}),
+    #             html.Hr(),
+    #             dcc.Store(id="trigger-update-diabetologo", data=False),
+    #             html.Div(id="dettagli-diabetologo")
+    #         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
+    #     ]
+    # )
+
 
 #******************************************************************************************************
 # FUNZIONE CHE GENERA LE BUBBLES DEI MESSAGGI
