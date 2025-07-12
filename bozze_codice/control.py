@@ -1148,15 +1148,18 @@ def registra_callbacks(app):
         if n_clicks and valore:
             current_user.inserisci_glicemia(valore, sintomi, flag_pasto)
             model.check_glicemia(model.get_user_id(),valore,flag_pasto) #notifica il medico se è troppo alta
+            # ipoglicemia rosso #FF4C4C
             if valore < 80:
-                colore = "#FF4C4C"
+                colore = 'linear-gradient(to bottom right, #FF4C4C, #D50000)'
+            # Valori nella norma verde "#08ff46"
             elif 80 <= valore <= 130:
-                colore = "#08ff46"
+                colore = 'linear-gradient(to bottom right, #08ff46, #228B22)'
+            # Valori alti giallo #FFD93B
             elif 131 <= valore <= 180:
-                colore = "#FFD93B"
+                colore = "linear-gradient(to bottom right, #FFD93B, #FF8C00)"
             else:
-                colore = "#FF4C4C"
-            return valore, {"background-color": colore}, "Inserimento corretto", True, "success", trigger + 1
+                colore = "linear-gradient(to bottom right, #FF4C4C, #D50000)"
+            return valore, {"background": colore}, "Inserimento corretto", True, "success", trigger + 1
 
 
         # Controlla che i campi obbligatori non siano vuoti o None

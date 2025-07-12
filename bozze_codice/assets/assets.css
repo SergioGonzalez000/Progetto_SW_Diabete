@@ -3,7 +3,7 @@
     flex: 1;
     padding: 30px;
     background-color: rgb(255, 255, 255);
-    border: 2px solid #dee2e6;
+    border: 1px solid #dee2e6;
     border-radius: 15px;
     width: 100%;
 }
@@ -12,7 +12,7 @@
 .form-card {
     padding: 30px;
     background-color: rgb(255, 255, 255);
-    border: 2px solid #dee2e6;
+    border: 1px solid #dee2e6;
     border-radius: 15px;
     width: 500px;
 }
@@ -21,7 +21,7 @@
 .input {
     width: 100%;
     padding: 15px 20px;
-    border-radius: 15px;
+    border-radius: 20px;
     border: none;
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
     background-color: #f8f9fa;
@@ -86,4 +86,128 @@
     background-color: red;
     color: white;
     border-color: red;
+}
+
+/* Pill dei navlink */
+.nav-pills .nav-link {
+    border-radius: 25px;
+}
+
+/* ClassName per i box con disposizione row */
+.flex-row {
+    display : flex;
+    flex-direction: row;
+}
+
+/* ClassName per i box con disposizione column */
+.flex-col {
+    display : flex;
+    flex-direction: column;
+}
+
+/* ClassName per flex 1*/
+.f-1 {
+    flex: 1
+}
+
+/* ClassName per flex 2*/
+.f-2 {
+    flex: 2;
+}
+
+/* ClassName per flex 3*/
+.f-3 {
+    flex: 3;
+}
+
+/* ClassName per border: none */
+.n-border {
+    border: none;
+}
+
+/* ClassName per border-radius 25px*/
+.rounded-25 {
+    border-radius: 25px;
+}
+
+/* ClassName per border-radius 15px*/
+.rounded-15 {
+    border-radius: 15px;
+}
+
+/* ClassName per contenitori scrollabili verticalmente */
+.scrollable {
+    overflow-y: auto;
+}
+
+/* ClassName colore del contenitore #f8f9fa */
+.l-gray {
+    background-color: #f8f9fa;
+}
+
+/* ClassName per gap 40px*/
+.g-40 {
+    gap: 40px;
+}
+
+/* ClassName per gap 30px */
+.g-30 {
+    gap: 30px;
+}
+
+/* ClassName per gap 20px */
+.g-20 {
+    gap: 20px;
+}
+
+/* ClassName per gap 10px */
+.g-10 {
+    gap: 10px;
+}
+
+/* ClassName per padding 40px */
+.p-40 {
+    padding: 40px;
+}
+
+/* ClassName per padding 30px */
+.p-30 {
+    padding: 30px;
+}
+
+/* ClassName per padding 20px */
+.p-20 {
+    padding: 20px;
+}
+
+/* ClassName per padding 15px */
+.p-15 {
+    padding: 15px;
+}
+
+/* ClassName per padding 10px */
+.p-10 {
+    padding: 10px;
+}
+
+/* ClassName per l'allineamento */
+.centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ClassName per font-size 20px */
+.font-20 {
+    font-size: 20px;
+}
+
+/* ClassName per font-size 25px */
+.font-25 {
+    font-size: 25px;
+}
+
+/* ClassName per il colore del font grigio */
+.gray {
+    color: gray;
 }
