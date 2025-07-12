@@ -4,6 +4,7 @@ from dash import MATCH, callback_context, html, dcc, Input, Output, State, ALL, 
 from flask_login import login_user, logout_user, current_user
 from werkzeug.security import check_password_hash 
 from datetime import date
+import time
 import dash
 import model
 import view
@@ -245,13 +246,13 @@ def registra_callbacks(app):
                 return view.admin_navlinks, view.admin_dashboard, "/admin-dashboard"
             # Se admin nella lista delle richieste
             elif pathname == "/request":
-                return view.admin_navlinks, view.admin_request, "/request"
+                return view.admin_navlinks, view.admin_request(), "/request"
             # Se admin nella lista dei pazienti
             elif pathname == "/admin-patient":
-                return view.admin_navlinks, view.admin_patient, "/admin-patient"
+                return view.admin_navlinks, view.admin_patient(), "/admin-patient"
             # Se admin nella lista dei diabetologi
             elif pathname == "/admin-doctor":
-                return view.admin_navlinks, view.admin_doctor, "/admin-doctor"
+                return view.admin_navlinks, view.admin_doctor(), "/admin-doctor"
             # Logout dell'admin
             elif pathname == "/logout":
                 logout_user()
@@ -330,35 +331,53 @@ def registra_callbacks(app):
 
     # callback che gestisce l'accettazione/rifiuto richiesta di inserimento. Versione aggiustata 28/06/25
     @app.callback(
-        Output({"type": "alert-richiesta", "codice_fiscale": ALL}, "children"),
+        [
+            Output({"type": "alert-richiesta", "codice_fiscale": ALL}, "children"),
+            Output("page-content", "children", allow_duplicate=True),
+        ],
         [
             Input({"type": "btn-accetta-richiesta", "codice_fiscale": ALL}, "n_clicks"),
-            Input({"type": "btn-rifiuta-richiesta", "codice_fiscale": ALL}, "n_clicks")
+            Input({"type": "btn-rifiuta-richiesta", "codice_fiscale": ALL}, "n_clicks"),
         ],
         prevent_initial_call=True
     )
     def gestisci_richieste(n_clicks_accetta, n_clicks_rifiuta):
         triggered = ctx.triggered_id
         if not triggered:
-            return dash.no_update
+            # ATTENZIONE: ritorna lista di dash.no_update per il wildcard output
+            return [dash.no_update] * len(ctx.outputs_list[0]), dash.no_update
 
         codice_fiscale = triggered["codice_fiscale"]
         tipo = triggered["type"]
 
         if tipo == "btn-accetta-richiesta":
+            idx = [i for i, inp in enumerate(ctx.inputs_list[0]) if inp['id'] == triggered][0]
+            if not n_clicks_accetta[idx] or n_clicks_accetta[idx] <= 0:
+                return [dash.no_update] * len(ctx.outputs_list[0]), dash.no_update
+
             model.Admin.approva_richiesta_cf(codice_fiscale)
             messaggio = dbc.Alert("Richiesta approvata con successo!", color="success", dismissable=True)
+
         elif tipo == "btn-rifiuta-richiesta":
+            idx = [i for i, inp in enumerate(ctx.inputs_list[1]) if inp['id'] == triggered][0]
+            if not n_clicks_rifiuta[idx] or n_clicks_rifiuta[idx] <= 0:
+                return [dash.no_update] * len(ctx.outputs_list[0]), dash.no_update
+
             model.Admin.rifiuta_richiesta_cf(codice_fiscale)
             messaggio = dbc.Alert("Richiesta rifiutata.", color="danger", dismissable=True)
+
         else:
             messaggio = None
 
-        # Ritorna un messaggio solo per il componente con il codice fiscale corrispondente
-        return [
+        alert_list = [
             messaggio if codice_fiscale == output["id"]["codice_fiscale"] else dash.no_update
-            for output in ctx.outputs_list
+            for output in ctx.outputs_list[0]
         ]
+
+        nuovo_contenuto = view.admin_request()
+
+        return alert_list, nuovo_contenuto
+
 
 
 
@@ -460,7 +479,7 @@ def registra_callbacks(app):
                     a += 1
                 elif 130 < valore < 180:
                     n += 1
-                elif 70 <= valore <= 130:
+                elif 80 <= valore <= 130:
                     o += 1
 
             values = [a,n,o]
@@ -541,9 +560,6 @@ def registra_callbacks(app):
             return html.H5("Seleziona un grafico.", style={'color': 'gray', 'margin-top': '10px'})
 
         dati = model.get_eventi_basso_glucosio(id_paz) if scelta=="basso" else model.get_dati_glicemia_filtrati(id_paz,filtro,scelta) 
-        oggi = date.today()
-        mese = oggi.month     # restituisce un intero, es. 6 per giugno
-        anno = oggi.year
         if pathname == "/doctor-patient" and scelta:
             # TRY CATHC per la costruzione del grafico
             try:
@@ -720,7 +736,7 @@ def registra_callbacks(app):
         if path == "/doctor-patient" and insertbtn > 0:
             if not any(n_clicks):
                 return "Seleziona un paziente!", "danger","True"
-            current_user.inserisci_info_paziente(id_paz, fattori, patologia, comorbidita)
+            current_user.inserisci_info_paziente(id_paz, patologia, fattori, comorbidita)
             return "Modifica avvenuta con successo", "success", "True"
         else:
             return dash.no_update
@@ -830,62 +846,66 @@ def registra_callbacks(app):
 # ******************************************************************************************************************
     # CALLBACK PER DROPDOWN TERAPIE
     @app.callback(
-         Output("patient-therapy","children"),
-         Input("url","pathname"),
-         Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        Output("patient-therapy", "children"),
+        Input("url", "pathname"),
+        Input("selected-patient-id", "data"),
+        Input("store-refresh-terapie", "data"),
     )
-    def visualizza_dropdown_terapie(path,n_clicks):
-        # id dell'ultimo elemento triggerato nel context (pagina)
-        trigger_id = ctx.triggered_id
-
-        if not trigger_id or not isinstance(trigger_id, dict) or not any(n_clicks):
+    def visualizza_dropdown_terapie(path, id_paz, refresh_count):
+        if not id_paz and path == "/doctor-patient":
             return html.H5("Seleziona un paziente.", style={'color': 'gray'})
-        
-        # Id paziente             
-        id_paz = trigger_id.get('index')
-        
-        if path=="/doctor-patient":
-            id_diab=current_user.get_id_diabetologo()
-            terapie=model.get_terapie_paziente(id_diab,id_paz)
-            # Se la lista delle terapie è vuota: mostra solo il pulsante "Nuova terapia"
+
+        if path == "/doctor-patient":
+            id_diab = current_user.get_id_diabetologo()
+            terapie = model.get_terapie_paziente(id_diab, id_paz)
             if not terapie:
-                return html.Div([  
-                    html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom':'80px'}),
-                    dbc.Button(
-                        "Nuova Terapia",
-                        id='aggiungi-terapia-btn',
-                        n_clicks=0,
-                        style={
-                            'width': '100%',
-                            'border':'none',
-                            'margin-top': 'auto',
-                            'border-radius': '25px',
-                            'padding': '10px 25px',
-                            'font-size':'20px'                
-                            }
-                        )
-                    ],
-                    style={
-                        'flex': 1,
-                        'height': '100%',   
-                        'display': 'flex',
-                        'flexDirection': 'column',
-                    }
-                )
-            # Altrimenti:   
+                return html.Div([
+                    html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom': '80px'}),
+                    dbc.Button("Nuova Terapia", id='aggiungi-terapia-btn', n_clicks=0,
+                            style={'width': '100%', 'border': 'none', 'margin-top': 'auto', 'border-radius': '25px',
+                                    'padding': '10px 25px', 'font-size': '20px'})
+                ], style={'flex': 1, 'height': '100%', 'display': 'flex', 'flexDirection': 'column'})
             return view.crea_div_terapia_dropdown(terapie)
-        elif path=="/patient-dashboard":
-            id_paz=current_user.get_id_paziente()
-            diab= current_user.get_diabetologo()[0]
-            id_diab=diab["id"]
-            terapie=model.get_terapie_paziente(id_diab,id_paz)
-            # Se la lista delle terapie è vuota: mostra solo il pulsante "Nuova terapia"
+
+        elif path == "/patient-dashboard":
+            id_paz = current_user.get_id_paziente()
+            diab = current_user.get_diabetologo()[0]
+            id_diab = diab["id"]
+            terapie = model.get_terapie_paziente(id_diab, id_paz)
             if not terapie:
-                return html.Div([html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom':'80px'}),])
+                return html.Div([
+                    html.H5("Nessuna terapia registrata.", style={'color': 'gray', 'marginBottom': '80px'}),
+                ])
             return view.crea_div_terapia_dropdown(terapie)
+
         else:
             return dash.no_update
+
         
+    @app.callback(
+        Output('selected-patient-id', 'data', allow_duplicate=True),
+        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
+        prevent_initial_call=True
+    )
+    def salva_id_paziente(n_clicks_list):
+        ctx_trigger = ctx.triggered_id
+        if ctx_trigger and isinstance(ctx_trigger, dict):
+            return ctx_trigger.get('index')
+        raise dash.exceptions.PreventUpdate
+    
+    @app.callback(
+        Output('store-refresh-terapie', 'data'),
+        Input('salva-nuova-terapia-btn', 'n_clicks'),
+        State('store-refresh-terapie', 'data'),
+        prevent_initial_call=True
+    )
+    def aggiorna_refresh_terapie(n_clicks, current_value):
+        if n_clicks:
+            # Incrementa il contatore per forzare refresh
+            return (current_value or 0) + 1
+        raise dash.exceptions.PreventUpdate
+
+            
 # ******************************************************************************************************************
     #mostra al paziente la div col dropdown che contiene tutte le terapie
     @app.callback(
@@ -970,83 +990,142 @@ def registra_callbacks(app):
         
     #callback per aprire il popup di modifica terapia
     @app.callback(
-        Output("popup-modifica-terapia", "is_open"),
+        Output("popup-modifica-terapia", "is_open", allow_duplicate=True),
         [Input("apri-modal-terapia", "n_clicks"), Input("chiudi-modal-terapia", "n_clicks")],
-        [dash.dependencies.State("popup-modifica-terapia", "is_open")]
+        [dash.dependencies.State("popup-modifica-terapia", "is_open")], 
+        prevent_initial_call= True
     )
     def apri_chiudi_popup_modificainfopaz(open_clicks, close_clicks, is_open):
         if open_clicks or close_clicks:
             return not is_open
         return is_open
 # ******************************************************************************************************************
-#callback per modificare dati terapia o per eliminarne una dopo la conferma
+    
+    # callback di modifica e eliminazione spezzata in due: dava errori con l'aggiornamento
 
+    # callback per l'eliminazione della terapia
     @app.callback(
-        Output("modifica-terapia-output", "children"),
-        Output("modifica-terapia-output", "color"),
-        Output("modifica-terapia-output", "is_open"),
-        Input("url", "pathname"),
-        Input({'type': 'btn-paziente', 'index': ALL}, 'n_clicks'),
-        Input("btn-salva-modifiche-terapia", "n_clicks"),
-        Input("input-farmaco", "value"),
-        Input("input-dosaggio", "value"),
-        Input("input-assunzioni", "value"),
-        Input("input-data-inizio", "value"),
-        Input("input-data-fine", "value"),
-        Input("input-indicazioni", "value"),
+        Output("modifica-terapia-output", "children", allow_duplicate=True),
+        Output("modifica-terapia-output", "color", allow_duplicate=True),
+        Output("modifica-terapia-output", "is_open", allow_duplicate=True),
+        Output("interval-chiudi-modal-terapia", "disabled", allow_duplicate=True),
+        Output("interval-chiudi-modal-terapia", "n_intervals", allow_duplicate=True),
         Input("conferma-elimina-terapia", "n_clicks"),
+        State("dropdown-terapia-selezionata", "value"),
+        prevent_initial_call=True
+    )
+    def elimina_terapia(conferma_clicks, id_terapia):
+        if conferma_clicks and id_terapia:
+            with model.DBSingleton.get_cursor() as cur:
+                cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
+            return "Terapia eliminata con successo!", "success", True, False, 0
+        raise dash.exceptions.PreventUpdate
+
+    # callback per la modifica della terapia
+    @app.callback(
+        Output("modifica-terapia-output", "children", allow_duplicate=True),
+        Output("modifica-terapia-output", "color", allow_duplicate=True),
+        Output("modifica-terapia-output", "is_open", allow_duplicate=True),
+        Output("interval-chiudi-modal-terapia", "disabled", allow_duplicate=True),
+        Output("interval-chiudi-modal-terapia", "n_intervals", allow_duplicate=True),
+        Input("btn-salva-modifiche-terapia", "n_clicks"),
+        State("input-farmaco", "value"),
+        State("input-dosaggio", "value"),
+        State("input-assunzioni", "value"),
+        State("input-data-inizio", "value"),
+        State("input-data-fine", "value"),
+        State("input-indicazioni", "value"),
         State("selected-patient-id", "data"),
         State("dropdown-terapia-selezionata", "value"),
         prevent_initial_call=True
     )
-    def modifica_terapia(path, n_clicks, modifybtn, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, conferma, id_paz, id_terapia):
-        trigger_id = ctx.triggered_id
+    def modifica_terapia(n_clicks, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni, id_paz, id_terapia):
+        if not n_clicks:
+            raise dash.exceptions.PreventUpdate
 
-        if trigger_id == "conferma-elimina-terapia" and conferma > 0:
-            # Azione di eliminazione terapia
-            with model.DBSingleton.get_cursor() as cur:
-                cur.execute("DELETE FROM Terapia WHERE id_terapia = %s", (id_terapia,))
-            return "Terapia eliminata con successo!", "success", True
+        farmaco = farmaco or None
+        dosaggio = dosaggio or None
+        assunzioni = assunzioni or None
+        indicazioni = indicazioni or None
+        data_i = data_i or None
+        data_f = data_f or None
 
-        if trigger_id == "btn-salva-modifiche-terapia":
-            # Gestione modifica terapia
-            farmaco = farmaco or None
-            dosaggio = dosaggio or None
-            assunzioni = assunzioni or None
-            indicazioni = indicazioni or None
-            data_i = data_i or None
-            data_f = data_f or None
-            #controlla se sono tutte nulle, in tal caso ritorna informazioni mancanti
-            if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni, data_i, data_f]):
-                return "Informazioni mancanti", "danger", True
+        if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni, data_i, data_f]):
+            return "Informazioni mancanti", "danger", True, True, 0
 
-            if data_i and data_f and data_f < data_i:
-                return "Data fine non valida", "danger", True
+        if data_i and data_f and data_f < data_i:
+            return "Data fine non valida", "danger", True, True, 0
 
-            if path == "/doctor-patient" and modifybtn > 0:
-                if not any(n_clicks):
-                    return "Seleziona un paziente!", "danger", True
+        if not id_paz or not id_terapia:
+            return "Seleziona un paziente e terapia!", "danger", True, True, 0
 
-                current_user.modifica_terapia_paziente(
-                    id_paz, id_terapia, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni
-                )
-                return "Modifica avvenuta con successo", "success", True
+        current_user.modifica_terapia_paziente(
+            id_paz, id_terapia, farmaco, dosaggio, assunzioni, data_i, data_f, indicazioni
+        )
+        return "Terapia aggiornata con successo!", "success", True, False, 0
 
-        # Se non è né il bottone salva né quello conferma, non aggiornare nulla
-        raise dash.exceptions.PreventUpdate
-
-#******************************************************************************************************************
-    #callback per aprire il pop up aggiungi terapia
+    # callback che chiude il pop-up modifica terapia dopo l'intervallo    
     @app.callback(
-        Output("popup-nuova-terapia", "is_open"),
-        [Input("aggiungi-terapia-btn", "n_clicks"), Input("chiudi-nuova-terapia", "n_clicks")],
-        [State("popup-nuova-terapia", "is_open")],
+        Output("popup-modifica-terapia", "is_open", allow_duplicate=True),
+        Output("interval-chiudi-modal-terapia", "disabled", allow_duplicate=True),
+        Output("store-reset-attivo", "data"),
+        Input("interval-chiudi-modal-terapia", "n_intervals"),
+        State("popup-modifica-terapia", "is_open"),
         prevent_initial_call=True
     )
-    def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
-        if n_apri or n_chiudi:
-            return not is_open
-        return is_open
+    def chiudi_popup_modifica_terapia(n_intervals, is_open):
+        if n_intervals and is_open:
+            return False, True, True  # chiude il modal, disabilita l'intervallo e permettere il reset del dropdown
+        return dash.no_update, dash.no_update, dash.no_update
+    
+
+    # callbacks di aggiornamento automatico della terapia. Funziona in un modo macchinoso ma ok.
+    # Praticamente modifico il valore del dropdown manualmente due volte: prima tolgo il value, poi rimetto quello precedente.
+    @app.callback(
+        Output("store-valore-dropdown", "data"),
+        Input("dropdown-terapia-selezionata", "value"),
+    )
+    def salva_valore_corrente(val):
+        return val
+    
+    @app.callback(
+        Output("dropdown-terapia-selezionata", "value", allow_duplicate=True),
+        Input("store-reset-attivo", "data"),
+        State("store-valore-dropdown", "data"),
+        prevent_initial_call=True
+    )
+    def resetta_e_ripristina_dropdown(reset_attivo, valore_salvato):
+        if reset_attivo and valore_salvato is not None:
+            return None  # prima azzeriamo
+        raise dash.exceptions.PreventUpdate
+
+
+    @app.callback(
+        Output("dropdown-terapia-selezionata", "value", allow_duplicate=True),
+        Output("store-reset-attivo", "data", allow_duplicate=True),  # lo resetti a False
+        Input("dropdown-terapia-selezionata", "value"),
+        State("store-valore-dropdown", "data"),
+        State("store-reset-attivo", "data"),
+        prevent_initial_call=True
+    )
+    def ripristina_valore_dropdown(val, val_salvato, reset_attivo):
+        if val is None and val_salvato is not None and reset_attivo:
+            return val_salvato, False
+        return dash.no_update, reset_attivo
+
+
+#******************************************************************************************************************
+    # #callback per aprire il pop up aggiungi terapia
+    # @app.callback(
+    #     Output("popup-nuova-terapia", "is_open"),
+    #     [Input("aggiungi-terapia-btn", "n_clicks"), Input("chiudi-nuova-terapia", "n_clicks")],
+    #     [State("popup-nuova-terapia", "is_open")],
+    #     prevent_initial_call=True
+    # )
+    # def apri_aggiungi_terapia(n_apri, n_chiudi, is_open):
+    #     if n_apri or n_chiudi:
+    #         return not is_open
+    #     return is_open
 
 
 #******************************************************************************************************************
@@ -1091,6 +1170,44 @@ def registra_callbacks(app):
             return "Terapia inserita con successo", "success", True
         else:
             return dash.no_update
+        
+
+    ## merda
+
+    @app.callback(
+        Output("popup-nuova-terapia", "is_open"),
+        Input("aggiungi-terapia-btn", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def apri_popup_nuova_terapia(n_clicks):
+        if n_clicks:
+            return True  # solo apertura, senza toccare l'intervallo
+        raise dash.exceptions.PreventUpdate
+    
+    @app.callback(
+        Output("interval-chiudi-modal-nuova-terapia", "disabled"),
+        Input("salva-nuova-terapia-btn", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def abilita_interval(n_clicks):
+        if n_clicks:
+            return False  # abilita l'intervallo per far partire il timer
+        raise dash.exceptions.PreventUpdate
+
+    
+    @app.callback(
+        Output("popup-nuova-terapia", "is_open", allow_duplicate=True),
+        Output("interval-chiudi-modal-nuova-terapia", "disabled", allow_duplicate=True),
+        Input("interval-chiudi-modal-nuova-terapia", "n_intervals"),
+        State("popup-nuova-terapia", "is_open"),
+        prevent_initial_call=True
+    )
+    def chiudi_popup_nuova_terapia(n_intervals, is_open):
+        if n_intervals and is_open:
+            return False, True
+        return dash.no_update, dash.no_update
+
+    ## merda
 
 #******************************************************************************************************************
     #callback per far partire correttamente la scelta della data fine terapia
@@ -1122,47 +1239,57 @@ def registra_callbacks(app):
         Output("inserisci-glicemia-output", "is_open"),
         Output("inserisci-glicemia-output", "color"),
         Output("trigger-aggiorna-grafico", "data"),
+        Output("input-sintomi-riscontrati", "value"),  # Resetta sintomi
+        Output("input-glicemia", "value"),            # Resetta glicemia
         Input("url", "pathname"),
         Input("inserisci-glicemia", "n_clicks"),
         Input("input-sintomi-riscontrati", "value"),
-        Input("pre-post-pasto","value"),
+        Input("pre-post-pasto", "value"),             
         State("input-glicemia", "value"),
         State("number", "children"),
         State("cerchio-colorato", "style"),
         State("trigger-aggiorna-grafico", "data"),
         prevent_initial_call=True
     )
-    def aggiorna_cerchio(path, n_clicks,  sintomi, flag_pasto, valore, number, stile_corrente, trigger):
-
-       
-        if path != "/patient-dashboard":
-            return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
-
-        # Se non è stato premuto nulla:
-        if not n_clicks:
-                # non aggiornare nulla:
-                return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, trigger
-        if valore<0:
-            return dash.no_update,dash.no_update,"Valore glicemico sbagliato!",True,"danger",trigger
+    def aggiorna_cerchio(path, n_clicks, sintomi, flag_pasto, valore, number, stile_corrente, trigger):
+        trigger_id = ctx.triggered_id
         
-        if n_clicks and valore:
-            current_user.inserisci_glicemia(valore, sintomi, flag_pasto)
-            model.check_glicemia(model.get_user_id(),valore,flag_pasto) #notifica il medico se è troppo alta
-            if valore < 80:
-                colore = "#FF4C4C"
-            elif 80 <= valore <= 130:
-                colore = "#08ff46"
-            elif 131 <= valore <= 180:
-                colore = "#FFD93B"
-            else:
-                colore = "#FF4C4C"
-            return valore, {"background-color": colore}, "Inserimento corretto", True, "success", trigger + 1
+        # Default: no_update per tutti gli Output (8 elementi)
+        no_update = dash.no_update
+        default_return = (no_update, no_update, no_update, no_update, no_update, trigger, no_update, no_update)
+        
+        if path != "/patient-dashboard":
+            return default_return
 
+        if not n_clicks:
+            return default_return
 
-        # Controlla che i campi obbligatori non siano vuoti o None
         if not valore:
-            return number, stile_corrente, "Tutti i campi obbligatori devono essere compilati.", True, "danger", trigger
-    
+            return (
+                number,stile_corrente, "Tutti i campi obbligatori devono essere compilati.",True,"danger", trigger, no_update, no_update)
+        
+        if valore < 0:
+            return (no_update, no_update, "Valore glicemico sbagliato!", True, "danger", trigger, no_update, no_update)
+        
+        if trigger_id == "inserisci-glicemia" and valore:
+            current_user.inserisci_glicemia(valore, flag_pasto, sintomi)
+            model.check_glicemia(model.get_user_id(),valore,flag_pasto) #notifica il medico se è troppo alta
+            # ipoglicemia rosso #FF4C4C
+            if valore < 80:
+                colore = 'linear-gradient(to bottom right, #FF4C4C, #D50000)'
+            # Valori nella norma verde "#08ff46"
+            elif 80 <= valore <= 130:
+                colore = 'linear-gradient(to bottom right, #08ff46, #228B22)'
+            # Valori alti giallo #FFD93B
+            elif 131 <= valore <= 180:
+                colore = "linear-gradient(to bottom right, #FFD93B, #FF8C00)"
+            else:
+                colore = "linear-gradient(to bottom right, #FF4C4C, #D50000)"
+            return (valore, {"background": colore}, "Inserimento corretto", True, "success", trigger + 1, 
+                "",  # Resetta sintomi
+                None   # Resetta glicemia
+            )
+        return default_return
 
 
 
@@ -1173,29 +1300,30 @@ def registra_callbacks(app):
         Output("output-assunzione","children"),
         Output("output-assunzione", "is_open"),
         Output("output-assunzione", "color"),
+        Output("input-farmaco-usato","value"),
+        Output("input-dosaggio-usato","value"),
         Input("input-farmaco-usato","value"),
         Input("input-dosaggio-usato","value"),
         Input("inserisci-assfarmaco-btn","n_clicks"),
         Input("url","pathname")
     )
     def inserisci_assunzione_farmaco(farmaco,dosaggio,n_clicks,path):
+        triggered_id=ctx.triggered_id
         if path=="/patient-dashboard":
-            if farmaco and dosaggio and n_clicks>0:
+            if farmaco and dosaggio and triggered_id=="inserisci-assfarmaco-btn":
                 current_user.inserisci_assunzione_farmaco(farmaco,dosaggio)
                 model.check_farmaco(model.get_user_id(),farmaco, dosaggio)
-                return "Inserimento avvenuto correttamente", True, "success"
-            elif (not farmaco or not dosaggio) and n_clicks>0:
+                return "Inserimento avvenuto correttamente", True, "success", "", None
+            elif (not farmaco or not dosaggio) and triggered_id=="inserisci-assfarmaco-btn":
                 n_clicks=n_clicks-1
-                return "Informazioni mancanti", True, "danger"
-            elif (not farmaco or not dosaggio) and n_clicks==0:
-                return dash.no_update
+                return "Informazioni mancanti", True, "danger",dash.no_update,dash.no_update
             else:
-                return dash.no_update
+                return dash.no_update,dash.no_update,dash.no_update,dash.no_update,dash.no_update
         else:
-            return dash.no_update
-    #callback che inserisce i grafici al paziente
+            return dash.no_update,dash.no_update,dash.no_update,dash.no_update,dash.no_update
 
 #************************************************************************************************************************************
+    #callback che inserisce i grafici al paziente
 
     @app.callback(
         Output('first-graph', 'children'),
@@ -1323,26 +1451,25 @@ def registra_callbacks(app):
 
     # callback dei pulsanti dentro il popup per confermare o meno la cancellazione di un paziente
     @app.callback(
-    Output("lista-pazienti-admin", "children"),
-    Output("pop-admin-delete-patient", "is_open"),
-    Input("btn-delete-paz-confirm-YES", "n_clicks"),
-    Input("btn-delete-paz-confirm-NO", "n_clicks"),
-    State("store-id-paziente", "data"),
-    prevent_initial_call=True
+        Output("page-content", "children", allow_duplicate=True),
+        Output("pop-admin-delete-patient", "is_open"),
+        Input("btn-delete-paz-confirm-YES", "n_clicks"),
+        Input("btn-delete-paz-confirm-NO", "n_clicks"),
+        State("store-id-paziente", "data"),
+        prevent_initial_call=True
     )
-    def rimozione_aggiornamento_lista_popup(n_clicks_yes, n_clicks_no, id_paziente):
-        """gestisce la rimozione del paziente, aggiornando la lista."""
-
-        # click sul pulsante "No"
+    def elimina_paziente_admin(n_clicks_yes, n_clicks_no, id_paziente):
+        '''elimina il paziente e aggiorna la pagina'''
         if n_clicks_no:
             return dash.no_update, False
 
-        # click sul pulsante "Sì"
         if n_clicks_yes:
-                model.Admin.elimina_paziente(id_paziente)                           # elimina dal DB
-                nuova_lista = view.layout_lista_pazienti()  # aggiorna la lista in modo da togliere l'eliminato. N.B. Manca togliere l'eliminato anche dalla card a destra!
-                return nuova_lista, False
-        
+            model.Admin.elimina_paziente(id_paziente)
+            # ritorna layout intero con lista aggiornata
+            time.sleep(1)   # per aspettare un sec
+
+            return view.admin_patient(), False
+
         return dash.no_update, False
         
      
@@ -1614,26 +1741,28 @@ def registra_callbacks(app):
 
 
     @app.callback(
-    Output("lista-diabetologi-admin", "children"),
-    Output("pop-admin-delete-diab", "is_open"),
-    Input("btn-delete-diab-confirm-YES", "n_clicks"),
-    Input("btn-delete-diab-confirm-NO", "n_clicks"),
-    State("store-id-diabetologo", "data"),
-    prevent_initial_call=True
+        Output("page-content", "children", allow_duplicate=True),
+        Output("pop-admin-delete-diab", "is_open"),
+        Input("btn-delete-diab-confirm-YES", "n_clicks"),
+        Input("btn-delete-diab-confirm-NO", "n_clicks"),
+        State("store-id-diabetologo", "data"),
+        prevent_initial_call=True
     )
-    def rimozione_aggiornamento_lista_popup_diab(n_clicks_yes, n_clicks_no, id_diabetologo):
-        """Rimuove il diabetologo dal database e aggiorna la lista."""
-        # Click su "No"
+    def elimina_diabetologo_admin(n_clicks_yes, n_clicks_no, id_diabetologo):
+        """rimuove il diabetologo dal database e aggiorna l'intera pagina."""
         if n_clicks_no:
             return dash.no_update, False
 
-        # Click su "Sì"
         if n_clicks_yes:
-            current_user.elimina_diabetologo(id_diabetologo)
-            nuova_lista = view.layout_lista_diabetologi()
-            return nuova_lista, False
+            model.Admin.elimina_diabetologo(id_diabetologo)
+            # Ricostruisco tutta la pagina dei diabetologi, lista aggiornata
+
+            time.sleep(1)   # per aspettare un sec
+            
+            return view.admin_doctor(), False
 
         return dash.no_update, False
+
     
 
     @app.callback(

@@ -379,7 +379,7 @@ class Diabetologo(Persona):
     def inserisci_info_paziente(self,id_paz, patologie=None, fattori=None, comorbidita=None):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO InfoPaziente 
-                        (paziente, diabetologo,fattori_rischio, patologie_pregresse, comorbidita) 
+                        (paziente, diabetologo, fattori_rischio, patologie_pregresse, comorbidita) 
                         VALUES (%s, %s, %s, %s, %s)""", 
                         (id_paz, self.get_id_diabetologo(), fattori, patologie, comorbidita))
 
@@ -479,7 +479,7 @@ class Admin(Persona):
         with DBSingleton.get_cursor() as cursore:
             cursore.execute("""INSERT INTO Paziente 
                         (nome, cognome, data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email, username, pw) 
-                        VALUES (%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)""", 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", 
                         (p.nome, p.cognome, p.data_nascita, p.sesso, p.cf, p.indirizzo, p.citta, p.cap, p.tel, p.email, p.username, p.pw))
             
 
@@ -887,7 +887,7 @@ def get_richieste_account_pazienti():
     
     with DBSingleton.get_cursor() as cursore:
 
-        cursore.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s", ("in_attesa", "TRUE",))
+        cursore.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s ORDER BY cognome", ("in_attesa", "TRUE",))
         result = cursore.fetchall()
     
 
@@ -905,7 +905,7 @@ def get_richieste_account_diabetologi():
     
     with DBSingleton.get_cursor() as cursore:
 
-        cursore.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s", ("in_attesa", "FALSE",))
+        cursore.execute("SELECT id_richiesta, nome, cognome, codice_fiscale FROM richiesteaccount WHERE stato_richiesta = %s AND paziente = %s ORDER BY cognome", ("in_attesa", "FALSE",))
         result = cursore.fetchall()
         
         # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
@@ -959,7 +959,7 @@ def get_dettagli_paziente(id_paziente):
 # funzione che prende tutti i pazienti nella db, e ne ritorna i dati in un dict
 def get_all_pazienti():
     with DBSingleton.get_cursor() as cursore:
-        cursore.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente")
+        cursore.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente ORDER BY cognome")
         result = cursore.fetchall()
 
         # Conversione in lista di dizionari
@@ -1012,7 +1012,7 @@ def get_dettagli_diabetologo(id_diabetologo):
 # funzione che prende tutti i diabetologi nella db e li restituisce sotto forma di dict.
 def get_all_diabetologi():
     with DBSingleton.get_cursor() as cursore:
-        cursore.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo")
+        cursore.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo ORDER BY cognome")
         result = cursore.fetchall()
 
         diabetologi = [
