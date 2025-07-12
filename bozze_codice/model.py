@@ -300,8 +300,10 @@ class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
             cursore.execute("SELECT nome, cognome FROM Diabetologo WHERE id_diabetologo = %s", (new_diabetologo_id,))
             new_doc = cursore.fetchone()
             new_name = f"{new_doc[0]} {new_doc[1]}" if new_doc else "un nuovo specialista"
-            
-            messaggio = f"Il tuo diabetologo {old_diabetologo_name} non è più disponibile. Sei stato riassegnato al Dr. {new_name}."
+            cursore.execute("SELECT nome, cognome FROM Paziente WHERE diabetologo_associato = %s", (new_diabetologo_id,))
+            paz = cursore.fetchone()
+            paz_name = f"{paz[0]} {paz[1]}"
+            messaggio = f"{old_diabetologo_name} non è più disponibile. il paziente {paz_name} è stato assegnato al Dr. {new_name}."
             cursore.execute("""
                 INSERT INTO alerts (id_paziente, orario, alert_case)
                 VALUES (%s, %s, %s)
