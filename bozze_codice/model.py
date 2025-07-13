@@ -644,6 +644,87 @@ class Admin(Persona):
             # 5. POI elimina il diabetologo
             cursore.execute("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
 
+
+    # funzione che permette la modifica dei dati del paziente nella db
+    def modifica_dati_paziente_db(id_paziente, indirizzo=None, citta=None, cap=None, email=None, telefono=None):
+    
+        updates = []
+        params = []
+
+        # Costruzione dinamica della query
+        if indirizzo is not None:
+            updates.append("indirizzo = %s")
+            params.append(indirizzo)
+        if citta is not None:
+            updates.append("citta = %s")
+            params.append(citta)
+        if cap is not None:
+            updates.append("cap = %s")
+            params.append(cap)
+        if email is not None:
+            updates.append("email = %s")
+            params.append(email)
+        if telefono is not None:
+            updates.append("telefono = %s")
+            params.append(telefono)
+
+        if not updates:
+            raise ValueError("Nessun dato da aggiornare")
+
+        # ID paziente come ultimo parametro per il WHERE
+        params.append(id_paziente)
+
+        query = f"""
+        UPDATE paziente
+        SET {', '.join(updates)}
+        WHERE id_paziente = %s
+        """
+
+        with DBSingleton.get_cursor() as cursore:
+            cursore.execute(query, params)
+
+        return True
+
+
+    # funzione che permette la modifica dei dati del diabetologo nella db
+    def modifica_dati_diabetologo_db(id_diabetologo, email=None, telefono=None,
+                                    indirizzo=None, citta=None, cap=None):
+
+        updates = []
+        params = []
+
+        if email:
+            updates.append("email = %s")
+            params.append(email)
+        if telefono:
+            updates.append("telefono = %s")
+            params.append(telefono)
+        if indirizzo:
+            updates.append("indirizzo = %s")
+            params.append(indirizzo)
+        if citta:
+            updates.append("citta = %s")
+            params.append(citta)
+        if cap:
+            updates.append("cap = %s")
+            params.append(cap)
+
+        if not updates:
+            raise ValueError("Nessun dato da aggiornare")
+
+        params.append(id_diabetologo)
+
+        query = f"""
+        UPDATE diabetologo
+        SET {', '.join(updates)}
+        WHERE id_diabetologo = %s
+        """
+
+        with DBSingleton.get_cursor() as cursor:
+            cursor.execute(query, params)
+        return True
+
+
 #fil - design pattern factory, per rendere la creazione di oggetti riguardanti gli attori principali più 'elegante'
 #rende anche il codice più manutenibile (in teoria)
 class PersonaFactory:
@@ -1568,86 +1649,6 @@ def get_nomecognome(id):
     return nomecognome(nome = result[0], cognome = result[1])
     
 
-# funzione che permette la modifica dei dati del paziente nella db
-def modifica_dati_paziente_db(id_paziente, indirizzo=None, citta=None, cap=None, email=None, telefono=None):
- 
-    updates = []
-    params = []
-
-    # Costruzione dinamica della query
-    if indirizzo is not None:
-        updates.append("indirizzo = %s")
-        params.append(indirizzo)
-    if citta is not None:
-        updates.append("citta = %s")
-        params.append(citta)
-    if cap is not None:
-        updates.append("cap = %s")
-        params.append(cap)
-    if email is not None:
-        updates.append("email = %s")
-        params.append(email)
-    if telefono is not None:
-        updates.append("telefono = %s")
-        params.append(telefono)
-
-    if not updates:
-        raise ValueError("Nessun dato da aggiornare")
-
-    # ID paziente come ultimo parametro per il WHERE
-    params.append(id_paziente)
-
-    query = f"""
-    UPDATE paziente
-    SET {', '.join(updates)}
-    WHERE id_paziente = %s
-    """
-
-    with DBSingleton.get_cursor() as cursore:
-        cursore.execute(query, params)
-
-    return True
-
-
-
-
-# funzione che permette la modifica dei dati del diabetologo nella db
-def modifica_dati_diabetologo_db(id_diabetologo, email=None, telefono=None,
-                                 indirizzo=None, citta=None, cap=None):
-
-    updates = []
-    params = []
-
-    if email:
-        updates.append("email = %s")
-        params.append(email)
-    if telefono:
-        updates.append("telefono = %s")
-        params.append(telefono)
-    if indirizzo:
-        updates.append("indirizzo = %s")
-        params.append(indirizzo)
-    if citta:
-        updates.append("citta = %s")
-        params.append(citta)
-    if cap:
-        updates.append("cap = %s")
-        params.append(cap)
-
-    if not updates:
-        raise ValueError("Nessun dato da aggiornare")
-
-    params.append(id_diabetologo)
-
-    query = f"""
-    UPDATE diabetologo
-    SET {', '.join(updates)}
-    WHERE id_diabetologo = %s
-    """
-
-    with DBSingleton.get_cursor() as cursor:
-        cursor.execute(query, params)
-    return True
 
 
 def is_number(s):

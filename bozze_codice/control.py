@@ -1637,7 +1637,7 @@ def registra_callbacks(app):
             raise dash.exceptions.PreventUpdate
 
         try:
-            model.modifica_dati_paziente_db(
+            model.Admin.modifica_dati_paziente_db(
                 id_paziente=id_paziente,
                 indirizzo=indirizzo,
                 citta=citta,
@@ -1845,7 +1845,7 @@ def registra_callbacks(app):
             raise dash.exceptions.PreventUpdate
 
         try:
-            model.modifica_dati_diabetologo_db(
+            model.Admin.modifica_dati_diabetologo_db(
                 id_diabetologo=id_diabetologo,
                 email=email,
                 telefono=telefono,

@@ -2005,7 +2005,6 @@ admin_dashboard = html.Div(
 )
 
 
-
 # RICHIESTE DI INSERIMENTO NELLA PIATTAFORMA 
 # funzione che organizza in due colonne SEPARATE le richieste: una per pazienti e una diabetologi
 def render_richieste_account():
@@ -2029,7 +2028,7 @@ def render_richieste_account():
         "overflowY": "scroll",
         "height": "100%",
         "boxSizing": "border-box",
-        "paddingRight": "10px"
+        "paddingRight": "10px",
     }
 
     return html.Div(
@@ -2043,7 +2042,13 @@ def render_richieste_account():
             html.Div(
                 style=style_div_interno,
                 children=[
-                    html.H4("Richieste Pazienti", className='gray'),
+                    html.H4("Richieste Pazienti", className='gray', 
+                            style={
+                                "paddingTop": "12px",
+                                "paddingRight": "12px",
+                                "paddingLeft": "10px",
+                                "paddingBottom": "6px"
+                                }),
                     html.Hr(style={"margin-top": "5px"}),
 
                     html.Div(     # wrapper scrollabile aggiunto
@@ -2066,7 +2071,13 @@ def render_richieste_account():
             html.Div(
                 style=style_div_interno,
                 children=[
-                    html.H4("Richieste Diabetologi", className='gray'),
+                    html.H4("Richieste Diabetologi", className='gray',
+                            style={
+                                "paddingTop": "12px",
+                                "paddingRight": "12px",
+                                "paddingLeft": "10px",
+                                "paddingBottom": "6px"
+                                }),
                     html.Hr(style={"margin-top": "5px"}),
 
                     html.Div(    # wrapper scrollabile aggiunto
