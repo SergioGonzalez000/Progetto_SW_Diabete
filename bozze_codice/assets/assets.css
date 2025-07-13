@@ -14,6 +14,8 @@
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    line-height: 1.2;           /* aumenta l'altezza della riga */
+    padding-bottom: 4px;        /* spazio interno sotto */
 }
 
 /* ClassName per il carosello */
