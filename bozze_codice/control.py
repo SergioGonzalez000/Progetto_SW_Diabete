@@ -1241,6 +1241,7 @@ def registra_callbacks(app):
         Output("trigger-aggiorna-grafico", "data"),
         Output("input-sintomi-riscontrati", "value"),  # Resetta sintomi
         Output("input-glicemia", "value"),            # Resetta glicemia
+        Output("inserisci-glicemia", "n_clicks"),
         Input("url", "pathname"),
         Input("inserisci-glicemia", "n_clicks"),
         Input("input-sintomi-riscontrati", "value"),
@@ -1256,7 +1257,7 @@ def registra_callbacks(app):
         
         # Default: no_update per tutti gli Output (8 elementi)
         no_update = dash.no_update
-        default_return = (no_update, no_update, no_update, no_update, no_update, trigger, no_update, no_update)
+        default_return = (no_update, no_update, no_update, no_update, no_update, trigger, no_update, no_update, no_update)
         
         if path != "/patient-dashboard":
             return default_return
@@ -1266,10 +1267,10 @@ def registra_callbacks(app):
 
         if not valore:
             return (
-                number,stile_corrente, "Tutti i campi obbligatori devono essere compilati.",True,"danger", trigger, no_update, no_update)
+                number,stile_corrente, "Tutti i campi obbligatori devono essere compilati.",True,"danger", trigger, no_update, no_update,no_update)
         
         if valore < 0:
-            return (no_update, no_update, "Valore glicemico sbagliato!", True, "danger", trigger, no_update, no_update)
+            return (no_update, no_update, "Valore glicemico sbagliato!", True, "danger", trigger, no_update, no_update, no_update)
         
         if trigger_id == "inserisci-glicemia" and valore:
             current_user.inserisci_glicemia(valore, flag_pasto, sintomi)
@@ -1287,7 +1288,8 @@ def registra_callbacks(app):
                 colore = "linear-gradient(to bottom right, #FF4C4C, #D50000)"
             return (valore, {"background": colore}, "Inserimento corretto", True, "success", trigger + 1, 
                 "",  # Resetta sintomi
-                None   # Resetta glicemia
+                None,   # Resetta glicemia
+                0,#azzero il numero dei click del bottone
             )
         return default_return
 

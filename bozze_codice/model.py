@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 from abc import ABC, abstractmethod
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Eseguito una sola volta all'avvio
 
@@ -296,8 +296,10 @@ class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
             cursore.execute("SELECT nome, cognome FROM Diabetologo WHERE id_diabetologo = %s", (new_diabetologo_id,))
             new_doc = cursore.fetchone()
             new_name = f"{new_doc[0]} {new_doc[1]}" if new_doc else "un nuovo specialista"
-            
-            messaggio = f"Il tuo diabetologo {old_diabetologo_name} non è più disponibile. Sei stato riassegnato al Dr. {new_name}."
+            cursore.execute("SELECT nome, cognome FROM Paziente WHERE diabetologo_associato = %s", (new_diabetologo_id,))
+            paz = cursore.fetchone()
+            paz_name = f"{paz[0]} {paz[1]}"
+            messaggio = f"{old_diabetologo_name} non è più disponibile. il paziente {paz_name} è stato assegnato al Dr. {new_name}."
             cursore.execute("""
                 INSERT INTO alerts (id_paziente, orario, alert_case)
                 VALUES (%s, %s, %s)
@@ -349,7 +351,9 @@ class Diabetologo(Persona):
                 LEFT JOIN Glicemia g ON p.id_paziente = g.paziente
                 WHERE p.diabetologo_associato = %s
                 GROUP BY p.id_paziente
-                ORDER BY media DESC
+                ORDER BY 
+                    CASE WHEN COALESCE(AVG(g.valore), 0) > 180 OR COALESCE(AVG(g.valore), 0) < 80 THEN 0 ELSE 1 END,
+                    media DESC
             """, (self.get_id_diabetologo(),))
             
             result = cursore.fetchall()
@@ -1246,65 +1250,68 @@ def formatta_sintomo(s):
 
 #grafico linea per l'andamento
 def visualizza_andamento_glicemia(dati):
+    if not dati:
+        # Eccezione per assenza di dati
+        raise ValueError("Nessun dato glicemico disponibile.")
 
-        if not dati:
-            # Eccezione per assenza di dati
-            raise ValueError("Nessun dato glicemico disponibile.")
+    valori = [r[0] for r in dati]
+    date = [r[1] for r in dati]
+    sintomi = [r[2] for r in dati]
 
-        valori = [r[0] for r in dati]
-        date = [r[1] for r in dati]
-        sintomi= [r[2] for r in dati]
+    sintomi_formattati = [formatta_sintomo(s) for s in sintomi]
 
-        sintomi_formattati = [formatta_sintomo(s) for s in sintomi]
+    fig = go.Figure()
 
-        fig = go.Figure()
+    # Se c'è solo un dato, estendiamo l'asse x artificialmente
+    if len(date) == 1:
+        extended_date = [date[0], date[0] + timedelta(days=1)]  # Aggiungiamo un giorno dopo
+    else:
+        extended_date = date
 
-        fig.add_trace(go.Scatter(
-            x=date,
-            y=valori,
-            mode='lines+markers',
-            fill='tozeroy',
-            fillcolor='rgba(0, 123, 255, 0.2)',
-            line=dict(color='blue', width=3),
-            marker=dict(size=6),
-            name='Glicemia',
-            customdata=[[s] for s in sintomi_formattati],
-            hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<br>%{customdata[0]}<extra></extra>'
+    fig.add_trace(go.Scatter(
+        x=date,
+        y=valori,
+        mode='lines+markers',
+        fill='tozeroy',
+        fillcolor='rgba(0, 123, 255, 0.2)',
+        line=dict(color='blue', width=3),
+        marker=dict(size=6),
+        name='Glicemia',
+        customdata=[[s] for s in sintomi_formattati],
+        hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<br>%{customdata[0]}<extra></extra>'
+    ))
+
+    # Linee soglia glicemica - usiamo extended_date per assicurarci che siano visibili
+    for soglia in [80, 130]:
+        fig.add_trace(go.Scatter(   
+            x=extended_date,
+            y=[soglia]*len(extended_date),
+            mode='lines',
+            line=dict(color="#71BAFF", dash='dash'),
+            name=f'Soglia {soglia} mg/dL',
+            hoverinfo='skip'
         ))
 
-        # Linee soglia glicemica
-        for soglia in [80, 130]:
-            fig.add_trace(go.Scatter(   
-                x=date,
-                y=[soglia]*len(date),
-                mode='lines',
-                line=dict(color="#71BAFF", dash='dash'),
-                name=f'Soglia {soglia} mg/dL',
-                hoverinfo='skip'
-            ))
-
-        fig.update_layout(
-            xaxis_title='Data rilevazione',
-            yaxis_title='Glicemia (mg/dL)',
-            yaxis=dict(range=[min(50, min(valori)-10), max(valori) + 50]),
-            plot_bgcolor="#e6f2ff",
-            hovermode='x unified',
-            font=dict(family='Arial', size=14),
-            # altezza forzata a 40px
-            height=400,
-            # margini forzati a top/bottom/left/right = 10px
-            margin=dict(t=10, b=10, l=10, r=10),
-            legend=dict(
-                x=0.01, # posizione orizzontale
-                y=0.99, # posizione verticale
-                xanchor='left', # a sinistra
-                yanchor='top', # in alto
-                bgcolor='rgba(255,255,255,0.3)', # sfondo semi trasparente di colore bianco
-                borderwidth=0 # senza bordo
-            )
+    fig.update_layout(
+        xaxis_title='Data rilevazione',
+        yaxis_title='Glicemia (mg/dL)',
+        yaxis=dict(range=[min(50, min(valori)-10), max(valori) + 50]),
+        plot_bgcolor="#e6f2ff",
+        hovermode='x unified',
+        font=dict(family='Arial', size=14),
+        height=400,
+        margin=dict(t=10, b=10, l=10, r=10),
+        legend=dict(
+            x=0.01,
+            y=0.99,
+            xanchor='left',
+            yanchor='top',
+            bgcolor='rgba(255,255,255,0.3)',
+            borderwidth=0
         )
+    )
 
-        return fig
+    return fig
 
 #****************************************************************************************************************
 
