@@ -136,12 +136,14 @@ admin_navlinks = dbc.Nav(
 sidebar = html.Div(
     [
         # Titolo
-        html.H1("DiaLog", style={'textAlign': 'center'}, className="text-primary"),
+        html.H1("DiaLog", className="b-gradient-text"),
         html.Hr(),
 
         # Per testare è fissa quella del paziente, da modificare con la callback in base al tipo di utente
         # patient_navlinks,
         html.Div(id="navlinks"),
+
+        html.P("v1.3.2-beta", style={'margin-top': 'auto'}, className='text-primary font-18')
     ],
     style={
         "top": 0,
@@ -167,56 +169,66 @@ sidebar = html.Div(
 
 # HOME GUEST
 home = html.Div(
-    className='f-1 flex-row g-40 p-40',
+    className='f-1 flex-col p-40 g-30',
     children=[
-        # Prima colonna (a sinistra) con numero di pazienti
+        
+        #Prima riga:
         html.Div(
-            style = {
-                'background-color':'red'
-            },
-            children = [
-                # Numero pazienti
-                html.Div(
+          className='f-1 flex-row',
+          children=[
+              # Numero Pazienti model.get_num_pazienti()
+               html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.P(model.get_num_pazienti(), id='num-pazienti', className='centered font-115 font-bold' ),
+                                html.P("Pazienti",  className='centered font-25 font-bold mt-0')
+                            ]
+                        )
+                    ],
+                    className='f-1 centered flex-col b-gradient-text'
+              ),
 
+              # Presentazione
+                html.Div(
+                    [
+                        html.P("DiaLog", className='font-85 centered font-bold text-primary b-gradient-text mb-0'),
+                        html.P("🠈 Uniti nella cura 🠊", className='centered font-25 font-bold b-gradient-text mt-0 mb-4'),
+                        html.P("Mettiamo in comunicazione i diabetologi con chi ne ha bisogno!", className='font-25 center')
+                    ],
+                    className='f-1 flex-col centered'
                 ),
 
-                # Screen dashboard paziente
-
-            ],
-            className= 'f-1 flex-col'
+              # Numero diabetologi model.get_num_diabetologi()
+                html.Div(
+                    [
+                        html.P(model.get_num_diabetologi(), id='num-dottori', className='centered font-115 font-bold' ),
+                        html.P("Dottori",  className='centered font-25 font-bold mt-0')
+                    ],
+                    className='f-1 centered flex-col b-gradient-text'
+                )
+          ]
         ),
 
-        # Colonna centrale (Presentazione app)
+        # Seconda riga:
         html.Div(
-            style = {
-                'background-color':'green'
-            },
-            children = [
-                # Presentazione dell'app (tema importante la condivisione)
-                html.Div(
-
-                ),
-
-                # Screen di una chat (?)
-            ],
-            className= 'f-1 flex-col'
-        ),
-
-        # Ultima colonna (a destra) con numero diabetologi
-        html.Div(
-            style = {
-                'background-color':'blue'
-            },
-            children = [
-                # Numero diabetologi
-                html.Div(
-
-                ),
-
-                # Screen dashboard diabetologi
-
-            ],
-            className= 'f-1 flex-col'
+          className='f-2',
+          children=[
+                # Immagini dell'app:
+                dbc.Carousel(
+                    items=[
+                        {"key": "1", "src": "/assets/img1.png", "img_style":{"max-height": "565px"}},
+                        {"key": "2", "src": "/assets/img2.png", "img_style":{"max-height": "565px"}},
+                        {"key": "3", "src": "/assets/img3.png", "img_style":{"max-height": "565px"}},
+                    ],
+                    controls=True,
+                    indicators=True,
+                    interval=4000,
+                    ride="carousel",
+                    variant="dark",
+                    className='carousel'
+                )
+          ]
         )
     ],
 )
@@ -241,7 +253,7 @@ username_box = html.Div(
             [
                 # Il placeholder è necessario per il corretto funzionamento di FormFloating() anche se non visibile
                 dbc.Input(type="text", id="username-input", placeholder="Username", className='input'),
-                dbc.Label("Inserisci username generato"),
+                dbc.Label("Username"),
             ]
         )
     ],
@@ -515,17 +527,6 @@ form3 = html.Div(
         # Pulsante di registrazione
         html.Div(
             dbc.Button("Registrati", id="registration-input", size="lg",  style={'border-radius':'35px'}, n_clicks=0, className='button mb-3')
-        ),
-        # Username generato
-        dbc.Card(
-            [
-                html.H5("Username:", style={'color': 'gray'}),
-                dbc.CardBody(
-                    [
-                        html.P(id="generated-username")
-                    ]
-                )
-            ], className='mb-4'
         ),
 
         # Link per il Login
@@ -1249,7 +1250,7 @@ doctor_patient = html.Div(
                     ]
                 ),
                 
-                # modal fittizio FATTO SOLO PER FAR STAR ZITTO DASH.
+                # modal fittizio.
                 dbc.Modal(
                     [
                         dbc.ModalHeader(dbc.ModalTitle(id="modal-title")),

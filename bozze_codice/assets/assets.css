@@ -8,6 +8,25 @@
     width: 100%;
 }
 
+/* className per testo con gradiente */
+.b-gradient-text {
+    background: linear-gradient(to bottom right, #0d6efd, #001f3f);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ClassName per il carosello */
+.carousel {
+    height: 100%;
+    overflow: hidden;
+}
+
+.carousel .carousel-item img {
+    object-fit: contain;
+    display: block;
+}
+
 /* ClassName per i form di registrazione e login*/
 .form-card {
     padding: 30px;
@@ -197,6 +216,11 @@
     justify-content: center;
 }
 
+/* ClassName per font-size 18px */
+.font-18 {
+    font-size: 18px;
+}
+
 /* ClassName per font-size 20px */
 .font-20 {
     font-size: 20px;
@@ -205,6 +229,26 @@
 /* ClassName per font-size 25px */
 .font-25 {
     font-size: 25px;
+}
+
+/* ClassName per font-size 85px */
+.font-85 {
+    font-size: 85px;
+}
+
+/* ClassName per font-size 115px */
+.font-115 {
+    font-size: 115px;
+}
+
+/* ClassName per font-weight  */
+.font-bold {
+    font-weight: bold;
+}
+
+/* ClassName per testo centrato */
+.center {
+    text-align: center;
 }
 
 /* ClassName per il colore del font grigio */

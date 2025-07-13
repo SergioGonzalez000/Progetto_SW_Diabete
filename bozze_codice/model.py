@@ -176,10 +176,6 @@ class Persona(UserMixin):
         self._pw = value
 
 
-    
-
-
-
 class Paziente(Persona):
     def __init__(self,nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw):
         super().__init__(nome,cognome,data_nascita, sesso, codice_fiscale, indirizzo, citta, cap, telefono, email,username, pw)
@@ -799,6 +795,36 @@ class PersonaFactory:
 #da qua in poi metodi generali non appartenenti a classi specifiche
 #*************************************************************************************************************************************
 # METODI DI UTILITY:
+
+# Metodo che restituisce il numero di diabetologi
+def get_num_diabetologi():
+    with DBSingleton.get_cursor() as cur:
+        query="""
+            SELECT COUNT(id_diabetologo)
+            FROM Diabetologo
+        """
+        
+        cur.execute(query, ())
+        result = cur.fetchone()
+
+        return result[0]
+
+# Metodo che restituisce il numero dei pazienti
+def get_num_pazienti():
+    with DBSingleton.get_cursor() as cur:
+        query="""
+            SELECT COUNT(id_paziente)
+            FROM Paziente
+        """
+
+        cur.execute(query, ())
+        result = cur.fetchone()
+
+        return result[0]
+
+#*************************************************************************************************************************************
+
+
 #miglio - funzione che a seconda della classe di appartenenza dell'utente 
 #chiama i metodi per restituire la sua lista di contatti 
 def get_contatti():
