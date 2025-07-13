@@ -1957,7 +1957,6 @@ admin_dashboard = html.Div(
         html.Div(
             className='f-2 flex-col g-30',
             style={
-                "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)",
                 "borderRadius": "15px",
             },
             children=[
@@ -2014,7 +2013,6 @@ def render_richieste_account():
         "overflow": "hidden",
         "padding": "20px",
         "backgroundColor": "#ffffff",
-        "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)",
         "border": "1px solid #dee2e6",
         "borderRadius": "15px",
         "display": "flex",
@@ -2227,7 +2225,7 @@ def layout_lista_pazienti():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, style={"overflowY": "auto", 'height': '80vh'})  
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", 'maxHeight': '74.5vh'})  
 
 #*****************************************************************************************************
 
@@ -2533,9 +2531,11 @@ def admin_patient():
                 html.Hr(),
                 # Genera la lista dei pazienti
                 html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
-            ],  style={ 'height': '100%', 
-                        "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)", 
+            ],  style={ 'maxHeight': '100%', 
                         "borderRadius": "15px",
+                        "marginRight": "25px",
+                        "marginTop": "20px",
+                        "marginBottom": "20px",
                 }, 
                 className='flex-col card'),
             # Info dei pazienti:
@@ -2545,18 +2545,15 @@ def admin_patient():
                 dcc.Store(id="trigger-update-paziente", data=False),
                 # Genera la card di informazioni
                 html.Div(id="dettagli-paziente")
-            ], className='f-2 flex-col card')   
+            ], className='f-2 flex-col card', style={
+                "borderRadius": "15px",
+                "marginTop": "20px",
+                "marginRight": "20px",
+                "marginBottom": "20px"
+            })   
         ]
 )
 
-    #         html.Div([
-    #             html.H4("Informazioni:", style={'color': 'gray'}),
-    #             html.Hr(),
-    #             dcc.Store(id="trigger-update-paziente", data=False),
-    #             html.Div(id="dettagli-paziente")
-    #         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
-    #     ]
-    # )
 
 #************************************************************************************************************************************************************
 # renderizza in modo corretto e uguale alla pagina dei pazienti, il layout.
@@ -2582,7 +2579,7 @@ def layout_lista_diabetologi():
     ]
 
     # Ritorna un contenitore con tutti i pulsanti
-    return html.Div(lista_pulsanti, style={"overflowY": "auto", "height": "80vh"})
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", "maxHeight": "74.5vh"})
 
 
 # funzione che crea la card dove vengono visualizzati i dettagli del diabetologo selezionato dalla lista
@@ -2935,9 +2932,11 @@ def admin_doctor():
                 # Genera la lista dei diabetologi
                 html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
                 
-            ], style={'height': '100%',
-                    "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)", 
-                    "borderRadius": "15px"}, 
+            ], style={'maxHeight': '100%',
+                    "borderRadius": "15px",
+                    "marginRight": "25px",
+                    "marginTop": "20px",
+                    "marginBottom": "20px"}, 
                className='flex-col card'),
             # Info dei pazienti:
             html.Div([
@@ -2946,19 +2945,15 @@ def admin_doctor():
                 dcc.Store(id="trigger-update-diabetologo", data=False),
                 # Genera la card di informazioni
                 html.Div(id="dettagli-diabetologo")
-            ], className='f-2 flex-col card')   
+            ], className='f-2 flex-col card', 
+            style={
+                "borderRadius": "15px",
+                "marginTop": "20px",
+                "marginRight": "20px",
+                "marginBottom": "20px"
+            })   
         ]
 )
-
-    #         html.Div([
-    #             html.H4("Informazioni:", style={'color': 'gray'}),
-    #             html.Hr(),
-    #             dcc.Store(id="trigger-update-diabetologo", data=False),
-    #             html.Div(id="dettagli-diabetologo")
-    #         ], style={'flex': 2, 'display': 'flex', 'flexDirection': 'column'}, className='card')   
-    #     ]
-    # )
-
 
 #******************************************************************************************************
 # FUNZIONE CHE GENERA LE BUBBLES DEI MESSAGGI
