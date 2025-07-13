@@ -293,17 +293,31 @@ class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
 
     def _crea_alert(self, old_diabetologo_name, new_diabetologo_id):
         with DBSingleton.get_cursor() as cursore:
-            cursore.execute("SELECT nome, cognome FROM Diabetologo WHERE id_diabetologo = %s", (new_diabetologo_id,))
+            cursore.execute(
+                "SELECT nome, cognome FROM Diabetologo WHERE id_diabetologo = %s", 
+                (new_diabetologo_id,)
+            )
             new_doc = cursore.fetchone()
             new_name = f"{new_doc[0]} {new_doc[1]}" if new_doc else "un nuovo specialista"
-            cursore.execute("SELECT nome, cognome FROM Paziente WHERE diabetologo_associato = %s", (new_diabetologo_id,))
+
+            cursore.execute(
+                "SELECT nome, cognome FROM Paziente WHERE id_paziente = %s", 
+                (self.paziente.get_id_paziente(),)
+            )
             paz = cursore.fetchone()
-            paz_name = f"{paz[0]} {paz[1]}"
-            messaggio = f"{old_diabetologo_name} non è più disponibile. il paziente {paz_name} è stato assegnato al Dr. {new_name}."
+            paz_name = f"{paz[0]} {paz[1]}" if paz else "il paziente"
+
+            messaggio = f"{old_diabetologo_name} non è più disponibile. Il paziente {paz_name} è stato assegnato al Dr. {new_name}."
+
             cursore.execute("""
                 INSERT INTO alerts (id_paziente, orario, alert_case)
                 VALUES (%s, %s, %s)
-            """, (self.paziente.get_id_paziente(),datetime.now(), messaggio))
+            """, (
+                self.paziente.get_id_paziente(),
+                datetime.now(),
+                messaggio
+            ))
+
 
     def _crea_alert_fallback(self, old_diabetologo_name):
         with DBSingleton.get_cursor() as cursore:
@@ -312,6 +326,23 @@ class PazienteDiabetologoObserver(DiabetologoDeletionObserver):
                 INSERT INTO alerts (id_paziente, orario, alert_case)
                 VALUES (%s, %s, %s)
             """, (self.paziente.get_id_paziente(),datetime.now(), messaggio))
+
+class DiabetologoSubject:
+    def __init__(self, id_diabetologo, nome):
+        self.id = id_diabetologo
+        self.nome = nome
+        self._observers = []
+
+    def attach(self, observer: DiabetologoDeletionObserver):
+        self._observers.append(observer)
+
+    def detach(self, observer):
+        self._observers.remove(observer)
+
+    def notify(self):
+        for obs in self._observers:
+            obs.on_diabetologo_deleted(self.id, self.nome)
+
 
 
     
@@ -416,7 +447,7 @@ class Diabetologo(Persona):
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def visualizza_dati_paziente(self,id_paz):
         with DBSingleton.get_cursor() as cursore:
-            cursore.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita), nome
+            cursore.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita), nome, cognome
                             FROM Paziente
                             WHERE id_paziente=%s
                             """,(id_paz,))
@@ -632,16 +663,20 @@ class Admin(Persona):
             diabetologo_name = f"{nome} {cognome}"
             
             # Ottieni pazienti associati
-            pazienti = self.get_pazienti_associati(id_diabetologo)
-            
-            # Crea e notifica gli Observer (uno per paziente) direttamente
-            observers = [PazienteDiabetologoObserver(p) for p in pazienti]
+            subject = DiabetologoSubject(id_diabetologo, nome)
+
+            # recuperi i pazienti e li attacchi come observer
+            for paz in self.get_pazienti_associati(id_diabetologo):
+                subject.attach(PazienteDiabetologoObserver(paz))
+
+            # fai la notifica a tutti
+            subject.notify()
             
             # PRIMA notifica gli observer (così possono accedere al diabetologo)
-            for observer in observers:
-                observer.on_diabetologo_deleted(id_diabetologo, diabetologo_name)
+            # for observer in observers:
+            #     observer.on_diabetologo_deleted(id_diabetologo, diabetologo_name)
             
-            # 5. POI elimina il diabetologo
+            #POI elimina il diabetologo
             cursore.execute("DELETE FROM Diabetologo WHERE id_diabetologo = %s", (id_diabetologo,))
 
 
@@ -740,141 +775,6 @@ class PersonaFactory:
             raise ValueError("Tipo di persona non valido")
 
 
-
-
-
-# classi Terapia, Farmaco e Glicemia abbozzate, variabili d'istanza minime necessarie, qualche idea per i metodi
-# class Terapia():
-#     def __init__(self, farmaco_prescritto, dose, via_somministrazione, periodo_terapia):
-#         self.farmaco_prescritto = farmaco_prescritto 
-#         self.dose = dose 
-#         self.via_somministrazione = via_somministrazione 
-#         self.periodo_terapia = periodo_terapia
-
-#     # Getter e Setter per farmaco_prescritto
-#     @property
-#     def farmaco_prescritto(self):
-#         return self._farmaco_prescritto
-    
-#     @farmaco_prescritto.setter
-#     def farmaco_prescritto(self, value):
-#         self._farmaco_prescritto = value
-
-#     # Getter e Setter per dose
-#     @property
-#     def dose(self):
-#         return self._dose
-    
-#     @dose.setter
-#     def dose(self, value):
-#         self._dose = value
-
-#     # Getter e Setter per via_somministrazione
-#     @property
-#     def via_somministrazione(self):
-#         return self._via_somministrazione
-    
-#     @via_somministrazione.setter
-#     def via_somministrazione(self, value):
-#         self._via_somministrazione = value
-
-#     # Getter e Setter per periodo_terapia
-#     @property
-#     def periodo_terapia(self):
-#         return self._periodo_terapia
-    
-#     @periodo_terapia.setter
-#     def periodo_terapia(self, value):
-#         self._periodo_terapia = value
-        
-
-
-
-
-# class Farmaco():
-#     def __init__(self, nome, tipologia, unita_misura, codice_univoco):
-#         self.nome = nome
-#         self.tipologia = tipologia
-#         self.unita_misura = unita_misura
-#         self.codice_univoco = codice_univoco
-
-#     # Getter e Setter per nome
-#     @property
-#     def nome(self):
-#         return self._nome
-    
-#     @nome.setter
-#     def nome(self, value):
-#         self._nome = value
-
-#     # Getter e Setter per tipologia
-#     @property
-#     def tipologia(self):
-#         return self._tipologia
-    
-#     @tipologia.setter
-#     def tipologia(self, value):
-#         self._tipologia = value
-
-#     # Getter e Setter per unita_misura
-#     @property
-#     def unita_misura(self):
-#         return self._unita_misura
-    
-#     @unita_misura.setter
-#     def unita_misura(self, value):
-#         self._unita_misura = value
-
-#     # Getter e Setter per codice_univoco
-#     @property
-#     def codice_univoco(self):
-#         return self._codice_univoco
-    
-#     @codice_univoco.setter
-#     def codice_univoco(self, value):
-#         self._codice_univoco = value
-
-#     # fx che aggiunga un farmaco alla tabella farmaco nel db
-#     def aggiungi_farmaco():
-#         pass
-
-
-
-
-    
-# class Glicemia():
-#     def __init__(self, valore, data_assunzione, ora_assunzione):
-#         self.valore = valore
-#         self.data_assunzione = data_assunzione
-#         self.ora_assunzione = ora_assunzione
-
-#     # Getter e setter del valore
-#     @property
-#     def valore(self):
-#         return self._valore
-
-#     @valore.setter
-#     def valore(self, valore):
-#         self._valore = valore
-
-#     # Getter e setter della data di assunzione
-#     @property
-#     def data_assunzione(self):
-#         return self._data_assunzione
-
-#     @data_assunzione.setter
-#     def data_assunzione(self, data_assunzione):
-#         self._data_assunzione = data_assunzione
-
-#     # Getter e setter dell'ora di assunzione
-#     @property
-#     def ora_assunzione(self):
-#         return self._ora_assunzione
-
-#     @ora_assunzione.setter
-#     def ora_assunzione(self, ora_assunzione):
-#         self._ora_assunzione = ora_assunzione
-        
 
 
 #da qua in poi metodi generali non appartenenti a classi specifiche
@@ -1294,7 +1194,7 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     with DBSingleton.get_cursor() as cursore:
         if filtro_grafico == "andamento":
             query_base = """
-                SELECT valore, data_inserimento, sintomi
+                SELECT valore, data_inserimento, sintomi, pasto
                 FROM Glicemia
                 WHERE paziente = %s
             """
@@ -1338,8 +1238,11 @@ def visualizza_andamento_glicemia(dati):
     valori = [r[0] for r in dati]
     date = [r[1] for r in dati]
     sintomi = [r[2] for r in dati]
+    pasto = [r[3] for r in dati]
 
     sintomi_formattati = [formatta_sintomo(s) for s in sintomi]
+    customdata = list(zip(sintomi_formattati, pasto))
+
 
     fig = go.Figure()
 
@@ -1358,8 +1261,13 @@ def visualizza_andamento_glicemia(dati):
         line=dict(color='blue', width=3),
         marker=dict(size=6),
         name='Glicemia',
-        customdata=[[s] for s in sintomi_formattati],
-        hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<br>%{customdata[0]}<extra></extra>'
+        customdata=customdata,
+        hovertemplate=(
+            'Valore: %{y} mg/dL<br>'
+            'Data: %{x}<br>'
+            '%{customdata[0]}<br>'
+            '%{customdata[1]} pasto<extra></extra>'
+        )
     ))
 
     # Linee soglia glicemica - usiamo extended_date per assicurarci che siano visibili
