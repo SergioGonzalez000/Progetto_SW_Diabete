@@ -1956,6 +1956,10 @@ admin_dashboard = html.Div(
         # Colonna a sinistra 1 (divisa in due righe)
         html.Div(
             className='f-2 flex-col g-30',
+            style={
+                "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)",
+                "borderRadius": "15px",
+            },
             children=[
                 
                 # colonna a sx
@@ -1966,7 +1970,7 @@ admin_dashboard = html.Div(
                         html.Div(
                             className='card',
                             children=[
-                                html.H5("Glicemia media dei pazienti gestiti da ciascun diabetologo:", className='gray'),
+                                html.H4("Glicemia media dei pazienti gestiti da ciascun diabetologo:", className='gray'),
                                 html.Hr(style= {"margin-top": "18px"}),
                                 
                                 html.Div(
@@ -1986,7 +1990,7 @@ admin_dashboard = html.Div(
                                            "height": "100%",
                                            'justify-content': 'center',
                                            'align-items':'center',
-                                           'margin-top': '40px'
+                                           'margin-top': '40px',
                                     }        
                                 ),
                                 
@@ -2039,7 +2043,7 @@ def render_richieste_account():
             html.Div(
                 style=style_div_interno,
                 children=[
-                    html.H5("Richieste Pazienti", className='gray'),
+                    html.H4("Richieste Pazienti", className='gray'),
                     html.Hr(style={"margin-top": "5px"}),
 
                     html.Div(     # wrapper scrollabile aggiunto
@@ -2062,7 +2066,7 @@ def render_richieste_account():
             html.Div(
                 style=style_div_interno,
                 children=[
-                    html.H5("Richieste Diabetologi", className='gray'),
+                    html.H4("Richieste Diabetologi", className='gray'),
                     html.Hr(style={"margin-top": "5px"}),
 
                     html.Div(    # wrapper scrollabile aggiunto
@@ -2521,6 +2525,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
 def admin_patient():
     return html.Div(
         className='f-1 flex-row g-20 p-20',
+        style={"paddingLeft": "40px",},
         children=[
             # Lista dei pazienti
             html.Div([
@@ -2528,7 +2533,11 @@ def admin_patient():
                 html.Hr(),
                 # Genera la lista dei pazienti
                 html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
-            ], style={'height': '100%'}, className='flex-col card'),
+            ],  style={ 'height': '100%', 
+                        "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)", 
+                        "borderRadius": "15px",
+                }, 
+                className='flex-col card'),
             # Info dei pazienti:
             html.Div([
                 html.H4("Informazioni:", className='gray'),
@@ -2915,6 +2924,9 @@ def genera_lista_pazienti_associati(lista_pazienti):
 def admin_doctor():
     return html.Div(
         className='f-1 flex-row g-20 p-20',
+        style={
+            "paddingLeft": "40px"
+        },
         children=[
             # Lista dei pazienti
             html.Div([
@@ -2923,7 +2935,10 @@ def admin_doctor():
                 # Genera la lista dei diabetologi
                 html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
                 
-            ], style={'height': '100%'}, className='flex-col card'),
+            ], style={'height': '100%',
+                    "boxShadow": "0px 4px 8px rgba(0, 0, 255, 0.2)", 
+                    "borderRadius": "15px"}, 
+               className='flex-col card'),
             # Info dei pazienti:
             html.Div([
                 html.H4("Informazioni:", className='gray'),
