@@ -78,7 +78,7 @@ patient_navlinks = dbc.Nav(
         # Link della home/dashboard
         dbc.NavLink("Dashboard", href="/patient-dashboard", active="exact", className="mb-4 font-25"),
         # Link per la pagina di grafici
-        dbc.NavLink("Grafici", href="/grafici", active="exact", className="mb-4 font-25"),
+        dbc.NavLink("Overview", href="/grafici", active="exact", className="mb-4 font-25"),
         # Link della pagina della chat
         dbc.NavLink("Chat", href="/chat", active="exact", className="mb-1.5 font-25"),
         html.Hr(),
@@ -115,7 +115,7 @@ doctor_navlinks = dbc.Nav(
 admin_navlinks = dbc.Nav(
     [
         # Link per la pagina iniziale
-        dbc.NavLink("Dashboard", href="/admin-dashboard", active="exact", className="mb-4 font-25"),
+        dbc.NavLink("Overview", href="/admin-dashboard", active="exact", className="mb-4 font-25"),
         # Link della pagina della chat
         dbc.NavLink("Richieste", href="/request", active="exact", className="mb-4 font-25"), 
         # Link per la pagina dei pazienti
