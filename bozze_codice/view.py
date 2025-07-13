@@ -558,11 +558,11 @@ form3 = html.Div(
 
         # Avviso:
         html.Small(
-            "Attenzione: lo username apparirà solo quando la tua richiesta verrà accettata. Potrebbe volerci qualche minuto.",
+            "Attenzione: apparirà il tuo username una volta effettuata la registrazione. Conservalo e utilizzalo per il login!",
             style={
                 'color': 'red'
             },
-            className='mb-3'
+            className='f-1'
         )
     ],
     id="form3",
