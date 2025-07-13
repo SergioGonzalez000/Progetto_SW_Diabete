@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 from dash import MATCH, callback_context, html, dcc, Input, Output, State, ALL, ctx
 from flask_login import login_user, logout_user, current_user
 from werkzeug.security import check_password_hash 
-from datetime import date
+from datetime import date, datetime
 import time
 import dash
 import model
@@ -101,7 +101,8 @@ def registra_callbacks(app):
     )
     def richiesta_account(n_clicks,user,nome,cognome,cf,datanascita,sesso,tel,email,indirizzo,citta,cap,pw,conf_pw):
         if n_clicks > 0:
-            if datanascita>date.today():
+            datanascita_date = datetime.strptime(datanascita, "%Y-%m-%d").date()
+            if datanascita_date>date.today():
                 return "Data non valida!", "danger", True, None
             if not nome or not cognome or not cf or not datanascita or not sesso or not tel or not email or not indirizzo or not citta or not cap or not pw or not conf_pw:
                 return "Inserisci tutti i campi!", "danger", True, None
@@ -1762,7 +1763,7 @@ def registra_callbacks(app):
             return dash.no_update, False
 
         if n_clicks_yes:
-            model.Admin.elimina_diabetologo(id_diabetologo)
+            current_user.elimina_diabetologo(id_diabetologo)
             # Ricostruisco tutta la pagina dei diabetologi, lista aggiornata
 
             time.sleep(1)   # per aspettare un sec
