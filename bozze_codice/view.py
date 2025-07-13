@@ -168,7 +168,8 @@ sidebar = html.Div(
 # ******************************************************************************************************************
 
 # HOME GUEST
-home = html.Div(
+def home(): 
+    return html.Div(
     className='f-1 flex-col p-40 g-30',
     children=[
         
@@ -224,7 +225,7 @@ home = html.Div(
                     controls=True,
                     indicators=True,
                     interval=4000,
-                    ride="carousel",
+                    # ride="carousel",
                     variant="dark",
                     className='carousel'
                 )

@@ -189,7 +189,7 @@ def registra_callbacks(app):
 
             # Accesso alla home
             if pathname == "/":
-                return view.guest_navlinks, view.home, "/"
+                return view.guest_navlinks, view.home(), "/"
             # Accesso al login
             elif pathname == "/login":
                 return view.guest_navlinks, view.login, "/login"
