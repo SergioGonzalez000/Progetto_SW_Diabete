@@ -296,6 +296,7 @@ class TestPazienteDiabetologoObserver(unittest.TestCase):
                 INSERT INTO alerts (id_paziente, orario, alert_case)
                 VALUES (%s, %s, %s)
             """, (123, unittest.mock.ANY, unittest.mock.ANY))
+
 class TestAdmin(unittest.TestCase):
     
     def setUp(self):
@@ -869,7 +870,7 @@ class TestUtilityMethods(unittest.TestCase):
         result = get_terapie_paziente(1, 1)
         self.assertEqual(len(result), 1)
         
-        args, kwargs = mock_cursor.execute.call_args
+        args, _ = mock_cursor.execute.call_args
         self.assertSqlEqual(args[0], "SELECT * FROM Terapia t WHERE paziente=%s AND diabetologo=%s")
         self.assertEqual(args[1], (1, 1))
 
