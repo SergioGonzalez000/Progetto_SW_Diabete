@@ -399,7 +399,7 @@ class Diabetologo(Persona):
     # funzione che prende tutti i pazienti nella db
     def get_all_pazienti_associati(self):
         with DBSingleton.get_cursor() as cursore:
-            cursore.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s", (self.get_id_diabetologo(),))
+            cursore.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s ORDER BY cognome", (self.get_id_diabetologo(),))
             result = cursore.fetchall()
 
             # Conversione in lista di dizionari
@@ -1701,6 +1701,7 @@ def get_alerts_paziente(id_paziente):
             SELECT orario, alert_case
             FROM alerts 
             where id_paziente = %s
+            order by orario desc
         """,(id_paziente,))
         result = cursore.fetchmany(5)
         if not result: return
