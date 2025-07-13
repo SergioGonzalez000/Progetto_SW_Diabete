@@ -221,6 +221,8 @@ def home():
                         {"key": "1", "src": "/assets/img1.png", "img_style":{"max-height": "565px"}},
                         {"key": "2", "src": "/assets/img2.png", "img_style":{"max-height": "565px"}},
                         {"key": "3", "src": "/assets/img3.png", "img_style":{"max-height": "565px"}},
+                        {"key": "4", "src": "/assets/img4.png", "img_style":{"max-height": "565px"}},
+                        {"key": "5", "src": "/assets/img5.png", "img_style":{"max-height": "565px"}},                        
                     ],
                     controls=True,
                     indicators=True,
@@ -767,7 +769,7 @@ patient_dashboard = html.Div(
                 # Input glicemia
                 dcc.Input(
                     id="input-sintomi-riscontrati",
-                    placeholder="Sintomi...",
+                    placeholder="Sintomi (fac.)...",
                     type="text",
                     className="input mb-3"
                 ),
@@ -807,7 +809,7 @@ patient_dashboard = html.Div(
                                     # Inserimento del dosaggio
                                     dcc.Input(
                                         id="input-dosaggio-usato",
-                                        placeholder="Dosaggio...",
+                                        placeholder="Dosaggio (mg)...",
                                         type="text",
                                         className= 'input'  
                                     ),
