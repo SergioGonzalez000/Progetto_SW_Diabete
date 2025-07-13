@@ -416,7 +416,7 @@ class Diabetologo(Persona):
     # Saranno da interrogare quindi sia "paziente" che "info_paziente"
     def visualizza_dati_paziente(self,id_paz):
         with DBSingleton.get_cursor() as cursore:
-            cursore.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita), nome
+            cursore.execute("""SELECT codice_fiscale, EXTRACT(year FROM CURRENT_DATE)-EXTRACT(year FROM data_nascita), nome, cognome
                             FROM Paziente
                             WHERE id_paziente=%s
                             """,(id_paz,))
@@ -1213,7 +1213,7 @@ def get_dati_glicemia_filtrati(id_paziente, filtro_temporale, filtro_grafico):
     with DBSingleton.get_cursor() as cursore:
         if filtro_grafico == "andamento":
             query_base = """
-                SELECT valore, data_inserimento, sintomi
+                SELECT valore, data_inserimento, sintomi, pasto
                 FROM Glicemia
                 WHERE paziente = %s
             """
@@ -1257,8 +1257,11 @@ def visualizza_andamento_glicemia(dati):
     valori = [r[0] for r in dati]
     date = [r[1] for r in dati]
     sintomi = [r[2] for r in dati]
+    pasto = [r[3] for r in dati]
 
     sintomi_formattati = [formatta_sintomo(s) for s in sintomi]
+    customdata = list(zip(sintomi_formattati, pasto))
+
 
     fig = go.Figure()
 
@@ -1277,8 +1280,13 @@ def visualizza_andamento_glicemia(dati):
         line=dict(color='blue', width=3),
         marker=dict(size=6),
         name='Glicemia',
-        customdata=[[s] for s in sintomi_formattati],
-        hovertemplate='Valore: %{y} mg/dL<br>Data: %{x}<br>%{customdata[0]}<extra></extra>'
+        customdata=customdata,
+        hovertemplate=(
+            'Valore: %{y} mg/dL<br>'
+            'Data: %{x}<br>'
+            '%{customdata[0]}<br>'
+            '%{customdata[1]} pasto<extra></extra>'
+        )
     ))
 
     # Linee soglia glicemica - usiamo extended_date per assicurarci che siano visibili

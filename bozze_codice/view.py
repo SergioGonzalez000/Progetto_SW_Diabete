@@ -766,7 +766,7 @@ patient_dashboard = html.Div(
                 # Input glicemia
                 dcc.Input(
                     id="input-sintomi-riscontrati",
-                    placeholder="Sintomi...",
+                    placeholder="Sintomi (facoltativo)...",
                     type="text",
                     className="input mb-3"
                 ),
@@ -902,7 +902,8 @@ patient_graphs = html.Div(
                                     button_id="popover-button-2",
                                     popover_id="popover-2",
                                     contenuto=html.Div([
-                                        "Mostra i valori di glicemia registrati durante il periodo selezionato.",
+                                        "Mostra i valori di glicemia registrati durante il periodo selezionato."
+                                        "\nPosizionando il cursore sull'inserimento si possono vedere i sintomi relativi",
                                     ])
                                 )
                             ],
@@ -957,7 +958,7 @@ patient_graphs = html.Div(
                                     button_id="popover-button-4",
                                     popover_id="popover-4",
                                     contenuto=html.Div([
-                                        "Calendario degli eventi di glicemia bassa.",
+                                        "Calendario degli eventi di glicemia bassa (inferiore a 60).",
                                     ])
                                 )
                             ],
@@ -1284,9 +1285,11 @@ doctor_patient = html.Div(
                                     popover_id="popover-1",
                                     contenuto=html.Div([
                                         "Mostra i valori di glicemia registrati durante il periodo selezionato.",
-                                        html.Br(),
+                                        "\nPosizionando il cursore sull'inserimento si possono vedere i sintomi relativi",
                                         html.H6("Media giornaliera:"),
-                                        "La media è calcolata su fasce orarie."
+                                        "La media è calcolata su fasce orarie.",
+                                        html.H6("Eventi glucosio basso:"),
+                                        "calendario che mostra eventi di glicemia inferiore a 60mg/dL.",
                                     ])
                                 )
                             ],
@@ -1412,7 +1415,7 @@ def render_lista_pazienti_glicemia(pazienti):
 #fil-funzione che permette di creare una lista ordinata dalle info dei paziente 
 
 def crea_div_paziente(cfanno, info, segnalazioni):
-    codice_fiscale, eta, nome = cfanno[0]
+    codice_fiscale, eta, nome, cognome = cfanno[0]
      # Visualizzazione segnalazioni
     segnalazioni_div = []
     # Se ci sono segnalazioni:
@@ -1548,7 +1551,7 @@ def crea_div_paziente(cfanno, info, segnalazioni):
             # Header:
             html.Div([
                 html.Div([
-                    html.H4(f"{nome}, {eta}"),
+                    html.H4(f"{nome} {cognome}, {eta}"),
                     #Codice fiscale tutto maiuscolo
                     html.H6(codice_fiscale.upper(), className='gray')
                 ], className='f-1'),
@@ -1887,9 +1890,18 @@ def crea_div_info_base(info,flagpaziente):
                 ),
 
                 html.Div([
-                    html.P("Glicata:", className='font-20'),
+                    html.P("Glicemia media:", className='font-20'),
                     html.Div([
-                        html.P(glicata, style={'display': 'inline-block','font-size': '45px', 'font-weight': 'bold'}),
+                        html.P(round(media_glicemia,2), style={'display': 'inline-block','font-size': '35px', 'font-weight': 'bold'}),
+                        html.P(" mg/dL", style={'display': 'inline-block'}, className='gray')
+                    ]),
+                ], className=' flex-col p-10'
+                ),
+
+                html.Div([
+                    html.P("Glicata stimata:", className='font-20'),
+                    html.Div([
+                        html.P(glicata, style={'display': 'inline-block','font-size': '35px', 'font-weight': 'bold'}),
                         html.P(" mg/dL", style={'display': 'inline-block'}, className='gray')
                     ]),
                 ], className='f-1 flex-col p-10'

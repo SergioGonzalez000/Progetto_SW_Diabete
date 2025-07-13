@@ -101,7 +101,8 @@ def registra_callbacks(app):
     )
     def richiesta_account(n_clicks,user,nome,cognome,cf,datanascita,sesso,tel,email,indirizzo,citta,cap,pw,conf_pw):
         if n_clicks > 0:
-
+            if datanascita>date.today():
+                return "Data non valida!", "danger", True, None
             if not nome or not cognome or not cf or not datanascita or not sesso or not tel or not email or not indirizzo or not citta or not cap or not pw or not conf_pw:
                 return "Inserisci tutti i campi!", "danger", True, None
 
@@ -1164,6 +1165,8 @@ def registra_callbacks(app):
             raise dash.exceptions.PreventUpdate
 
         if path == "/doctor-patient" and savebtn > 0:
+            if data_i>data_f:
+                return "Data fine non valida!", "danger",True
             if not any(n_clicks):
                 return "Seleziona un paziente!", "danger",True
             current_user.inserisci_terapia(id_paz,farmaco,dosaggio,assunzioni,data_i,data_f,indicazioni)
@@ -1382,10 +1385,13 @@ def registra_callbacks(app):
         prevent_initial_call=True
     )
     def salva_segnalazione(n_clicks, tipo, descrizione, data_i, data_f):
+        
         if not all([tipo, descrizione, data_i]):
             return "Informazioni mancanti", "danger", True
 
         if n_clicks>0:
+            if data_f<data_i:
+                return "Data fine non valida!", "danger", True
             current_user.inserisci_segnalazione(tipo, descrizione, data_i, data_f)
             return "Segnalazione inserita con successo!", "success", True
         else:
