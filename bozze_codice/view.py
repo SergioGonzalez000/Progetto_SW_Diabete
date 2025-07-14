@@ -2237,7 +2237,7 @@ def layout_lista_pazienti():
 
     lista_pulsanti = [
         dbc.Button(
-            f"{d['nome']} {d['cognome']}",
+            f"{d['cognome']} {d['nome']}",
             id={"type": "btn-paziente", "index": d["id_paziente"]},
             color="light",
             style={
@@ -2379,7 +2379,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                     dbc.ModalBody(
                         html.Div([
                             dbc.Alert(
-                                f"""L'eliminazione di un account è un operazione irreversibile. 
+                                f"""L'eliminazione di un account è un'operazione irreversibile. 
                                 E' sicuro/a di voler eliminare il/la paziente {dati_paziente.get('nome')} {dati_paziente.get('cognome')}?""",
 
                                 color="danger",  # rosso
@@ -2591,7 +2591,7 @@ def layout_lista_diabetologi():
 
     lista_pulsanti = [
         dbc.Button(
-            f"{d['nome']} {d['cognome']}",
+            f"{d['cognome']} {d['nome']}",
             id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
             color="light",
             style={
@@ -2730,7 +2730,7 @@ def crea_card_diabetologo(dati_diabetologo):
                     dbc.ModalBody(
                         html.Div([
                             dbc.Alert(
-                                f"""L'eliminazione di un account è un operazione irreversibile. 
+                                f"""L'eliminazione di un account è un'operazione irreversibile. 
                                 E' sicuro/a di voler eliminare il/la diabetologo/a {dati_diabetologo.get('nome')} {dati_diabetologo.get('cognome')}?""",
 
                                 color="danger",  # rosso
@@ -3276,6 +3276,3 @@ def layout_lista_alerts(alerts):
         alert_cards.append(card)
     
     return html.Div(alert_cards, className='flex-col')
-
-
-

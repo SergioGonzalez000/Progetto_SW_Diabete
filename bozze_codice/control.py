@@ -108,10 +108,14 @@ def registra_callbacks(app):
                 return "Inserisci tutti i campi!", "danger", True, None
 
             if pw != conf_pw:
-                return "Password errata!", "danger", True, None
+                return "Le password non corrispondono!", "danger", True, None
             
-            if len(cf) > 16: #or len(nome) > 50 or len(cognome)>50 or len(indirizzo)>100 or len(citta)>50 or len(cap)>10 or len(tel)>20 or len(email)>100:
-                return "Uno o più campi errati!","danger", True, None
+            if len(cf) != 16: 
+                return "Codice fiscale non valido!","danger", True, None
+
+            # Check lunghezza del CAP:
+            if len(str(cap)) != 5 or cap < 0:
+                return "CAP non valido!", "danger", True, None
             
             if user=='P':
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,True,pw)
@@ -1850,7 +1854,7 @@ def registra_callbacks(app):
 
         if trigger_id != "btn-salva-modifiche-diabetologo":
             raise dash.exceptions.PreventUpdate
-
+        
         try:
             model.Admin.modifica_dati_diabetologo_db(
                 id_diabetologo=id_diabetologo,

@@ -970,7 +970,7 @@ def get_dettagli_paziente(id_paziente):
 # funzione che prende tutti i pazienti nella db, e ne ritorna i dati in un dict
 def get_all_pazienti():
     with DBSingleton.get_cursor() as cursore:
-        cursore.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente ORDER BY cognome")
+        cursore.execute("SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM paziente ORDER BY cognome, nome")
         result = cursore.fetchall()
 
         # Conversione in lista di dizionari
@@ -1023,7 +1023,7 @@ def get_dettagli_diabetologo(id_diabetologo):
 # funzione che prende tutti i diabetologi nella db e li restituisce sotto forma di dict.
 def get_all_diabetologi():
     with DBSingleton.get_cursor() as cursore:
-        cursore.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo ORDER BY cognome")
+        cursore.execute("SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono FROM diabetologo ORDER BY cognome, nome")
         result = cursore.fetchall()
 
         diabetologi = [
