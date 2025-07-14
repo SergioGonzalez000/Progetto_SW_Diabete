@@ -426,7 +426,7 @@ class Diabetologo(Persona):
     # funzione che prende tutti i pazienti nella db
     def get_all_pazienti_associati(self):
         with DBSingleton.get_cursor() as cursore:
-            cursore.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s ORDER BY cognome", (self.get_id_diabetologo(),))
+            cursore.execute("SELECT id_paziente, nome, cognome FROM paziente where diabetologo_associato = %s ORDER BY cognome, nome", (self.get_id_diabetologo(),))
             result = cursore.fetchall()
 
             # Conversione in lista di dizionari
@@ -1533,7 +1533,7 @@ def get_messaggi(id_paziente): #current_user.get_id() e id_button
 #funzione che inserisci i messaggi nella base di dati. 
 def insert_messaggio(id_paziente, contenuto, is_mittente):
         with DBSingleton.get_cursor() as cursore:
-            cursore.execute("""Insert into messaggio values (%s,current_timestamp,%s,%s)""",(id_paziente,is_mittente,contenuto))
+            cursore.execute("""Insert into messaggio values (%s,%s,%s,%s)""",(id_paziente,datetime.now(),is_mittente,contenuto))
         return
 
 #*************************************************************************************************************************
@@ -1583,17 +1583,19 @@ def check_glicemia(id_paziente,valore,pasto):
     with DBSingleton.get_cursor() as cursore:
 
     #supponendo flag == True prima dei pasti
-        if (80 > valore < 130 and pasto == "pre"):
+        if (80 > valore > 130 and pasto == "pre"):
             cursore.execute(
-                """Insert into alerts values(%s,current_timestamp,%s)""",(
+                """Insert into alerts values(%s,%s,%s)""",(
                 id_paziente,
+                datetime.now(),
                 f"Glicemia pre-pasto {valore} fuori range  [80 - 130]")
                 )
 
-        elif (valore > 180 and not pasto == "post"):
+        elif (valore > 180 and pasto == "post"):
             cursore.execute(
-            """Insert into alerts values(%s,current_timestamp,%s)""",(
+            """Insert into alerts values(%s,%s,%s)""",(
                 id_paziente,
+                datetime.now(),
                 f"Glicemia post-pasto {valore} fuori range  [80 - 180]")
             )
     return
@@ -1617,14 +1619,16 @@ def check_farmaco(id_paziente,farmaco, dose):
 
         if farmaco_mancante:
             cursore.execute(
-                """Insert into alerts values(%s,current_timestamp,%s)""",(
+                """Insert into alerts values(%s,%s,%s)""",(
                 id_paziente,
+                datetime.now(),
                 f"Il paziente ha assunto un farmaco non previsto dalle terapie correnti: {farmaco}")
             )
         if dose_errata and not farmaco_mancante:
             cursore.execute(
-                """Insert into alerts values(%s,current_timestamp,%s)""",(
+                """Insert into alerts values(%s,%s,%s)""",(
                 id_paziente,
+                datetime.now(),
                 f"Il paziente ha assunto un dosaggio non previsto dalle terapie correnti: {dose}")
             )
     return

@@ -1277,7 +1277,7 @@ def registra_callbacks(app):
             return (
                 number,stile_corrente, "Tutti i campi obbligatori devono essere compilati.",True,"danger", trigger, no_update, no_update,no_update)
         
-        if valore < 0:
+        if valore < 20 or valore > 1500:
             return (no_update, no_update, "Valore glicemico sbagliato!", True, "danger", trigger, no_update, no_update, no_update)
         
         if trigger_id == "inserisci-glicemia" and valore:
@@ -1321,6 +1321,12 @@ def registra_callbacks(app):
         triggered_id=ctx.triggered_id
         if path=="/patient-dashboard":
             if farmaco and dosaggio and triggered_id=="inserisci-assfarmaco-btn":
+                # Se il dosaggio è negativo 
+                if (dosaggio < 0):
+                    return "Dosaggio non valido!", True, "danger", dash.no_update, dash.no_update
+                # Se il dosaggio inserito è una stringa
+                elif isinstance(dosaggio, str):
+                    return "Dosaggio non valido: inserire un valore numerico!", True, "danger", dash.no_update, dash.no_update
                 current_user.inserisci_assunzione_farmaco(farmaco,dosaggio)
                 model.check_farmaco(model.get_user_id(),farmaco, dosaggio)
                 return "Inserimento avvenuto correttamente", True, "success", "", None
