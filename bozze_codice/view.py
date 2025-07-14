@@ -227,7 +227,7 @@ def home():
                     controls=True,
                     indicators=True,
                     interval=4000,
-                    # ride="carousel",
+                    #ride="carousel",
                     variant="dark",
                     className='carousel'
                 )
@@ -810,7 +810,7 @@ patient_dashboard = html.Div(
                                     dcc.Input(
                                         id="input-dosaggio-usato",
                                         placeholder="Dosaggio (mg)...",
-                                        type="text",
+                                        type="number",
                                         className= 'input'  
                                     ),
                                     width=5
@@ -2466,7 +2466,7 @@ def crea_card_paziente(dati_paziente, dati_diab):
                                         dbc.Label("CAP"),
                                         dbc.Input(
                                             id="modifica-cap",
-                                            type="text",
+                                            type="number",
                                             value=dati_paziente.get("cap", ""),
                                             placeholder="Inserisci il CAP",
                                             style={"border": "none", "border-radius": "15px"}
@@ -2833,7 +2833,7 @@ def crea_card_diabetologo(dati_diabetologo):
                                         dbc.Label("CAP"),
                                         dbc.Input(
                                             id="modifica-cap-diabetologo",
-                                            type="text",
+                                            type="number",
                                             value=dati_diabetologo.get("cap", ""),
                                             placeholder="Inserisci il CAP",
                                             style={"border": "none", "border-radius": "15px"}
@@ -3060,7 +3060,7 @@ def layout_lista_contatti():
 
     lista_contatti = [
         dbc.Button(
-            f"{c['nome']} {c['cognome']}",
+            f"{c['cognome']} {c['nome']}",
             id = {
                 "type": "btn-contatto",
                 "index": c["id"],

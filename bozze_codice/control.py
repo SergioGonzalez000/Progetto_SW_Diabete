@@ -8,6 +8,7 @@ import time
 import dash
 import model
 import view
+import re
 
 
 import plotly.express as px
@@ -29,7 +30,7 @@ def registra_callbacks(app):
          State('password-input', 'value')],
          prevent_initial_call=True
     )
-    def check_login_account(n_clicks, username, password_dal_form):    # molta della logica è scritta qui nel control.py, ma volendo la si può spostare nel model
+    def check_login_account(n_clicks, username, password_dal_form):    
         if n_clicks is None or n_clicks == 0:
             return dash.no_update, dash.no_update
         
@@ -41,11 +42,8 @@ def registra_callbacks(app):
         if user:        # è un oggetto Persona
             # controlliamo la password.
             # se la password va bene, chiamo login_user()
-            valid = check_password_hash(user.pw, password_dal_form)  # ho eliminato la fx check_password mia, nel model.py
+            valid = check_password_hash(user.pw, password_dal_form)
 
-            # 
-            #   **modificata questa roba, dovrebbe andare**
-            #
             if valid:
                 login_user(user)
 
@@ -112,6 +110,8 @@ def registra_callbacks(app):
             
             if len(cf) != 16: 
                 return "Codice fiscale non valido!","danger", True, None
+            if not re.fullmatch(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+                return "Email non valida!","danger", True, None
 
             # Check lunghezza del CAP:
             if len(str(cap)) != 5 or cap < 0:
@@ -1277,7 +1277,7 @@ def registra_callbacks(app):
             return (
                 number,stile_corrente, "Tutti i campi obbligatori devono essere compilati.",True,"danger", trigger, no_update, no_update,no_update)
         
-        if valore < 0:
+        if valore < 20 or valore > 1500:
             return (no_update, no_update, "Valore glicemico sbagliato!", True, "danger", trigger, no_update, no_update, no_update)
         
         if trigger_id == "inserisci-glicemia" and valore:
@@ -1321,6 +1321,12 @@ def registra_callbacks(app):
         triggered_id=ctx.triggered_id
         if path=="/patient-dashboard":
             if farmaco and dosaggio and triggered_id=="inserisci-assfarmaco-btn":
+                # Se il dosaggio è negativo 
+                if (dosaggio < 0):
+                    return "Dosaggio non valido!", True, "danger", dash.no_update, dash.no_update
+                # Se il dosaggio inserito è una stringa
+                elif isinstance(dosaggio, str):
+                    return "Dosaggio non valido: inserire un valore numerico!", True, "danger", dash.no_update, dash.no_update
                 current_user.inserisci_assunzione_farmaco(farmaco,dosaggio)
                 model.check_farmaco(model.get_user_id(),farmaco, dosaggio)
                 return "Inserimento avvenuto correttamente", True, "success", "", None
