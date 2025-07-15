@@ -1293,7 +1293,8 @@ doctor_patient = html.Div(
                                         "La media è calcolata su fasce orarie.",
                                         html.H6("Eventi glucosio basso:"),
                                         "calendario che mostra eventi di glicemia inferiore a 60mg/dL.",
-                                    ])
+                                    ]), 
+                                    title= "Andamento"
                                 )
                             ],
                             style={"display": "flex", "alignItems": "auto", "gap": "8px"}

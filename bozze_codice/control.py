@@ -1055,6 +1055,12 @@ def registra_callbacks(app):
         indicazioni = indicazioni or None
         data_i = data_i or None
         data_f = data_f or None
+        
+        if dosaggio is None or dosaggio <= 0:
+            return "Dosaggio non valido", "danger", True, True, 0
+        
+        if assunzioni is None or assunzioni <= 0:
+            return "Numero assunzioni non valido", "danger", True, True, 0
 
         if all(x is None for x in [farmaco, dosaggio, assunzioni, indicazioni, data_i, data_f]):
             return "Informazioni mancanti", "danger", True, True, 0
@@ -1156,10 +1162,17 @@ def registra_callbacks(app):
         trigger_id = ctx.triggered_id
 
         farmaco = farmaco or None
-        indicazioni = indicazioni or None
+        indicazioni = indicazioni or ""
         dosaggio = dosaggio or None
         assunzioni = assunzioni or None
-        if savebtn>0 and any(
+
+        if (dosaggio is None or dosaggio <= 0) and trigger_id == "salva-nuova-terapia-btn" :
+            return "Dosaggio non valido", "danger", True
+        
+        if (assunzioni is None or assunzioni <= 0) and trigger_id == "salva-nuova-terapia-btn" :
+            return "Numero assunzioni non valido", "danger", True
+        #if savebtn>0
+        if trigger_id == "salva-nuova-terapia-btn" and any(
             val is None or (isinstance(val, str) and val.strip() == "") 
             for val in [farmaco, dosaggio, assunzioni, data_i, data_f]
         ):
