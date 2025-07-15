@@ -1585,8 +1585,7 @@ def check_glicemia(id_paziente,valore,pasto):
             cursore.execute( 
                 """Insert into alerts(id_paziente, orario, alert_case) values(%s,%S,%s)""",(
                 id_paziente,
-                datetime.now(),
-                f"Glicemia pre-pasto {valore} fuori range  [80 - 130]"
+                f"Glicemia pre-pasto {valore} fuori range  [80 - 130]")
                 )
                 )
 
