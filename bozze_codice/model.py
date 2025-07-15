@@ -1587,7 +1587,7 @@ def check_glicemia(id_paziente,valore,pasto):
                 id_paziente,
                 f"Glicemia pre-pasto {valore} fuori range  [80 - 130]")
                 )
-                )
+                
 
         elif (valore > 180 and pasto == "post"):
             cursore.execute(
@@ -1735,3 +1735,116 @@ def get_diabetologo_associato(id_paziente):
         cursore.execute("""Select p.diabetologo_associato from paziente p where p.id_paziente = %s""",(id_paziente,))
         return cursore.fetchone()
     
+
+
+# funzione di ricerca nel db DEI PAZIENTI
+def cerca_paziente(fullname):
+
+    # Pre-elaborazione input
+    fullname = fullname.strip()
+    parti = fullname.split()
+
+    
+    if len(parti) == 1:
+        # Cerca per nome o cognome
+        termine = parti[0]
+        query = """
+            SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono
+            FROM Paziente
+            WHERE LOWER(nome) = LOWER(%s) OR LOWER(cognome) = LOWER(%s)
+        """
+        params = (termine, termine)
+
+    elif len(parti) == 2:
+        # Proviamo sia ordine [nome, cognome] che [cognome, nome]
+        nome1, cognome1 = parti[0], ' '.join(parti[1:])
+        cognome2, nome2 = nome1, cognome1
+
+        query = """
+            SELECT id_paziente, nome, cognome, codice_fiscale, data_nascita, email, telefono
+            FROM Paziente
+            WHERE 
+                (LOWER(nome) = LOWER(%s) AND LOWER(cognome) = LOWER(%s)) OR
+                (LOWER(nome) = LOWER(%s) AND LOWER(cognome) = LOWER(%s))
+        """
+        params = (nome1, cognome1, nome2, cognome2)
+
+    else:
+        raise ValueError("Nome e cognome mancanti")
+
+    with DBSingleton.get_cursor() as cursore:
+        cursore.execute(query,params)
+        result = cursore.fetchall()
+
+        # Conversione in lista di dizionari
+        pazienti = [
+            {
+                "id_paziente": r[0],
+                "nome": r[1],
+                "cognome": r[2],
+                "codice_fiscale": r[3],
+                "data_nascita": r[4],
+                "email": r[5],
+                "telefono": r[6]
+            }
+            for r in result
+        ]
+
+    return pazienti
+
+
+
+# funzione di ricerca nel db DEI DIABETOLOGI
+def cerca_diab(fullname):
+
+    # Pre-elaborazione input
+    fullname = fullname.strip()
+    parti = fullname.split()
+
+
+    if len(parti) == 1:
+        # Cerca per nome o cognome
+        termine = parti[0]
+        query = """
+            SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono
+            FROM Diabetologo
+            WHERE LOWER(nome) = LOWER(%s) OR LOWER(cognome) = LOWER(%s)
+        """
+        params = (termine, termine)
+
+    elif len(parti) == 2:
+        # Proviamo sia ordine [nome, cognome] che [cognome, nome]
+        nome1, cognome1 = parti[0], ' '.join(parti[1:])
+        cognome2, nome2 = nome1, cognome1
+
+        query = """
+            SELECT id_diabetologo, nome, cognome, codice_fiscale, data_nascita, email, telefono
+            FROM Diabetologo
+            WHERE 
+                (LOWER(nome) = LOWER(%s) AND LOWER(cognome) = LOWER(%s)) OR
+                (LOWER(nome) = LOWER(%s) AND LOWER(cognome) = LOWER(%s))
+        """
+        params = (nome1, cognome1, nome2, cognome2)
+
+    else:
+        raise ValueError("Nome e cognome mancanti")
+
+    with DBSingleton.get_cursor() as cursore:
+        cursore.execute(query,params)
+        result = cursore.fetchall()
+
+        # Conversione in lista di dizionari
+        diabetologi = [
+            {
+                "id_diabetologo": r[0],
+                "nome": r[1],
+                "cognome": r[2],
+                "codice_fiscale": r[3],
+                "data_nascita": r[4],
+                "email": r[5],
+                "telefono": r[6]
+            }
+            for r in result
+        ]
+
+    return diabetologi

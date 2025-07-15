@@ -1951,4 +1951,37 @@ def registra_callbacks(app):
             
         return False, dash.no_update, stored_data  # Chiudi modal
         
-        
+
+    # callback per la barra di ricerca nei PAZIENTI
+    @app.callback(
+        Output("lista-pazienti-admin", "children", allow_duplicate= True),
+        State("ricerca-admin-paziente", "value"),
+        Input("ricerca-admin-paziente", "n_submit"),
+        prevent_initial_call=True
+    )    
+    def ricerca_pazienti(testoInserito, submit):
+        if not testoInserito or submit == 0:
+            return view.layout_lista_pazienti()
+
+        if testoInserito and submit > 0:
+            # corretto
+            # print("hai inserito qualcosa e premuto invio")
+            return view.layout_lista_ricerca_pazienti(model.cerca_paziente(testoInserito))
+            
+
+    # callback per la barra di ricerca nei DIABETOLOGI
+    @app.callback(
+        Output("lista-diabetologi-admin", "children", allow_duplicate= True),
+        State("ricerca-admin-diab", "value"),
+        Input("ricerca-admin-diab", "n_submit"),
+        prevent_initial_call=True
+    )    
+    def ricerca_diabetologi(testoInserito, submit):
+        if not testoInserito or submit == 0:
+            return view.layout_lista_diabetologi()
+
+        if testoInserito and submit > 0:
+            # corretto
+            # print("hai inserito qualcosa e premuto invio")
+            return view.layout_lista_ricerca_diabetologi(model.cerca_diab(testoInserito))
+            

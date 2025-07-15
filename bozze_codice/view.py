@@ -2252,6 +2252,32 @@ def layout_lista_pazienti():
     # Ritorna un contenitore con tutti i pulsanti
     return html.Div(lista_pulsanti, style={"overflowY": "auto", 'maxHeight': '74.5vh'})  
 
+
+
+# funzione che restituisce la lista pazienti che corrispondono a una ricerca fatta dall'admin. 
+def layout_lista_ricerca_pazienti(pazienti):
+
+    if not pazienti:
+        return dbc.Alert("Nessuna corrispondenza!", color="warning")
+
+    lista_pulsanti = [
+        dbc.Button(
+            f"{d['cognome']} {d['nome']}",
+            id={"type": "btn-paziente", "index": d["id_paziente"]},
+            color="light",
+            style={
+                "textAlign": "left",
+                "marginBottom": "20px",
+            },
+            className="button font-25 gray"
+        )
+        for d in pazienti
+    ]
+
+    # Ritorna un contenitore con tutti i pulsanti
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", 'maxHeight': '74.5vh'})  
+
+
 #*****************************************************************************************************
 
 # Funzione che crea la card con i dati del paziente selezionato nella lista pazienti
@@ -2552,7 +2578,17 @@ def admin_patient():
         children=[
             # Lista dei pazienti
             html.Div([
-                html.H4("Pazienti:", className='gray'),
+                html.Div([
+                    # nuovo div per ricerca pazienti.
+                    html.H4("Pazienti:", 
+                            className='f-1 gray d-flex', style={"alignItems": "center"}),
+                    dbc.Input(
+                        id="ricerca-admin-paziente",
+                        className="f-1 input", 
+                        placeholder="🔍 Cerca",
+                        n_submit=0)
+                ],
+                className="f-1 flex-row"),
                 html.Hr(),
                 # Genera la lista dei pazienti
                 html.Div(layout_lista_pazienti(), id="lista-pazienti-admin", style={'height': '100%'})
@@ -2588,6 +2624,29 @@ def layout_lista_diabetologi():
 
     if not diabetologi:
         return dbc.Alert("Nessun paziente registrato.", color="warning")
+
+    lista_pulsanti = [
+        dbc.Button(
+            f"{d['cognome']} {d['nome']}",
+            id={"type": "btn-diabetologo", "index": d["id_diabetologo"]},
+            color="light",
+            style={
+                "textAlign": "left",
+                "marginBottom": "20px",
+            },
+            className="button font-25 gray"
+        )
+        for d in diabetologi
+    ]
+
+    # Ritorna un contenitore con tutti i pulsanti
+    return html.Div(lista_pulsanti, style={"overflowY": "auto", "maxHeight": "74.5vh"})
+
+# funzione che restituisce la lista pazienti che corrispondono a una ricerca fatta dall'admin. 
+def layout_lista_ricerca_diabetologi(diabetologi):
+
+    if not diabetologi:
+        return dbc.Alert("Nessuna corrispondenza!", color="warning")
 
     lista_pulsanti = [
         dbc.Button(
@@ -2950,9 +3009,12 @@ def admin_doctor():
             "paddingLeft": "40px"
         },
         children=[
-            # Lista dei pazienti
+            # Lista dei diabetologi
             html.Div([
-                html.H4("Diabetologi:", className='gray'),
+                html.Div([
+                    html.H4("Diabetologi:", className='f-1 gray d-flex', style={"alignItems": "center"}),
+                    dbc.Input(id="ricerca-admin-diab", className="f-1 input", placeholder="🔍 Cerca", n_submit=0)
+                ], className="f-1 flex-row"),
                 html.Hr(),
                 # Genera la lista dei diabetologi
                 html.Div(layout_lista_diabetologi(), id="lista-diabetologi-admin", style={'height': '100%'})
@@ -2963,7 +3025,7 @@ def admin_doctor():
                     "marginTop": "20px",
                     "marginBottom": "20px"}, 
                className='flex-col card'),
-            # Info dei pazienti:
+            # Info dei diabetologi:
             html.Div([
                 html.H4("Informazioni:", className='gray'),
                 html.Hr(),
