@@ -233,6 +233,11 @@
     font-size: 25px;
 }
 
+/* ClassName per font-size 35px */
+.font-35 {
+    font-size: 35px;
+}
+
 /* ClassName per font-size 85px */
 .font-85 {
     font-size: 85px;

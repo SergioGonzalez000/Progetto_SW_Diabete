@@ -122,13 +122,13 @@ def registra_callbacks(app):
                 with model.DBSingleton.get_cursor() as cursore:
                     cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
                     id_richiesta=cursore.fetchone()
-                return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
+                return "Registrazione avvenuta con successo! Attendi la verifica dei dati.", "success", True, model.Admin.genera_username(id_richiesta)
             else:
                 model.inserisci_richiesta(nome,cognome,datanascita,sesso,cf,indirizzo,citta,cap,tel,email,False,pw)
                 with model.DBSingleton.get_cursor() as cursore:
                     cursore.execute("SELECT id_richiesta FROM RichiesteAccount WHERE codice_fiscale = %s ",(cf,))
                     id_richiesta=cursore.fetchone()
-                return "Registrazione avvenuta con successo! attendi la verifica dei dati", "success", True, model.Admin.genera_username(id_richiesta)
+                return "Registrazione avvenuta con successo! Attendi la verifica dei dati.", "success", True, model.Admin.genera_username(id_richiesta)
         else:
             return None,None,None,None
         

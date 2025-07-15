@@ -906,7 +906,7 @@ def get_richieste_account_pazienti():
 
     # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
         options = [
-            {"label": f"{nome} {cognome} {codice_fiscale}", "value": id_richiesta}
+            {"label": f"{nome} {cognome} - {codice_fiscale}", "value": id_richiesta}
             for id_richiesta, nome, cognome, codice_fiscale in result
         ]
     return options
@@ -923,7 +923,7 @@ def get_richieste_account_diabetologi():
         
         # formato per il dropdown: mostra nome, cognome, usa l'id come value. Prendo anche il codice fiscale per usarlo come identificatore.
         options = [
-            {"label": f"{nome} {cognome} {codice_fiscale}", "value": id_richiesta}
+            {"label": f"{nome} {cognome} - {codice_fiscale}", "value": id_richiesta}
             for id_richiesta, nome, cognome, codice_fiscale in result
         ]
     return options
@@ -1586,8 +1586,7 @@ def check_glicemia(id_paziente,valore,pasto):
                 """Insert into alerts(id_paziente, orario, alert_case) values(%s,%S,%s)""",(
                 id_paziente,
                 f"Glicemia pre-pasto {valore} fuori range  [80 - 130]")
-                )
-                
+            )
 
         elif (valore > 180 and pasto == "post"):
             cursore.execute(

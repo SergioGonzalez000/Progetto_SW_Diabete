@@ -550,7 +550,7 @@ form3 = html.Div(
                 html.H5("Username generato:", className='gray'),
                 dbc.CardBody(
                     [
-                        html.P(id="generated-username")
+                        html.P(id="generated-username", className='font-25')
                     ]
                 )
             ], className='mt-3 mb-3'
@@ -1895,19 +1895,19 @@ def crea_div_info_base(info,flagpaziente):
                 html.Div([
                     html.P("Glicemia media:", className='font-20'),
                     html.Div([
-                        html.P(round(media_glicemia,2), style={'display': 'inline-block','font-size': '35px', 'font-weight': 'bold'}),
+                        html.P(round(media_glicemia,2), style={'display': 'inline-block'}, className='font-35 font-bold'),
                         html.P(" mg/dL", style={'display': 'inline-block'}, className='gray')
                     ]),
-                ], className=' flex-col p-10'
+                ], className='f-1 flex-col d-flex p-10', style={'justifyContent': 'center'}
                 ),
 
                 html.Div([
                     html.P("Glicata stimata:", className='font-20'),
                     html.Div([
-                        html.P(glicata, style={'display': 'inline-block','font-size': '35px', 'font-weight': 'bold'}),
+                        html.P(glicata, style={'display': 'inline-block'}, className='font-35 font-bold'),
                         html.P(" mg/dL", style={'display': 'inline-block'}, className='gray')
                     ]),
-                ], className='f-1 flex-col p-10'
+                ], className='f-1 flex-col d-flex p-10', style={'justifyContent': 'center'}
                 )
 
                 ], className='d-flex g-20'
